@@ -10,13 +10,23 @@ import {
   Code, 
   Eye, 
   AlertTriangle,
-  X 
+  X,
+  Palette,
+  Sun,
+  Moon,
+  SlidersHorizontal,
+  ClipboardCopy,
+  Check
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
-import { PreviewPane } from './preview/preview-pane.ts';
+import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
 import { FileManager, FileState } from './files/file-manager.ts';
 import { SyncCoordinator } from './sync/sync-coordinator.ts';
 import { CDN_LIBRARIES, injectSnippetIntoHtml } from './libraries/cdn-catalog.ts';
+import { extractPalette, replaceColor, ColorSwatch } from './tools/palette-scanner.ts';
+import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont } from './tools/font-detector.ts';
+import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage } from './tools/image-inliner.ts';
+import { extractCleanBody } from './tools/body-exporter.ts';
 
 // Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
@@ -132,6 +142,7 @@ const STARTER_HTML = `<!DOCTYPE html>
     <div class="features-list">
       <ul style="margin: 0; padding-left: 18px;">
         <li><strong>Click &amp; Tweak Text:</strong> Click anywhere on this page and start typing to update the copy.</li>
+        <li><strong>Style Drawer:</strong> Click any element and use CSS sliders for padding, radius, and colors.</li>
         <li><strong>Dual-Sync Code:</strong> Changes update the raw HTML on the left instantly, and vice versa.</li>
         <li><strong>Save Locally:</strong> Press <code>Ctrl + S</code> to save changes straight to your local file.</li>
       </ul>
@@ -157,7 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
       Code,
       Eye,
       AlertTriangle,
-      X
+      X,
+      Palette,
+      Sun,
+      Moon,
+      SlidersHorizontal,
+      ClipboardCopy,
+      Check
     }
   });
 
@@ -182,6 +199,47 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewModeTag = document.getElementById('preview-mode-tag')!;
   const quickColor = document.getElementById('quick-color') as HTMLInputElement;
 
+  // Style Drawer Elements
+  const styleDrawer = document.getElementById('style-drawer')!;
+  const btnToggleStyles = document.getElementById('btn-toggle-styles')!;
+  const btnCloseStyleDrawer = document.getElementById('btn-close-style-drawer')!;
+  const drawerElementTag = document.getElementById('drawer-element-tag')!;
+  const sliderFontSize = document.getElementById('slider-font-size') as HTMLInputElement;
+  const valFontSize = document.getElementById('val-font-size')!;
+  const sliderPadding = document.getElementById('slider-padding') as HTMLInputElement;
+  const valPadding = document.getElementById('val-padding')!;
+  const sliderMargin = document.getElementById('slider-margin') as HTMLInputElement;
+  const valMargin = document.getElementById('val-margin')!;
+  const sliderRadius = document.getElementById('slider-radius') as HTMLInputElement;
+  const valRadius = document.getElementById('val-radius')!;
+  const sliderSpacing = document.getElementById('slider-spacing') as HTMLInputElement;
+  const valSpacing = document.getElementById('val-spacing')!;
+  const sliderOpacity = document.getElementById('slider-opacity') as HTMLInputElement;
+  const valOpacity = document.getElementById('val-opacity')!;
+  const pickerTextColor = document.getElementById('picker-text-color') as HTMLInputElement;
+  const valTextColor = document.getElementById('val-text-color')!;
+  const pickerBgColor = document.getElementById('picker-bg-color') as HTMLInputElement;
+  const valBgColor = document.getElementById('val-bg-color')!;
+
+  // Theme Simulator Elements
+  const btnThemeSim = document.getElementById('btn-theme-sim')!;
+  const themeSimLabel = document.getElementById('theme-sim-label')!;
+  const btnBakeTheme = document.getElementById('btn-bake-theme')!;
+
+  // Toast Helper
+  const hudToast = document.getElementById('hud-toast')!;
+  const hudToastMsg = document.getElementById('hud-toast-msg')!;
+  let toastTimeout: any;
+
+  function showToast(message: string, durationMs = 2600) {
+    if (toastTimeout) clearTimeout(toastTimeout);
+    hudToastMsg.textContent = message;
+    hudToast.classList.remove('hidden');
+    toastTimeout = setTimeout(() => {
+      hudToast.classList.add('hidden');
+    }, durationMs);
+  }
+
   let coordinator: SyncCoordinator;
 
   // Initialize Code Editor
@@ -190,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initialValue: STARTER_HTML,
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
-      checkRelativeCss(code);
+      checkDocumentIntegrity(code);
     }
   });
 
@@ -202,6 +260,15 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onSelectElement: (domPath) => {
       if (coordinator) coordinator.handleDomPathSelect(domPath);
+    },
+    onActiveElementChange: (info: ActiveElementInfo | null) => {
+      if (!info) return;
+      populateStyleDrawer(info);
+    },
+    onImageDropped: (_dataUrl, fileName) => {
+      showToast(`✦ Embedded image: ${fileName}`);
+      coordinator.updateStats();
+      fileManager.markDirty(true);
     }
   });
 
@@ -211,35 +278,72 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial preview render
   previewPane.render(STARTER_HTML);
 
-  // Relative CSS Link Detection & Embedding
-  const relativeCssBanner = document.getElementById('relative-css-banner');
-  const relativeCssMsg = document.getElementById('relative-css-msg');
-  const btnEmbedCss = document.getElementById('btn-embed-css');
-  const btnDismissCssBanner = document.getElementById('btn-dismiss-css-banner');
+  // Smart Helper Action Bar & Inputs
+  const smartHelperBanner = document.getElementById('smart-helper-banner')!;
+  const smartHelperMsg = document.getElementById('smart-helper-msg')!;
+  const btnHelperActionCss = document.getElementById('btn-helper-action-css')!;
+  const btnHelperActionImg = document.getElementById('btn-helper-action-img')!;
+  const btnHelperActionFont = document.getElementById('btn-helper-action-font')!;
+  const btnDismissHelper = document.getElementById('btn-dismiss-helper')!;
   const cssFileInput = document.getElementById('css-file-input') as HTMLInputElement;
+  const imgFileInput = document.getElementById('img-file-input') as HTMLInputElement;
 
-  function checkRelativeCss(code: string) {
-    if (!relativeCssBanner || !relativeCssMsg) return;
-    const regex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
-    const match = code.match(regex);
-    if (match) {
-      const href = match[1];
-      relativeCssMsg.innerHTML = `Local stylesheet link detected: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
-      relativeCssBanner.classList.remove('hidden');
-    } else {
-      relativeCssBanner.classList.add('hidden');
+  let currentPendingTargetImgSrc: string | null = null;
+  let currentPendingFont: UnlinkedFont | null = null;
+
+  function checkDocumentIntegrity(code: string) {
+    if (!smartHelperBanner || !smartHelperMsg) return;
+
+    // Reset helper buttons
+    btnHelperActionCss.classList.add('hidden');
+    btnHelperActionImg.classList.add('hidden');
+    btnHelperActionFont.classList.add('hidden');
+
+    // 1. Check relative stylesheet link
+    const cssRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
+    const cssMatch = code.match(cssRegex);
+    if (cssMatch) {
+      const href = cssMatch[1];
+      smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+      btnHelperActionCss.classList.remove('hidden');
+      smartHelperBanner.classList.remove('hidden');
+      return;
     }
+
+    // 2. Check unembedded local images
+    const unembeddedImages: UnembeddedImage[] = findUnembeddedImages(code);
+    if (unembeddedImages.length > 0) {
+      currentPendingTargetImgSrc = unembeddedImages[0].src;
+      smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
+      btnHelperActionImg.classList.remove('hidden');
+      smartHelperBanner.classList.remove('hidden');
+      return;
+    }
+
+    // 3. Check unlinked Google Fonts
+    const unlinkedFonts: UnlinkedFont[] = detectUnlinkedFonts(code);
+    if (unlinkedFonts.length > 0) {
+      currentPendingFont = unlinkedFonts[0];
+      smartHelperMsg.innerHTML = `Google Font <strong class="text-white">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
+      btnHelperActionFont.classList.remove('hidden');
+      smartHelperBanner.classList.remove('hidden');
+      return;
+    }
+
+    // All good
+    smartHelperBanner.classList.add('hidden');
   }
 
-  btnDismissCssBanner?.addEventListener('click', () => {
-    relativeCssBanner?.classList.add('hidden');
+  btnDismissHelper.addEventListener('click', () => {
+    smartHelperBanner.classList.add('hidden');
   });
 
-  btnEmbedCss?.addEventListener('click', () => {
-    cssFileInput?.click();
+  // Action: Embed Local CSS
+  btnHelperActionCss.addEventListener('click', () => {
+    cssFileInput.click();
   });
 
-  cssFileInput?.addEventListener('change', async () => {
+  cssFileInput.addEventListener('change', async () => {
     const file = cssFileInput.files?.[0];
     if (!file) return;
     const cssText = await file.text();
@@ -254,7 +358,44 @@ document.addEventListener('DOMContentLoaded', () => {
     previewPane.render(currentCode);
     coordinator.updateStats();
     fileManager.markDirty(true);
-    checkRelativeCss(currentCode);
+    checkDocumentIntegrity(currentCode);
+    showToast(`✦ Inlined stylesheet: ${file.name}`);
+  });
+
+  // Action: Embed Local Image
+  btnHelperActionImg.addEventListener('click', () => {
+    imgFileInput.click();
+  });
+
+  imgFileInput.addEventListener('change', async () => {
+    const file = imgFileInput.files?.[0];
+    if (!file || !currentPendingTargetImgSrc) return;
+    try {
+      const dataUri = await fileToDataUrl(file);
+      const currentCode = codePane.getValue();
+      const updatedCode = inlineImageInHtml(currentCode, currentPendingTargetImgSrc, dataUri);
+      codePane.setValue(updatedCode);
+      previewPane.render(updatedCode);
+      coordinator.updateStats();
+      fileManager.markDirty(true);
+      checkDocumentIntegrity(updatedCode);
+      showToast(`✦ Embedded image: ${file.name}`);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // Action: Inject Google Font
+  btnHelperActionFont.addEventListener('click', () => {
+    if (!currentPendingFont) return;
+    const currentCode = codePane.getValue();
+    const updatedCode = injectGoogleFont(currentCode, currentPendingFont.fontName, currentPendingFont.query);
+    codePane.setValue(updatedCode);
+    previewPane.render(updatedCode);
+    coordinator.updateStats();
+    fileManager.markDirty(true);
+    checkDocumentIntegrity(updatedCode);
+    showToast(`✦ Injected Google Font: ${currentPendingFont.fontName}`);
   });
 
   // File Manager UI Subscription
@@ -278,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveLabel.textContent = 'Saved!';
         setTimeout(() => { saveLabel.textContent = 'Save HTML'; }, 1500);
       }
+      showToast('✦ File saved to disk');
     }
   });
 
@@ -288,7 +430,8 @@ document.addEventListener('DOMContentLoaded', () => {
       codePane.setValue(content);
       previewPane.render(content);
       coordinator.updateStats();
-      checkRelativeCss(content);
+      checkDocumentIntegrity(content);
+      showToast('✦ File loaded into ScryPad');
     }
   });
 
@@ -303,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     codePane.setValue(STARTER_HTML);
     previewPane.render(STARTER_HTML);
     coordinator.updateStats();
-    checkRelativeCss(STARTER_HTML);
+    checkDocumentIntegrity(STARTER_HTML);
   });
 
   // Keyboard shortcut Ctrl+S / Cmd+S
@@ -339,6 +482,268 @@ document.addEventListener('DOMContentLoaded', () => {
     codePane.formatHtml();
     previewPane.render(codePane.getValue());
     coordinator.updateStats();
+    showToast('✦ HTML formatted and aligned');
+  });
+
+  // Feature: Copy Clean Body
+  document.getElementById('btn-copy-body')?.addEventListener('click', async () => {
+    const rawHtml = codePane.getValue();
+    const cleanBody = extractCleanBody(rawHtml);
+    try {
+      await navigator.clipboard.writeText(cleanBody);
+      showToast('✦ Body HTML copied to clipboard (ready for CMS/React)!');
+    } catch {
+      // Fallback prompt
+      window.prompt('Copy clean body HTML:', cleanBody);
+    }
+  });
+
+  // Feature: Theme Simulator (Auto -> Dark -> Light -> Auto)
+  btnThemeSim.addEventListener('click', () => {
+    const current = previewPane.getThemeSimulation();
+    let next: 'auto' | 'dark' | 'light' = 'auto';
+    if (current === 'auto') next = 'dark';
+    else if (current === 'dark') next = 'light';
+    else next = 'auto';
+
+    previewPane.setThemeSimulation(next);
+    themeSimLabel.textContent = `Theme: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
+    if (next === 'auto') {
+      btnBakeTheme.classList.add('hidden');
+    } else {
+      btnBakeTheme.classList.remove('hidden');
+    }
+  });
+
+  btnBakeTheme.addEventListener('click', () => {
+    previewPane.bakeThemeSimulation();
+    previewPane.setThemeSimulation('auto');
+    themeSimLabel.textContent = 'Theme: Auto';
+    btnBakeTheme.classList.add('hidden');
+    showToast('✦ Theme class baked into HTML source');
+  });
+
+  // Feature: Visual Style Drawer (CSS Quick-Sliders)
+  btnToggleStyles.addEventListener('click', () => {
+    styleDrawer.classList.toggle('hidden');
+  });
+
+  btnCloseStyleDrawer.addEventListener('click', () => {
+    styleDrawer.classList.add('hidden');
+  });
+
+  function parsePxValue(valStr: string, defaultNum = 0): number {
+    const match = valStr.match(/(-?[\d.]+)px/i);
+    return match ? parseFloat(match[1]) : defaultNum;
+  }
+
+  function rgbToHex(rgbStr: string): string {
+    const match = rgbStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if (!match) return '#ffffff';
+    const r = parseInt(match[1]).toString(16).padStart(2, '0');
+    const g = parseInt(match[2]).toString(16).padStart(2, '0');
+    const b = parseInt(match[3]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+  }
+
+  function populateStyleDrawer(info: ActiveElementInfo) {
+    drawerElementTag.textContent = `<${info.tagName}${info.id ? '#' + info.id : ''}${info.className ? '.' + info.className.trim().split(/\s+/)[0] : ''}>`;
+
+    // Font size
+    const fontSizeNum = Math.round(parsePxValue(info.styles.fontSize, 16));
+    sliderFontSize.value = String(Math.min(64, Math.max(10, fontSizeNum)));
+    valFontSize.textContent = `${sliderFontSize.value}px`;
+
+    // Padding
+    const paddingNum = Math.round(parsePxValue(info.styles.padding, 16));
+    sliderPadding.value = String(Math.min(64, Math.max(0, paddingNum)));
+    valPadding.textContent = `${sliderPadding.value}px`;
+
+    // Margin
+    const marginNum = Math.round(parsePxValue(info.styles.margin, 0));
+    sliderMargin.value = String(Math.min(64, Math.max(0, marginNum)));
+    valMargin.textContent = `${sliderMargin.value}px`;
+
+    // Radius
+    const radiusNum = Math.round(parsePxValue(info.styles.borderRadius, 0));
+    sliderRadius.value = String(Math.min(48, Math.max(0, radiusNum)));
+    valRadius.textContent = `${sliderRadius.value}px`;
+
+    // Spacing
+    const spacingNum = Math.round(parsePxValue(info.styles.letterSpacing, 0));
+    sliderSpacing.value = String(Math.min(10, Math.max(-2, spacingNum)));
+    valSpacing.textContent = `${sliderSpacing.value}px`;
+
+    // Opacity
+    const opacityNum = Math.round(parseFloat(info.styles.opacity || '1') * 100);
+    sliderOpacity.value = String(Math.min(100, Math.max(10, opacityNum)));
+    valOpacity.textContent = `${sliderOpacity.value}%`;
+
+    // Colors
+    if (info.styles.color) {
+      const hex = info.styles.color.startsWith('#') ? info.styles.color : rgbToHex(info.styles.color);
+      pickerTextColor.value = hex;
+      valTextColor.textContent = hex;
+    }
+    if (info.styles.backgroundColor && !info.styles.backgroundColor.includes('rgba(0, 0, 0, 0)')) {
+      const hex = info.styles.backgroundColor.startsWith('#') ? info.styles.backgroundColor : rgbToHex(info.styles.backgroundColor);
+      pickerBgColor.value = hex;
+      valBgColor.textContent = hex;
+    }
+  }
+
+  // Wire Style Drawer Slider Inputs
+  sliderFontSize.addEventListener('input', () => {
+    valFontSize.textContent = `${sliderFontSize.value}px`;
+    previewPane.updateActiveElementStyle('fontSize', `${sliderFontSize.value}px`);
+  });
+
+  sliderPadding.addEventListener('input', () => {
+    valPadding.textContent = `${sliderPadding.value}px`;
+    previewPane.updateActiveElementStyle('padding', `${sliderPadding.value}px`);
+  });
+
+  sliderMargin.addEventListener('input', () => {
+    valMargin.textContent = `${sliderMargin.value}px`;
+    previewPane.updateActiveElementStyle('margin', `${sliderMargin.value}px`);
+  });
+
+  sliderRadius.addEventListener('input', () => {
+    valRadius.textContent = `${sliderRadius.value}px`;
+    previewPane.updateActiveElementStyle('borderRadius', `${sliderRadius.value}px`);
+  });
+
+  sliderSpacing.addEventListener('input', () => {
+    valSpacing.textContent = `${sliderSpacing.value}px`;
+    previewPane.updateActiveElementStyle('letterSpacing', `${sliderSpacing.value}px`);
+  });
+
+  sliderOpacity.addEventListener('input', () => {
+    valOpacity.textContent = `${sliderOpacity.value}%`;
+    const opacityDec = (parseInt(sliderOpacity.value) / 100).toFixed(2);
+    previewPane.updateActiveElementStyle('opacity', opacityDec);
+  });
+
+  pickerTextColor.addEventListener('input', () => {
+    valTextColor.textContent = pickerTextColor.value;
+    previewPane.updateActiveElementStyle('color', pickerTextColor.value);
+  });
+
+  pickerBgColor.addEventListener('input', () => {
+    valBgColor.textContent = pickerBgColor.value;
+    previewPane.updateActiveElementStyle('backgroundColor', pickerBgColor.value);
+  });
+
+  // Feature: Global Palette Swatches & Replace Modal
+  const modalPalette = document.getElementById('modal-palette')!;
+  const btnPaletteToggle = document.getElementById('btn-palette-toggle')!;
+  const btnClosePalette = document.getElementById('btn-close-palette')!;
+  const btnPaletteDone = document.getElementById('btn-palette-done')!;
+  const paletteSwatches = document.getElementById('palette-swatches')!;
+  const replaceTargetLabel = document.getElementById('replace-target-label')!;
+  const replaceNewColorPicker = document.getElementById('replace-new-color-picker') as HTMLInputElement;
+  const replaceNewColorText = document.getElementById('replace-new-color-text') as HTMLInputElement;
+  const btnReplaceColorAll = document.getElementById('btn-replace-color-all')!;
+  const btnCopyColor = document.getElementById('btn-copy-color')!;
+  const paletteSummaryCount = document.getElementById('palette-summary-count')!;
+
+  let activeTargetColor: string | null = null;
+
+  function renderPalette() {
+    const code = codePane.getValue();
+    const swatches: ColorSwatch[] = extractPalette(code);
+    paletteSummaryCount.textContent = `${swatches.length} unique colors detected`;
+
+    if (swatches.length === 0) {
+      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#8d9bb6]">No colors detected in document styles.</div>`;
+      return;
+    }
+
+    paletteSwatches.innerHTML = swatches.map((s) => `
+      <button class="swatch-card p-2 bg-[#122036] hover:bg-[#1b2f4f] border ${activeTargetColor === s.color ? 'border-[#5cff9d]' : 'border-[#203453]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
+        <span class="w-6 h-6 rounded shadow border border-white/20 shrink-0" style="background-color: ${s.color};"></span>
+        <div class="flex-1 min-w-0">
+          <div class="text-[11px] font-['IBM_Plex_Mono'] text-white font-bold truncate">${s.color}</div>
+          <div class="text-[10px] text-[#8d9bb6]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
+        </div>
+      </button>
+    `).join('');
+
+    paletteSwatches.querySelectorAll('.swatch-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        const color = (e.currentTarget as HTMLElement).getAttribute('data-color');
+        if (!color) return;
+        activeTargetColor = color;
+        replaceTargetLabel.textContent = color;
+        btnCopyColor.classList.remove('hidden');
+
+        // If hex, set to picker
+        if (color.startsWith('#') && (color.length === 7 || color.length === 4)) {
+          const hex7 = color.length === 4 
+            ? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}` 
+            : color;
+          replaceNewColorPicker.value = hex7;
+          replaceNewColorText.value = hex7;
+        } else {
+          replaceNewColorText.value = color;
+        }
+
+        renderPalette();
+      });
+    });
+  }
+
+  btnPaletteToggle.addEventListener('click', () => {
+    renderPalette();
+    modalPalette.classList.remove('hidden');
+  });
+
+  btnClosePalette.addEventListener('click', () => {
+    modalPalette.classList.add('hidden');
+  });
+
+  btnPaletteDone.addEventListener('click', () => {
+    modalPalette.classList.add('hidden');
+  });
+
+  modalPalette.addEventListener('click', (e) => {
+    if (e.target === modalPalette) modalPalette.classList.add('hidden');
+  });
+
+  replaceNewColorPicker.addEventListener('input', () => {
+    replaceNewColorText.value = replaceNewColorPicker.value;
+  });
+
+  replaceNewColorText.addEventListener('input', () => {
+    if (/^#[0-9a-fA-F]{6}$/.test(replaceNewColorText.value)) {
+      replaceNewColorPicker.value = replaceNewColorText.value;
+    }
+  });
+
+  btnCopyColor.addEventListener('click', async () => {
+    if (!activeTargetColor) return;
+    await navigator.clipboard.writeText(activeTargetColor);
+    showToast(`✦ Copied color ${activeTargetColor}`);
+  });
+
+  btnReplaceColorAll.addEventListener('click', () => {
+    if (!activeTargetColor) {
+      alert('Please click a color swatch first to select it.');
+      return;
+    }
+    const newColor = replaceNewColorText.value.trim();
+    if (!newColor) return;
+
+    const currentCode = codePane.getValue();
+    const updatedCode = replaceColor(currentCode, activeTargetColor, newColor);
+    codePane.setValue(updatedCode);
+    previewPane.render(updatedCode);
+    coordinator.updateStats();
+    fileManager.markDirty(true);
+    showToast(`✦ Replaced ${activeTargetColor} with ${newColor}`);
+    activeTargetColor = newColor;
+    replaceTargetLabel.textContent = newColor;
+    renderPalette();
   });
 
   // Responsive Viewports
@@ -346,17 +751,59 @@ document.addEventListener('DOMContentLoaded', () => {
   viewportBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       viewportBtns.forEach((b) => {
-        b.className = 'viewport-btn px-2.5 py-0.5 rounded text-[#8d9bb6] hover:bg-[#122036] hover:text-[#e8eef8]';
+        b.className = 'viewport-btn px-2 py-0.5 rounded text-[#8d9bb6] hover:bg-[#122036] hover:text-[#e8eef8]';
       });
-      btn.className = 'viewport-btn px-2.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]';
+      btn.className = 'viewport-btn px-2 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]';
       const width = btn.getAttribute('data-width') || '100%';
       previewPane.setViewportWidth(width);
     });
   });
 
-  // View Modes (Split / Code / Preview)
+  // View Modes (Split / Code / Preview) & Resizable Gutter
   const codePaneContainer = document.getElementById('code-pane-container')!;
   const previewPaneContainer = document.getElementById('preview-pane-container')!;
+  const paneResizer = document.getElementById('pane-resizer')!;
+  let splitRatio = 50;
+  let isDraggingResizer = false;
+
+  paneResizer.addEventListener('pointerdown', (e) => {
+    isDraggingResizer = true;
+    paneResizer.setPointerCapture(e.pointerId);
+    document.body.classList.add('select-none');
+    const previewIframe = previewMount.querySelector('iframe');
+    if (previewIframe) previewIframe.style.pointerEvents = 'none';
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!isDraggingResizer) return;
+    const workspace = document.getElementById('workspace')!;
+    const rect = workspace.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = Math.max(15, Math.min(85, (x / rect.width) * 100));
+    splitRatio = pct;
+    codePaneContainer.style.width = `${pct}%`;
+    previewPaneContainer.style.width = `${100 - pct}%`;
+  });
+
+  const stopResizerDrag = (e: PointerEvent) => {
+    if (!isDraggingResizer) return;
+    isDraggingResizer = false;
+    try { paneResizer.releasePointerCapture(e.pointerId); } catch {}
+    document.body.classList.remove('select-none');
+    const previewIframe = previewMount.querySelector('iframe');
+    if (previewIframe) previewIframe.style.pointerEvents = 'auto';
+  };
+
+  window.addEventListener('pointerup', stopResizerDrag);
+  window.addEventListener('pointercancel', stopResizerDrag);
+
+  // Double click resets to 50/50
+  paneResizer.addEventListener('dblclick', () => {
+    splitRatio = 50;
+    codePaneContainer.style.width = '50%';
+    previewPaneContainer.style.width = '50%';
+    showToast('✦ Split layout reset to 50 / 50');
+  });
 
   const modeButtons = {
     split: document.getElementById('mode-split')!,
@@ -375,17 +822,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mode === 'split') {
       codePaneContainer.style.display = 'flex';
-      codePaneContainer.style.width = '50%';
+      codePaneContainer.style.width = `${splitRatio}%`;
       previewPaneContainer.style.display = 'flex';
-      previewPaneContainer.style.width = '50%';
+      previewPaneContainer.style.width = `${100 - splitRatio}%`;
+      paneResizer.style.display = 'flex';
     } else if (mode === 'code') {
       codePaneContainer.style.display = 'flex';
       codePaneContainer.style.width = '100%';
       previewPaneContainer.style.display = 'none';
+      paneResizer.style.display = 'none';
     } else {
       codePaneContainer.style.display = 'none';
       previewPaneContainer.style.display = 'flex';
       previewPaneContainer.style.width = '100%';
+      paneResizer.style.display = 'none';
     }
   }
 
@@ -437,6 +887,8 @@ document.addEventListener('DOMContentLoaded', () => {
           target.classList.remove('btn-hud-primary');
           target.classList.add('btn-hud-ghost');
         }, 1500);
+
+        showToast(`✦ Injected library: ${lib.name}`);
       }
     });
   });
@@ -453,4 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
   modalLibrary.addEventListener('click', (e) => {
     if (e.target === modalLibrary) modalLibrary.classList.add('hidden');
   });
+
+  // Run initial integrity check
+  checkDocumentIntegrity(STARTER_HTML);
 });

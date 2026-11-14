@@ -1,7 +1,30 @@
+import { fileToDataUrl } from '../tools/image-inliner.ts';
+
+export interface ActiveElementStyles {
+  padding: string;
+  margin: string;
+  borderRadius: string;
+  fontSize: string;
+  letterSpacing: string;
+  color: string;
+  backgroundColor: string;
+  opacity: string;
+}
+
+export interface ActiveElementInfo {
+  tagName: string;
+  id: string;
+  className: string;
+  domPath: string;
+  styles: ActiveElementStyles;
+}
+
 export interface PreviewOptions {
   container: HTMLElement;
   onVisualDocChange: (newHtml: string) => void;
   onSelectElement: (domPath: string) => void;
+  onActiveElementChange?: (info: ActiveElementInfo | null) => void;
+  onImageDropped?: (dataUrl: string, fileName: string) => void;
 }
 
 export class PreviewPane {
@@ -9,11 +32,17 @@ export class PreviewPane {
   private visualEditMode: boolean = true;
   private onVisualDocChange: (newHtml: string) => void;
   private onSelectElement: (domPath: string) => void;
+  private onActiveElementChange?: (info: ActiveElementInfo | null) => void;
+  private onImageDropped?: (dataUrl: string, fileName: string) => void;
   private isWritingToIframe: boolean = false;
+  private activeElement: HTMLElement | null = null;
+  private currentThemeMode: 'auto' | 'dark' | 'light' = 'auto';
 
   constructor(options: PreviewOptions) {
     this.onVisualDocChange = options.onVisualDocChange;
     this.onSelectElement = options.onSelectElement;
+    this.onActiveElementChange = options.onActiveElementChange;
+    this.onImageDropped = options.onImageDropped;
 
     this.iframe = document.createElement('iframe');
     this.iframe.className = "w-full h-full bg-white rounded shadow-2xl border border-slate-800 transition-all duration-150";
@@ -47,6 +76,7 @@ export class PreviewPane {
     doc.close();
 
     this.attachIframeEvents(doc);
+    this.applyCurrentTheme(doc);
     this.isWritingToIframe = false;
   }
 
@@ -54,6 +84,71 @@ export class PreviewPane {
     const win = this.iframe.contentWindow;
     if (win) {
       win.document.execCommand(command, false, value as any);
+      this.notifyDocChange();
+    }
+  }
+
+  public getActiveElement(): HTMLElement | null {
+    return this.activeElement;
+  }
+
+  public updateActiveElementStyle(property: string, value: string) {
+    if (!this.activeElement) return;
+    (this.activeElement.style as any)[property] = value;
+    this.notifyDocChange();
+  }
+
+  public setThemeSimulation(mode: 'auto' | 'dark' | 'light') {
+    this.currentThemeMode = mode;
+    const doc = this.getDoc();
+    if (doc) {
+      this.applyCurrentTheme(doc);
+    }
+  }
+
+  public getThemeSimulation(): 'auto' | 'dark' | 'light' {
+    return this.currentThemeMode;
+  }
+
+  public bakeThemeSimulation(): void {
+    if (this.currentThemeMode === 'auto') return;
+    const doc = this.getDoc();
+    if (!doc) return;
+
+    const root = doc.documentElement;
+    if (this.currentThemeMode === 'dark') {
+      root.classList.remove('light');
+      root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+    } else if (this.currentThemeMode === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
+    }
+
+    this.notifyDocChange();
+  }
+
+  private applyCurrentTheme(doc: Document) {
+    const root = doc.documentElement;
+    const body = doc.body;
+    if (!root) return;
+
+    if (this.currentThemeMode === 'dark') {
+      root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
+      root.style.colorScheme = 'dark';
+      if (body) body.style.colorScheme = 'dark';
+    } else if (this.currentThemeMode === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
+      root.style.colorScheme = 'light';
+      if (body) body.style.colorScheme = 'light';
+    } else {
+      // auto / default
+      root.style.colorScheme = '';
+      if (body) body.style.colorScheme = '';
     }
   }
 
@@ -65,13 +160,49 @@ export class PreviewPane {
     }
   }
 
+  private notifyDocChange() {
+    if (this.isWritingToIframe) return;
+    const doc = this.getDoc();
+    if (!doc) return;
+    const docType = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>\n` : '<!DOCTYPE html>\n';
+    const serialized = docType + doc.documentElement.outerHTML;
+    this.onVisualDocChange(serialized);
+  }
+
   private attachIframeEvents(doc: Document) {
     if (!doc.body) return;
 
     // Apply current visual edit mode
     doc.body.contentEditable = this.visualEditMode ? "true" : "false";
 
-    // Track selection changes for breadcrumbs
+    // Track selection changes and active elements
+    const handleElementSelection = (el: HTMLElement) => {
+      this.activeElement = el;
+      const path = this.computeDomPath(el);
+      this.onSelectElement(path);
+
+      if (this.onActiveElementChange) {
+        const win = this.iframe.contentWindow;
+        const computed = win ? win.getComputedStyle(el) : null;
+        this.onActiveElementChange({
+          tagName: el.tagName.toLowerCase(),
+          id: el.id,
+          className: el.className,
+          domPath: path,
+          styles: {
+            padding: computed?.padding || el.style.padding || '',
+            margin: computed?.margin || el.style.margin || '',
+            borderRadius: computed?.borderRadius || el.style.borderRadius || '',
+            fontSize: computed?.fontSize || el.style.fontSize || '',
+            letterSpacing: computed?.letterSpacing || el.style.letterSpacing || '',
+            color: computed?.color || el.style.color || '',
+            backgroundColor: computed?.backgroundColor || el.style.backgroundColor || '',
+            opacity: computed?.opacity || el.style.opacity || '1'
+          }
+        });
+      }
+    };
+
     doc.addEventListener('selectionchange', () => {
       const win = this.iframe.contentWindow;
       const sel = win?.getSelection();
@@ -80,9 +211,15 @@ export class PreviewPane {
           ? sel.anchorNode.parentElement
           : (sel.anchorNode as HTMLElement);
         if (el) {
-          const path = this.computeDomPath(el);
-          this.onSelectElement(path);
+          handleElementSelection(el);
         }
+      }
+    });
+
+    doc.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName) {
+        handleElementSelection(target);
       }
     });
 
@@ -90,7 +227,6 @@ export class PreviewPane {
     doc.addEventListener('mousemove', (e) => {
       const target = e.target as HTMLElement;
       if (target && target.tagName) {
-        // Only update if no active text selection
         const sel = this.iframe.contentWindow?.getSelection();
         if (!sel || sel.isCollapsed) {
           this.onSelectElement(this.computeDomPath(target));
@@ -98,12 +234,50 @@ export class PreviewPane {
       }
     });
 
+    // Drag and drop image support
+    doc.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    doc.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          try {
+            const dataUrl = await fileToDataUrl(file);
+            const target = e.target as HTMLElement;
+            if (target && target.tagName.toUpperCase() === 'IMG') {
+              (target as HTMLImageElement).src = dataUrl;
+            } else {
+              const img = doc.createElement('img');
+              img.src = dataUrl;
+              img.alt = file.name;
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              if (target && target !== doc.body) {
+                target.appendChild(img);
+              } else {
+                doc.body.appendChild(img);
+              }
+            }
+            this.notifyDocChange();
+            if (this.onImageDropped) {
+              this.onImageDropped(dataUrl, file.name);
+            }
+          } catch (err) {
+            console.error('Failed to embed dropped image:', err);
+          }
+        }
+      }
+    });
+
     // Listen to direct text typing / mutations inside the iframe
     doc.body.addEventListener('input', () => {
-      if (this.isWritingToIframe) return;
-      const docType = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>\n` : '<!DOCTYPE html>\n';
-      const serialized = docType + doc.documentElement.outerHTML;
-      this.onVisualDocChange(serialized);
+      this.notifyDocChange();
     });
   }
 
