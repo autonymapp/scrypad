@@ -3,9 +3,9 @@
 > **Sci-Fantasy Tools for Everyday Adventurers**  
 > An indie web tool by [Interstatus Lab](https://lab.interstatus.app).
 
-ScryPad is a distraction-free, ultra-snappy live WYSIWYG & HTML code editor built for indie hackers, creative writers, and developers who are tired of burning LLM tokens or wrestling with bloated IDEs just to tweak a few lines of copy or change a color.
+ScryPad is a distraction-free, ultra-snappy live WYSIWYG & HTML code editor built for indie hackers, creative writers, and developers who are tired of wrestling with bloated, confusing IDEs just to tweak a few lines of copy or change a color.
 
-Inspired by classic 90s/2000s tools like CoffeeCup HTML Editor, redesigned with a cyberpunk laboratory HUD aesthetic (inspired by the FF7R interface).
+Modern IDEs are great for complex software architectures, but when all you want to do is change text or preview a page layout, they're overwhelming. ScryPad brings back the simplicity of tools like CoffeeCup HTML Editor, redesigned with a cyberpunk laboratory HUD aesthetic inspired by the FF7R interface.
 
 ---
 

@@ -105,10 +105,10 @@ const STARTER_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="hud-card">
-    <div class="hud-badge">✦ Everyday, Made Exciting</div>
-    <h1>Construct Your Future</h1>
-    <p>Click anywhere in this preview to rewrite copy or adjust colors directly. Raw HTML updates in real time with zero token burn.</p>
-    <a href="#" class="cta-btn">Begin Quest</a>
+    <div class="hud-badge">✦ Web Editing, Simplified</div>
+    <h1>No More IDE Headaches</h1>
+    <p>Modern IDEs are great for complex software architectures, but when all you want to do is tweak copy, change a button color, or preview a layout, they can be overwhelming. Click directly on this text to edit it, or write raw code on the left.</p>
+    <a href="#" class="cta-btn">Click & Edit This Button</a>
   </div>
 </body>
 </html>`;
