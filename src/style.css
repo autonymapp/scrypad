@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Interstatus Lab Font Declarations */
+@font-face {
+  font-family: 'Rajdhani';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/assets/fonts/rajdhani-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Rajdhani';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/rajdhani-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/ibm-plex-sans-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fonts/ibm-plex-sans-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2');
+}
+
+:root {
+  /* Interstatus Lab Studio Tokens */
+  --void: #070a10;
+  --panel: #0c1320;
+  --panel-hi: #122036;
+  --line: #203453;
+  --line-hot: #2e4d75;
+  --ink: #e8eef8;
+  --dim: #8d9bb6;
+
+  /* The Lab Accent Pair */
+  --bio-green: #5cff9d;
+  --hud-teal: #48e0d2;
+  --amber: #ffbf4d;
+  --violet: #a98bff;
+
+  /* ScryPad App Accent (Scrying Lens) */
+  --scry-accent: #48e0d2;
+  --scry-glow: rgba(72, 224, 210, 0.25);
+
+  --f-display: 'Rajdhani', "Segoe UI", system-ui, sans-serif;
+  --f-body: 'IBM Plex Sans', "Segoe UI", system-ui, sans-serif;
+  --f-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --cut: 12px;
+}
+
+body {
+  background-color: var(--void);
+  color: var(--ink);
+  font-family: var(--f-body);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Interstatus Lab Cyberpunk HUD Frame with Cut Corners */
+.hud-frame {
+  position: relative;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel-hi) 0%, var(--panel) 100%);
+}
+
+.hud-frame:hover {
+  border-color: var(--line-hot);
+}
+
+/* Slanted HUD Action Buttons */
+.btn-hud {
+  font-family: var(--f-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 13px;
+  padding: 5px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  transition: all 0.15s ease;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.btn-hud-primary {
+  background: linear-gradient(135deg, var(--bio-green), var(--hud-teal));
+  color: #070a10;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-hud-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 14px rgba(92, 255, 157, 0.4);
+}
+
+.btn-hud-ghost {
+  background: rgba(18, 32, 54, 0.6);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.btn-hud-ghost:hover {
+  background: var(--panel-hi);
+  border-color: var(--hud-teal);
+  color: var(--hud-teal);
+}
+
+/* ATB Style Status Gauge */
+.gauge-bar {
+  height: 3px;
+  background: var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.gauge-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--bio-green), var(--hud-teal));
+  width: 100%;
+}
+
+/* CodeMirror Interstatus Theme Overrides */
+.cm-editor {
+  height: 100%;
+  font-family: var(--f-mono) !important;
+  font-size: 13px;
+  background-color: #080d15 !important;
+}
+.cm-gutters {
+  background-color: #06090e !important;
+  border-right: 1px solid var(--line) !important;
+  color: #3e5374 !important;
+}
+.cm-activeLineGutter {
+  background-color: #0e1624 !important;
+  color: var(--hud-teal) !important;
+}
+.cm-activeLine {
+  background-color: rgba(18, 32, 54, 0.35) !important;
+}
+.cm-selectionBackground, ::selection {
+  background: rgba(72, 224, 210, 0.22) !important;
+}
+.cm-cursor {
+  border-left-color: var(--bio-green) !important;
+  border-left-width: 2px !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hud-teal);
+}

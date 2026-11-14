@@ -1,0 +1,17 @@
+{
+  "name": "ScryPad",
+  "short_name": "ScryPad",
+  "description": "Sci-Fantasy WYSIWYG & HTML Code Editor by Interstatus Lab",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070a10",
+  "theme_color": "#070a10",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

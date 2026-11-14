@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Outline Spark star inside a cut-corner HUD frame -->
+  <path d="M3 3h48l10 10v48H13L3 51z" fill="#0c1320" stroke="#5cff9d" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M32 11Q35.36 28.64 53 32Q35.36 35.36 32 53Q28.64 35.36 11 32Q28.64 28.64 32 11Z" fill="none" stroke="#5cff9d" stroke-width="2.4" stroke-linejoin="round"/><path d="M32 24Q33.28 30.72 40 32Q33.28 33.28 32 40Q30.72 33.28 24 32Q30.72 30.72 32 24Z" fill="#48e0d2"/>
+</svg>
