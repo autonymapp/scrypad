@@ -9,6 +9,7 @@ import {
   MousePointerClick, 
   Code, 
   Eye, 
+  AlertTriangle,
   X 
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
@@ -155,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       MousePointerClick,
       Code,
       Eye,
+      AlertTriangle,
       X
     }
   });
@@ -188,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initialValue: STARTER_HTML,
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
+      checkRelativeCss(code);
     }
   });
 
@@ -207,6 +210,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial preview render
   previewPane.render(STARTER_HTML);
+
+  // Relative CSS Link Detection & Embedding
+  const relativeCssBanner = document.getElementById('relative-css-banner');
+  const relativeCssMsg = document.getElementById('relative-css-msg');
+  const btnEmbedCss = document.getElementById('btn-embed-css');
+  const btnDismissCssBanner = document.getElementById('btn-dismiss-css-banner');
+  const cssFileInput = document.getElementById('css-file-input') as HTMLInputElement;
+
+  function checkRelativeCss(code: string) {
+    if (!relativeCssBanner || !relativeCssMsg) return;
+    const regex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
+    const match = code.match(regex);
+    if (match) {
+      const href = match[1];
+      relativeCssMsg.innerHTML = `Local stylesheet link detected: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+      relativeCssBanner.classList.remove('hidden');
+    } else {
+      relativeCssBanner.classList.add('hidden');
+    }
+  }
+
+  btnDismissCssBanner?.addEventListener('click', () => {
+    relativeCssBanner?.classList.add('hidden');
+  });
+
+  btnEmbedCss?.addEventListener('click', () => {
+    cssFileInput?.click();
+  });
+
+  cssFileInput?.addEventListener('change', async () => {
+    const file = cssFileInput.files?.[0];
+    if (!file) return;
+    const cssText = await file.text();
+    let currentCode = codePane.getValue();
+    const regex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
+    if (currentCode.match(regex)) {
+      currentCode = currentCode.replace(regex, `<style>\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>`);
+    } else {
+      currentCode = `<style>\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>\n${currentCode}`;
+    }
+    codePane.setValue(currentCode);
+    previewPane.render(currentCode);
+    coordinator.updateStats();
+    fileManager.markDirty(true);
+    checkRelativeCss(currentCode);
+  });
 
   // File Manager UI Subscription
   fileManager.subscribe((state: FileState) => {
@@ -239,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       codePane.setValue(content);
       previewPane.render(content);
       coordinator.updateStats();
+      checkRelativeCss(content);
     }
   });
 
@@ -253,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     codePane.setValue(STARTER_HTML);
     previewPane.render(STARTER_HTML);
     coordinator.updateStats();
+    checkRelativeCss(STARTER_HTML);
   });
 
   // Keyboard shortcut Ctrl+S / Cmd+S

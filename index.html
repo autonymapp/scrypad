@@ -118,6 +118,23 @@
     </div>
   </div>
 
+  <!-- Relative CSS Helper Banner (Auto-detects broken local stylesheet links) -->
+  <div id="relative-css-banner" class="hidden h-8 bg-[#122036] border-b border-[#ffbf4d]/40 px-4 flex items-center justify-between text-xs font-['IBM_Plex_Mono'] text-[#ffbf4d] shrink-0 z-10">
+    <div class="flex items-center gap-2 truncate">
+      <i data-lucide="alert-triangle" class="w-3.5 h-3.5 shrink-0 text-[#ffbf4d]"></i>
+      <span id="relative-css-msg" class="truncate">Unresolved local stylesheet link. Click to embed the CSS file directly into the HTML!</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="btn-embed-css" class="btn-hud btn-hud-primary text-[11px] py-0.5 px-2.5">
+        <span>Embed Local CSS</span>
+      </button>
+      <button id="btn-dismiss-css-banner" class="text-[#8d9bb6] hover:text-white p-0.5" title="Dismiss">✕</button>
+    </div>
+  </div>
+
+  <!-- Hidden CSS file picker input -->
+  <input type="file" id="css-file-input" accept=".css" class="hidden" />
+
   <!-- Main Work Area -->
   <main id="workspace" class="flex-1 flex overflow-hidden relative">
     
