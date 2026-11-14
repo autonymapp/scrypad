@@ -48,7 +48,7 @@ const STARTER_HTML = `<!DOCTYPE html>
     body {
       margin: 0;
       padding: 44px 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: radial-gradient(circle at 50% 20%, #122036 0%, #070a10 70%);
       color: var(--ink);
       min-height: 100vh;
@@ -296,8 +296,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset helper buttons
     btnHelperActionCss.classList.add('hidden');
+    btnHelperActionCss.style.display = 'none';
     btnHelperActionImg.classList.add('hidden');
+    btnHelperActionImg.style.display = 'none';
     btnHelperActionFont.classList.add('hidden');
+    btnHelperActionFont.style.display = 'none';
 
     // 1. Check relative stylesheet link
     const cssRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
@@ -306,7 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const href = cssMatch[1];
       smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
       btnHelperActionCss.classList.remove('hidden');
+      btnHelperActionCss.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
+      smartHelperBanner.style.display = 'flex';
       return;
     }
 
@@ -316,7 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
       currentPendingTargetImgSrc = unembeddedImages[0].src;
       smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
       btnHelperActionImg.classList.remove('hidden');
+      btnHelperActionImg.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
+      smartHelperBanner.style.display = 'flex';
       return;
     }
 
@@ -326,16 +333,20 @@ document.addEventListener('DOMContentLoaded', () => {
       currentPendingFont = unlinkedFonts[0];
       smartHelperMsg.innerHTML = `Google Font <strong class="text-white">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
       btnHelperActionFont.classList.remove('hidden');
+      btnHelperActionFont.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
+      smartHelperBanner.style.display = 'flex';
       return;
     }
 
     // All good
     smartHelperBanner.classList.add('hidden');
+    smartHelperBanner.style.display = 'none';
   }
 
   btnDismissHelper.addEventListener('click', () => {
     smartHelperBanner.classList.add('hidden');
+    smartHelperBanner.style.display = 'none';
   });
 
   // Action: Embed Local CSS

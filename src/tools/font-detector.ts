@@ -38,22 +38,32 @@ export function detectUnlinkedFonts(html: string): UnlinkedFont[] {
   // Check if fonts.googleapis.com is already imported or linked
   const hasGoogleFontsLink = /fonts\.googleapis\.com/i.test(html);
 
-  for (const [fontName, query] of Object.entries(POPULAR_GOOGLE_FONTS)) {
-    // Check if font name is mentioned in font-family or font property
-    // Matches e.g. font-family: 'Rajdhani', sans-serif; or font-family: "IBM Plex Sans"
-    const escaped = fontName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-    const fontUsageRegex = new RegExp(`['"]?${escaped}['"]?`, 'i');
-    
-    // Ensure it's in a CSS style block or inline style, not just random body text
-    const styleBlockMatches = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
-    const inlineStyleMatches = html.match(/style=["'][^"']*["']/gi) || [];
-    const allCss = [...styleBlockMatches, ...inlineStyleMatches].join('\n');
+  // Extract CSS from style tags and inline styles
+  const styleBlockMatches = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
+  const inlineStyleMatches = html.match(/style=["'][^"']*["']/gi) || [];
+  const allCss = [...styleBlockMatches, ...inlineStyleMatches].join('\n');
 
-    if (fontUsageRegex.test(allCss)) {
-      // Check if this specific font query is already linked
-      const fontSpecificRegex = new RegExp(`family=${query.split(':')[0]}`, 'i');
-      if (!hasGoogleFontsLink || !fontSpecificRegex.test(html)) {
-        unlinked.push({ fontName, query });
+  // Extract all font-family declarations
+  const fontDeclarations = allCss.match(/font-family\s*:\s*([^;}{"'>]+)/gi) || [];
+
+  for (const [fontName, query] of Object.entries(POPULAR_GOOGLE_FONTS)) {
+    for (const decl of fontDeclarations) {
+      // Ignore Roboto when used merely as an OS fallback in standard system stacks
+      if (fontName === 'Roboto' && /(-apple-system|BlinkMacSystemFont|system-ui)/i.test(decl)) {
+        continue;
+      }
+
+      // Match fontName surrounded by quotes, commas, or start/end
+      const escaped = fontName.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      const fontMatch = new RegExp(`(^|[,\\s"'])${escaped}([,\\s"']|$)`, 'i');
+
+      if (fontMatch.test(decl)) {
+        const fontSpecificRegex = new RegExp(`family=${query.split(':')[0]}`, 'i');
+        if (!hasGoogleFontsLink || !fontSpecificRegex.test(html)) {
+          if (!unlinked.some(u => u.fontName === fontName)) {
+            unlinked.push({ fontName, query });
+          }
+        }
       }
     }
   }

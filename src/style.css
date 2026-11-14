@@ -194,3 +194,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--hud-teal);
 }
+
+/* Specificity override: Ensure hidden elements always stay hidden */
+.hidden {
+  display: none !important;
+}
