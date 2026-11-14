@@ -4,7 +4,7 @@ import {
   FolderOpen, 
   Save, 
   FileCode, 
-  Box, 
+  BookCopy, 
   Sparkles, 
   MousePointerClick, 
   Code, 
@@ -17,18 +17,17 @@ import { FileManager, FileState } from './files/file-manager.ts';
 import { SyncCoordinator } from './sync/sync-coordinator.ts';
 import { CDN_LIBRARIES, injectSnippetIntoHtml } from './libraries/cdn-catalog.ts';
 
-// Initial Starter HTML (Interstatus Lab Theme Starter)
+// Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScryPad ✦ Landing Page</title>
+  <title>ScryPad ✦ Live HTML Editor</title>
   <style>
     :root {
       --void: #070a10;
       --panel: #0c1320;
-      --panel-hi: #122036;
       --line: #203453;
       --ink: #e8eef8;
       --dim: #8d9bb6;
@@ -37,7 +36,7 @@ const STARTER_HTML = `<!DOCTYPE html>
     }
     body {
       margin: 0;
-      padding: 48px 20px;
+      padding: 44px 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: radial-gradient(circle at 50% 20%, #122036 0%, #070a10 70%);
       color: var(--ink);
@@ -48,12 +47,12 @@ const STARTER_HTML = `<!DOCTYPE html>
       box-sizing: border-box;
     }
     .hud-card {
-      max-width: 520px;
+      max-width: 540px;
       width: 100%;
-      background: linear-gradient(180deg, rgba(18, 32, 54, 0.8) 0%, rgba(12, 19, 32, 0.95) 100%);
+      background: linear-gradient(180deg, rgba(18, 32, 54, 0.85) 0%, rgba(12, 19, 32, 0.95) 100%);
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 36px 32px;
+      padding: 34px 30px;
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 20px rgba(72, 224, 210, 0.1);
       text-align: center;
       position: relative;
@@ -71,11 +70,11 @@ const STARTER_HTML = `<!DOCTYPE html>
       border: 1px solid rgba(92, 255, 157, 0.35);
       padding: 4px 12px;
       border-radius: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     h1 {
       font-size: 2.1rem;
-      margin: 0 0 14px 0;
+      margin: 0 0 12px 0;
       color: #ffffff;
       letter-spacing: -0.02em;
     }
@@ -83,7 +82,27 @@ const STARTER_HTML = `<!DOCTYPE html>
       color: var(--dim);
       font-size: 1.02rem;
       line-height: 1.6;
-      margin: 0 0 28px 0;
+      margin: 0 0 22px 0;
+    }
+    .features-list {
+      text-align: left;
+      background: rgba(7, 10, 16, 0.6);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+      color: var(--dim);
+    }
+    .features-list li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .features-list li:last-child {
+      margin-bottom: 0;
+    }
+    .features-list strong {
+      color: var(--hud-teal);
     }
     .cta-btn {
       display: inline-block;
@@ -105,10 +124,19 @@ const STARTER_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="hud-card">
-    <div class="hud-badge">✦ Web Editing, Simplified</div>
-    <h1>No More IDE Headaches</h1>
-    <p>Modern IDEs are great for complex software architectures, but when all you want to do is tweak copy, change a button color, or preview a layout, they can be overwhelming. Click directly on this text to edit it, or write raw code on the left.</p>
-    <a href="#" class="cta-btn">Click & Edit This Button</a>
+    <div class="hud-badge">✦ Welcome to ScryPad</div>
+    <h1>Web Editing, Simplified</h1>
+    <p>You're viewing this live document inside ScryPad right now. Click on any text to edit it, or write raw code on the left without IDE clutter.</p>
+    
+    <div class="features-list">
+      <ul style="margin: 0; padding-left: 18px;">
+        <li><strong>Click &amp; Tweak Text:</strong> Click anywhere on this page and start typing to update the copy.</li>
+        <li><strong>Dual-Sync Code:</strong> Changes update the raw HTML on the left instantly, and vice versa.</li>
+        <li><strong>Save Locally:</strong> Press <code>Ctrl + S</code> to save changes straight to your local file.</li>
+      </ul>
+    </div>
+
+    <a href="#" class="cta-btn">Click &amp; Edit This Button Text</a>
   </div>
 </body>
 </html>`;
@@ -122,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       FolderOpen,
       Save,
       FileCode,
-      Box,
+      BookCopy,
       Sparkles,
       MousePointerClick,
       Code,
