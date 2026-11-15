@@ -1244,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagInfo = findTagInfo(tagName);
     if (tagInfo) {
       hintTagName.textContent = `<${tagInfo.tag}>`;
-      hintTagDesc.textContent = tagInfo.analogy;
+      hintTagDesc.textContent = tagInfo.purpose || tagInfo.name;
       inspectorTagHint.classList.remove('hidden');
       inspectorTagHint.style.display = 'flex';
     } else {
@@ -1253,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Tag Grimoire Modal
+  // Tag Guide Modal
   const modalTagGuide = document.getElementById('modal-tag-guide')!;
   const btnTagGuideToggle = document.getElementById('btn-tag-guide-toggle')!;
   const btnCloseTagGuide = document.getElementById('btn-close-tag-guide')!;
@@ -1273,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const matchesSearch = !q || 
         t.tag.toLowerCase().includes(q) || 
         t.name.toLowerCase().includes(q) || 
-        t.analogy.toLowerCase().includes(q) || 
+        t.purpose.toLowerCase().includes(q) || 
         t.description.toLowerCase().includes(q);
       return matchesCategory && matchesSearch;
     });
@@ -1281,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tagGuideCount.textContent = `Showing ${filtered.length} of ${HTML_TAG_DICTIONARY.length} tags`;
 
     if (filtered.length === 0) {
-      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#8d9bb6]">No tags matching "${filterText}". Try searching for layout, portal, button, or container.</div>`;
+      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#8d9bb6]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
       return;
     }
 
@@ -1291,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="flex items-center gap-2">
             <code class="text-sm font-bold text-[#48e0d2] bg-[#122036] px-2 py-0.5 rounded border border-[#203453]">&lt;${t.tag}&gt;</code>
             <span class="text-xs font-semibold text-white">${t.name}</span>
-            <span class="text-[10px] text-[#5cff9d] bg-[#5cff9d]/10 border border-[#5cff9d]/30 px-1.5 py-0.2 rounded">${t.analogy}</span>
+            <span class="text-[10px] text-[#5cff9d] bg-[#5cff9d]/10 border border-[#5cff9d]/30 px-1.5 py-0.2 rounded">${t.purpose}</span>
           </div>
           <button class="btn-hud btn-hud-primary btn-insert-tag text-xs py-0.5 px-2.5" data-tag="${t.tag}">
             <span>+ Insert</span>
