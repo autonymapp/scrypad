@@ -143,39 +143,12 @@
         </div>
       </div>
 
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#122036] text-[#e8eef8] hover:text-[#48e0d2] transition flex items-center gap-1">
-          View <span class="text-[10px] text-[#8d9bb6]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-52 bg-[#0c1320] border border-[#203453] rounded shadow-2xl py-1 z-50">
-          <button id="menu-view-split" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-[#48e0d2] text-[#e8eef8]">
-            <span>🌓 Split Mode (50/50)</span>
-          </button>
-          <button id="menu-view-code" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-[#48e0d2] text-[#e8eef8]">
-            <span>💻 Code Only</span>
-          </button>
-          <button id="menu-view-preview" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-[#48e0d2] text-[#e8eef8]">
-            <span>👁 Preview Only</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Side of Tier 1: UI Shape Switcher & Active Document Badge -->
+    <!-- Right Side of Tier 1: Active Document Badge -->
     <div class="flex items-center gap-3">
       <div id="file-badge" class="flex items-center gap-1.5 px-2.5 py-0.5 bg-[#122036] border border-[#203453] rounded text-xs font-['IBM_Plex_Mono'] text-[#8d9bb6]">
         <i data-lucide="file-code" class="w-3 h-3 text-[#48e0d2]"></i>
         <span id="active-filename" class="text-[#e8eef8]">untitled.html</span>
         <span id="dirty-indicator" class="text-[#ffbf4d] hidden">✦</span>
-      </div>
-
-      <!-- App Button Shape Switcher (Always Visible!) -->
-      <div class="flex items-center gap-1 bg-[#0c1320] border border-[#203453] p-0.5 rounded text-[11px] font-['IBM_Plex_Mono']">
-        <span class="text-[#8d9bb6] px-1 text-[10px] uppercase">UI Shape:</span>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]" data-shape="slanted" title="Slanted Cyber cut">Slant</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="notched" title="Notched chamfered corners">Notch</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="rounded" title="Rounded smooth corners">Round</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="sharp" title="Sharp brutalist rectangle">Sharp</button>
       </div>
     </div>
   </header>
@@ -221,13 +194,6 @@
       </button>
       <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden" />
     </div>
-
-    <!-- Right Side: View Mode Pills -->
-    <div class="flex items-center bg-[#070a10] border border-[#203453] p-0.5 rounded shrink-0">
-      <button id="mode-split" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]">Split</button>
-      <button id="mode-code" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]">Code</button>
-      <button id="mode-preview" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]">Preview</button>
-    </div>
   </div>
 
   <!-- Find & Replace HUD Bar (Drop-down bar) -->
@@ -257,7 +223,7 @@
     <button id="btn-close-find" class="px-2.5 py-1 rounded bg-[#122036]/50 hover:bg-[#122036] text-[#8d9bb6] hover:text-white border border-[#203453] text-xs font-['Rajdhani'] font-bold shrink-0 ml-2" title="Close Search (Escape)">✕ Close</button>
   </div>
 
-  <!-- Sub-Toolbar (Visual Tweaker Controls, Sliders Drawer, Guides, Button Shape & Theme Simulator) -->
+  <!-- Sub-Toolbar (Visual Tweaker Controls, Sliders Drawer, Guides, Theme Simulator & View Modes) -->
   <div class="h-10 bg-[#0c1320]/90 border-b border-[#203453] px-3 sm:px-4 flex items-center justify-between text-xs shrink-0 z-20 gap-2">
     <div class="flex items-center gap-2.5">
       <!-- Visual Edit Toggle -->
@@ -269,22 +235,22 @@
         </span>
       </label>
 
-      <!-- Quick Tweak Actions -->
+      <!-- Quick Tweak Actions (Matched to Click & Tweak button styling) -->
       <div class="flex items-center gap-1.5 pl-2 border-l border-[#203453]">
-        <button id="btn-bold" class="px-2 py-0.5 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-[#e8eef8] font-bold" title="Toggle Bold">B</button>
-        <button id="btn-italic" class="px-2 py-0.5 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-[#e8eef8] italic font-serif" title="Toggle Italic">I</button>
+        <button id="btn-bold" class="px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded text-[#e8eef8] font-bold text-xs transition min-w-[28px] text-center" title="Toggle Bold (Ctrl+B)">B</button>
+        <button id="btn-italic" class="px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded text-[#e8eef8] italic font-serif text-xs transition min-w-[28px] text-center" title="Toggle Italic (Ctrl+I)">I</button>
         
-        <label class="flex items-center gap-1.5 px-2 py-0.5 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded cursor-pointer" title="Selection Color">
-          <span class="text-[11px] text-[#8d9bb6]">Color</span>
-          <input type="color" id="quick-color" value="#48e0d2" class="w-4 h-4 rounded cursor-pointer bg-transparent border-0 p-0">
+        <label class="flex items-center gap-1.5 px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded cursor-pointer transition text-xs font-medium" title="Selection Color">
+          <i data-lucide="palette" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <span class="text-[#e8eef8]">Color</span>
+          <input type="color" id="quick-color" value="#48e0d2" class="w-3.5 h-3.5 rounded cursor-pointer bg-transparent border-0 p-0">
         </label>
-      </div>
 
-      <!-- Style Drawer Toggle -->
-      <button id="btn-toggle-styles" class="btn-hud btn-hud-ghost text-xs py-1 px-2.5 flex items-center gap-1.5" title="Open CSS Quick-Sliders for the selected element">
-        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-        <span class="hidden sm:inline">Style Drawer</span>
-      </button>
+        <button id="btn-toggle-styles" class="flex items-center gap-1.5 px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded text-[#e8eef8] transition text-xs font-medium" title="Open CSS Quick-Sliders for the selected element">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <span class="hidden sm:inline">Style Drawer</span>
+        </button>
+      </div>
 
       <!-- Live Tag Inspector Hint Pill (Learner Guide) -->
       <div id="inspector-tag-hint" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#122036] border border-[#48e0d2]/40 hover:border-[#48e0d2] rounded text-[11px] font-['IBM_Plex_Mono'] cursor-pointer transition" title="Click to view full entry in Grimoire of Tags">
@@ -294,28 +260,26 @@
       </div>
     </div>
 
-    <!-- Right: Guides Toggle, Button Shape Switcher, Theme Sim, Viewports -->
+    <!-- Right: View Mode Switcher, Guides Toggle, Theme Simulator & Viewports -->
     <div class="flex items-center gap-2.5">
-      <!-- Guides Toggle -->
-      <button id="btn-toggle-guides" class="px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Toggle Educational Tag Guides & Learning Tips">
-        <i data-lucide="sparkle" class="w-3.5 h-3.5 text-[#ffbf4d]"></i>
-        <span id="label-guides" class="font-['IBM_Plex_Mono'] text-[11px] text-[#e8eef8]">Guides: ON</span>
-      </button>
-
-      <!-- Button Shape Switcher -->
-      <div class="hidden lg:flex items-center gap-0.5 bg-[#070a10] border border-[#203453] p-0.5 rounded text-[11px] font-['IBM_Plex_Mono']">
-        <span class="text-[#8d9bb6] px-1 text-[10px] uppercase tracking-wider">Shape:</span>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]" data-shape="slanted" title="Slanted Cyberpunk polygon cut">Slant</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="notched" title="Notched chamfered sci-fi corners">Notch</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="rounded" title="Smooth rounded corners">Round</button>
-        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="sharp" title="Sharp rectangular cut">Sharp</button>
+      <!-- View Mode Switcher (Split | Code | Preview) - moved to same line as Guides & Theme -->
+      <div class="flex items-center bg-[#070a10] border border-[#203453] p-0.5 rounded shrink-0">
+        <button id="mode-split" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]">Split</button>
+        <button id="mode-code" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]">Code</button>
+        <button id="mode-preview" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]">Preview</button>
       </div>
 
       <div class="h-4 w-px bg-[#203453] hidden sm:block"></div>
 
+      <!-- Guides Toggle -->
+      <button id="btn-toggle-guides" class="px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Toggle Educational Tag Guides & Learning Tips">
+        <i data-lucide="sparkle" class="w-3.5 h-3.5 text-[#ffbf4d]"></i>
+        <span id="label-guides" class="font-['IBM_Plex_Mono'] text-[11px] text-[#e8eef8]">Guides: ON</span>
+      </button>
+
       <!-- Theme Simulator -->
       <div class="flex items-center gap-1.5">
-        <button id="btn-theme-sim" class="px-2.5 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Cycle Theme: Auto -> Dark -> Light">
+        <button id="btn-theme-sim" class="px-2.5 py-1 bg-[#122036] hover:bg-[#162742] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Cycle Theme: Auto -> Dark -> Light">
           <i data-lucide="moon" class="w-3.5 h-3.5 text-[#a98bff]" id="theme-sim-icon"></i>
           <span id="theme-sim-label" class="font-['IBM_Plex_Mono'] text-[11px] text-[#e8eef8]">Theme: Auto</span>
         </button>
