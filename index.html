@@ -39,10 +39,15 @@
           <i data-lucide="folder-open" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
           <span>Open</span>
         </button>
+        <button id="btn-open-folder" class="btn-hud btn-hud-ghost" title="Open Project Folder (e.g. Wisp/src)">
+          <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
+          <span>Folder</span>
+        </button>
         <button id="btn-save" class="btn-hud btn-hud-primary" title="Save HTML (Ctrl+S)">
           <i data-lucide="save" class="w-3.5 h-3.5"></i>
           <span id="save-label">Save HTML</span>
         </button>
+        <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden" />
       </div>
 
       <!-- Active File Badge -->
@@ -169,6 +174,20 @@
   <!-- Main Work Area -->
   <main id="workspace" class="flex-1 flex overflow-hidden relative">
     
+    <!-- Project Folder Drawer (Collapsible) -->
+    <aside id="project-drawer" class="hidden w-52 bg-[#090f19] border-r border-[#203453] flex flex-col shrink-0 z-20 transition-all select-none">
+      <div class="h-6 px-3 bg-[#0c1320] border-b border-[#203453] flex items-center justify-between text-[11px] font-['IBM_Plex_Mono']">
+        <span class="flex items-center gap-1.5 text-[#5cff9d] truncate">
+          <i data-lucide="folder-tree" class="w-3 h-3"></i>
+          <span id="project-folder-name" class="truncate font-bold">Project</span>
+        </span>
+        <button id="btn-close-project" class="text-[#8d9bb6] hover:text-white p-0.5" title="Close Project Drawer">✕</button>
+      </div>
+      <div id="project-file-list" class="flex-1 overflow-y-auto p-2 space-y-1 text-xs font-['IBM_Plex_Mono']">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+
     <!-- Left: Code Editor Pane -->
     <div id="code-pane-container" class="w-1/2 flex flex-col bg-[#080d15] relative">
       <div class="h-6 bg-[#0c1320] border-b border-[#203453] px-3 flex items-center justify-between text-[11px] font-['IBM_Plex_Mono'] text-[#8d9bb6] shrink-0">

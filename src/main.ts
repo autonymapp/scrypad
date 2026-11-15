@@ -16,7 +16,8 @@ import {
   Moon,
   SlidersHorizontal,
   ClipboardCopy,
-  Check
+  Check,
+  FolderTree
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -174,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
       Moon,
       SlidersHorizontal,
       ClipboardCopy,
-      Check
+      Check,
+      FolderTree
     }
   });
 
@@ -421,6 +423,83 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Project Folder Handling
+  const projectDrawer = document.getElementById('project-drawer')!;
+  const projectFolderName = document.getElementById('project-folder-name')!;
+  const projectFileList = document.getElementById('project-file-list')!;
+  const btnOpenFolder = document.getElementById('btn-open-folder')!;
+  const btnCloseProject = document.getElementById('btn-close-project')!;
+  const folderInput = document.getElementById('folder-input') as HTMLInputElement;
+
+  function renderProjectFiles(project: any) {
+    const files = project.getFilesList();
+    if (files.length === 0) {
+      projectFileList.innerHTML = `<div class="p-2 text-center text-[#8d9bb6]">No supported files found.</div>`;
+      return;
+    }
+
+    projectFileList.innerHTML = files.map((f: any) => {
+      const badgeColor = f.kind === 'html' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+        : f.kind === 'css' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
+        : f.kind === 'js' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
+        : 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30';
+
+      const isActive = fileManager.getFilename() === f.name;
+
+      return `
+        <button class="project-file-item w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isActive ? 'bg-[#122036] border border-[#48e0d2]/40 text-white' : 'text-[#8d9bb6]'}" data-path="${f.path}">
+          <span class="truncate flex-1 font-['IBM_Plex_Mono'] text-xs">${f.path}</span>
+          <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1.5 shrink-0 ${badgeColor}">${f.kind}</span>
+        </button>
+      `;
+    }).join('');
+
+    projectFileList.querySelectorAll('.project-file-item').forEach((item) => {
+      item.addEventListener('click', async (e) => {
+        const path = (e.currentTarget as HTMLElement).getAttribute('data-path');
+        if (!path) return;
+        const content = await fileManager.openProjectFile(path);
+        if (content !== null) {
+          codePane.setValue(content);
+          const resolved = await fileManager.resolvePreview(content);
+          previewPane.render(resolved);
+          coordinator.updateStats();
+          checkDocumentIntegrity(content);
+          renderProjectFiles(project);
+          showToast(`✦ Opened ${path}`);
+        }
+      });
+    });
+  }
+
+  fileManager.subscribeProject((project) => {
+    if (!project) {
+      projectDrawer.classList.add('hidden');
+      return;
+    }
+    projectDrawer.classList.remove('hidden');
+    projectFolderName.textContent = project.name;
+    renderProjectFiles(project);
+    showToast(`✦ Opened project folder: ${project.name}`);
+  });
+
+  btnOpenFolder?.addEventListener('click', async () => {
+    const project = await fileManager.openDirectory();
+    if (!project) {
+      folderInput?.click();
+    }
+  });
+
+  folderInput?.addEventListener('change', () => {
+    if (folderInput.files && folderInput.files.length > 0) {
+      fileManager.setProjectFromFiles(folderInput.files);
+    }
+  });
+
+  btnCloseProject?.addEventListener('click', () => {
+    projectDrawer.classList.toggle('hidden');
+  });
+
   // Save File Button
   document.getElementById('btn-save')?.addEventListener('click', async () => {
     const success = await fileManager.saveFile(codePane.getValue());
@@ -439,7 +518,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = await fileManager.openFile();
     if (content !== null) {
       codePane.setValue(content);
-      previewPane.render(content);
+      const resolved = await fileManager.resolvePreview(content);
+      previewPane.render(resolved);
       coordinator.updateStats();
       checkDocumentIntegrity(content);
       showToast('✦ File loaded into ScryPad');
