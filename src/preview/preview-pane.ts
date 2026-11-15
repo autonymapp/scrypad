@@ -9,6 +9,7 @@ export interface ActiveElementStyles {
   color: string;
   backgroundColor: string;
   opacity: string;
+  clipPath?: string;
 }
 
 export interface ActiveElementInfo {
@@ -197,7 +198,8 @@ export class PreviewPane {
             letterSpacing: computed?.letterSpacing || el.style.letterSpacing || '',
             color: computed?.color || el.style.color || '',
             backgroundColor: computed?.backgroundColor || el.style.backgroundColor || '',
-            opacity: computed?.opacity || el.style.opacity || '1'
+            opacity: computed?.opacity || el.style.opacity || '1',
+            clipPath: el.style.clipPath || computed?.clipPath || ''
           }
         });
       }

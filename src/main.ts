@@ -712,6 +712,25 @@ document.addEventListener('DOMContentLoaded', () => {
       pickerBgColor.value = hex;
       valBgColor.textContent = hex;
     }
+
+    // Element Shape Detection
+    const valShapeName = document.getElementById('val-shape-name');
+    if (valShapeName) {
+      const cp = info.styles.clipPath || '';
+      if (cp.includes('calc(100% - 8px)')) {
+        valShapeName.textContent = 'Slanted';
+        currentElementShape = 'slanted';
+      } else if (cp.includes('calc(100% - 6px)')) {
+        valShapeName.textContent = 'Notched';
+        currentElementShape = 'notched';
+      } else if (radiusNum > 0) {
+        valShapeName.textContent = 'Round';
+        currentElementShape = 'round';
+      } else {
+        valShapeName.textContent = 'Sharp';
+        currentElementShape = 'sharp';
+      }
+    }
   }
 
   // Wire Style Drawer Slider Inputs
@@ -754,6 +773,84 @@ document.addEventListener('DOMContentLoaded', () => {
   pickerBgColor.addEventListener('input', () => {
     valBgColor.textContent = pickerBgColor.value;
     previewPane.updateActiveElementStyle('backgroundColor', pickerBgColor.value);
+  });
+
+  // Element Shape Controls (Style Drawer)
+  const valShapeName = document.getElementById('val-shape-name');
+  const btnShapeElDefault = document.getElementById('btn-shape-el-default');
+  const btnShapeElSlant = document.getElementById('btn-shape-el-slant');
+  const btnShapeElNotch = document.getElementById('btn-shape-el-notch');
+  const btnShapeElSharp = document.getElementById('btn-shape-el-sharp');
+  const btnCopyShapeCss = document.getElementById('btn-copy-shape-css');
+
+  const SHAPE_STYLES = {
+    round: {
+      name: 'Round',
+      clipPath: 'none',
+      borderRadius: '8px',
+      css: 'border-radius: 8px;\nclip-path: none;'
+    },
+    slanted: {
+      name: 'Slanted',
+      clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+      borderRadius: '0px',
+      css: 'clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));\nborder-radius: 0px;'
+    },
+    notched: {
+      name: 'Notched',
+      clipPath: 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)',
+      borderRadius: '0px',
+      css: 'clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);\nborder-radius: 0px;'
+    },
+    sharp: {
+      name: 'Sharp',
+      clipPath: 'none',
+      borderRadius: '0px',
+      css: 'border-radius: 0px;\nclip-path: none;'
+    }
+  };
+
+  let currentElementShape = 'round';
+
+  function setElementShape(shapeKey: 'round' | 'slanted' | 'notched' | 'sharp') {
+    const s = SHAPE_STYLES[shapeKey];
+    currentElementShape = shapeKey;
+    if (valShapeName) valShapeName.textContent = s.name;
+    previewPane.updateActiveElementStyle('clipPath', s.clipPath);
+    previewPane.updateActiveElementStyle('borderRadius', s.borderRadius);
+    if (s.borderRadius !== '0px') {
+      sliderRadius.value = '8';
+      valRadius.textContent = '8px';
+    } else {
+      sliderRadius.value = '0';
+      valRadius.textContent = '0px';
+    }
+    showToast(`✦ Applied ${s.name} shape to element`);
+  }
+
+  btnShapeElDefault?.addEventListener('click', () => setElementShape('round'));
+  btnShapeElSlant?.addEventListener('click', () => setElementShape('slanted'));
+  btnShapeElNotch?.addEventListener('click', () => setElementShape('notched'));
+  btnShapeElSharp?.addEventListener('click', () => setElementShape('sharp'));
+
+  btnCopyShapeCss?.addEventListener('click', async () => {
+    const el = previewPane.getActiveElement();
+    const s = SHAPE_STYLES[currentElementShape as keyof typeof SHAPE_STYLES] || SHAPE_STYLES.slanted;
+    let snippet = `/* Button / Card Shape CSS (${s.name}) */\n`;
+    snippet += `${s.css}\n`;
+    if (el) {
+      if (el.style.backgroundColor) snippet += `background-color: ${el.style.backgroundColor};\n`;
+      if (el.style.color) snippet += `color: ${el.style.color};\n`;
+      if (el.style.padding) snippet += `padding: ${el.style.padding};\n`;
+    } else {
+      snippet += `padding: 10px 20px;\nbackground: #48e0d2;\ncolor: #070a10;\nfont-weight: 700;\ncursor: pointer;\n`;
+    }
+    try {
+      await navigator.clipboard.writeText(snippet);
+      showToast('✦ Copied shape CSS to clipboard! Ready to paste into Wisp/CSS.');
+    } catch {
+      window.prompt('Copy Button CSS:', snippet);
+    }
   });
 
   // Feature: Global Palette Swatches & Replace Modal
@@ -968,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // CDN Library Injector Modal
   const modalLibrary = document.getElementById('modal-library')!;
   const libraryList = document.getElementById('library-list')!;
-  const btnLibraryToggle = document.getElementById('btn-library-toggle')!;
+  const btnLibraryToggle = document.getElementById('btn-library-toggle');
   const btnCloseModal = document.getElementById('btn-close-modal')!;
   const btnModalDone = document.getElementById('btn-modal-done')!;
 
@@ -1015,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  btnLibraryToggle.addEventListener('click', () => {
+  btnLibraryToggle?.addEventListener('click', () => {
     modalLibrary.classList.remove('hidden');
   });
   btnCloseModal.addEventListener('click', () => {
@@ -1026,6 +1123,159 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   modalLibrary.addEventListener('click', (e) => {
     if (e.target === modalLibrary) modalLibrary.classList.add('hidden');
+  });
+
+  // --- Desktop Menu Bar Dropdowns & Actions ---
+  const menuGroups = document.querySelectorAll('.menu-group');
+  let activeOpenMenu: HTMLElement | null = null;
+
+  function closeAllMenus() {
+    document.querySelectorAll('.menu-dropdown').forEach((d) => d.classList.add('hidden'));
+    activeOpenMenu = null;
+  }
+
+  menuGroups.forEach((group) => {
+    const btn = group.querySelector('.menu-btn') as HTMLElement;
+    const dropdown = group.querySelector('.menu-dropdown') as HTMLElement;
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdown.classList.contains('hidden');
+      closeAllMenus();
+      if (isHidden) {
+        dropdown.classList.remove('hidden');
+        activeOpenMenu = group as HTMLElement;
+      }
+    });
+
+    btn.addEventListener('mouseenter', () => {
+      if (activeOpenMenu && activeOpenMenu !== group) {
+        closeAllMenus();
+        dropdown.classList.remove('hidden');
+        activeOpenMenu = group as HTMLElement;
+      }
+    });
+  });
+
+  window.addEventListener('click', () => {
+    closeAllMenus();
+  });
+
+  // File Menu
+  document.getElementById('menu-file-new')?.addEventListener('click', () => {
+    closeAllMenus();
+    document.getElementById('btn-new')?.click();
+  });
+  document.getElementById('menu-file-open')?.addEventListener('click', () => {
+    closeAllMenus();
+    document.getElementById('btn-open')?.click();
+  });
+  document.getElementById('menu-file-folder')?.addEventListener('click', () => {
+    closeAllMenus();
+    btnOpenFolder?.click();
+  });
+  document.getElementById('menu-file-save')?.addEventListener('click', () => {
+    closeAllMenus();
+    document.getElementById('btn-save')?.click();
+  });
+
+  // Edit Menu
+  document.getElementById('menu-edit-undo')?.addEventListener('click', () => {
+    closeAllMenus();
+    codePane.undo();
+    codePane.focus();
+  });
+  document.getElementById('menu-edit-redo')?.addEventListener('click', () => {
+    closeAllMenus();
+    codePane.redo();
+    codePane.focus();
+  });
+  document.getElementById('menu-edit-find')?.addEventListener('click', () => {
+    closeAllMenus();
+    openFindBar(false);
+  });
+  document.getElementById('menu-edit-clean')?.addEventListener('click', () => {
+    closeAllMenus();
+    document.getElementById('btn-beautify')?.click();
+  });
+
+  // Insert Menu
+  document.getElementById('menu-insert-btn-slant')?.addEventListener('click', () => {
+    closeAllMenus();
+    const snippet = `<button style="clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); background: #48e0d2; color: #070a10; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Cyber Button</button>`;
+    codePane.insertSnippet(snippet);
+    showToast('✦ Inserted Slanted Cyber Button snippet');
+  });
+  document.getElementById('menu-insert-btn-notch')?.addEventListener('click', () => {
+    closeAllMenus();
+    const snippet = `<button style="clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); background: #5cff9d; color: #070a10; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Notched Button</button>`;
+    codePane.insertSnippet(snippet);
+    showToast('✦ Inserted Notched Button snippet');
+  });
+  document.getElementById('menu-insert-btn-pill')?.addEventListener('click', () => {
+    closeAllMenus();
+    const snippet = `<button style="border-radius: 9999px; background: #ffbf4d; color: #070a10; font-weight: 700; padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;">Pill Button</button>`;
+    codePane.insertSnippet(snippet);
+    showToast('✦ Inserted Pill Button snippet');
+  });
+  document.getElementById('menu-insert-tag-guide')?.addEventListener('click', () => {
+    closeAllMenus();
+    openTagGuide('');
+  });
+
+  // Tools Menu
+  document.getElementById('menu-tools-palette')?.addEventListener('click', () => {
+    closeAllMenus();
+    renderPalette();
+    modalPalette.classList.remove('hidden');
+  });
+  document.getElementById('menu-tools-godot')?.addEventListener('click', () => {
+    closeAllMenus();
+    btnGodotBbcode?.click();
+  });
+  document.getElementById('menu-tools-copy-body')?.addEventListener('click', () => {
+    closeAllMenus();
+    document.getElementById('btn-copy-body')?.click();
+  });
+  document.getElementById('menu-tools-libraries')?.addEventListener('click', () => {
+    closeAllMenus();
+    modalLibrary.classList.remove('hidden');
+  });
+
+  // Presets Menu (Direct Template Loading)
+  document.querySelectorAll('.btn-preset-direct').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      closeAllMenus();
+      const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+      const tpl = AUTONYM_TEMPLATES.find((t: AutonymTemplate) => t.id === id);
+      if (tpl) {
+        if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
+          return;
+        }
+        codePane.setValue(tpl.html);
+        previewPane.render(tpl.html);
+        coordinator.updateStats();
+        fileManager.setFilename(`${tpl.id}.html`);
+        fileManager.markDirty(false);
+        checkDocumentIntegrity(tpl.html);
+        showToast(`✦ Loaded ${tpl.name} template!`);
+      }
+    });
+  });
+
+  // View Menu
+  document.getElementById('menu-view-split')?.addEventListener('click', () => {
+    closeAllMenus();
+    setViewMode('split');
+  });
+  document.getElementById('menu-view-code')?.addEventListener('click', () => {
+    closeAllMenus();
+    setViewMode('code');
+  });
+  document.getElementById('menu-view-preview')?.addEventListener('click', () => {
+    closeAllMenus();
+    setViewMode('preview');
   });
 
   // --- Undo & Redo ---
