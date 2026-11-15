@@ -41,7 +41,7 @@ import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage
 import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
 import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
-import { AUTONYM_TEMPLATES, AutonymTemplate } from './templates/autonym-templates.ts';
+import { WEB_TEMPLATES, WebTemplate } from './templates/web-templates.ts';
 
 // Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
@@ -715,12 +715,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Element Shape Detection
     const valShapeName = document.getElementById('val-shape-name');
+    const sliderCutDepth = document.getElementById('slider-cut-depth') as HTMLInputElement;
+    const valCutDepth = document.getElementById('val-cut-depth');
+    const sliderShapeRadius = document.getElementById('slider-shape-radius') as HTMLInputElement;
+    const valShapeRadius = document.getElementById('val-shape-radius');
+
+    currentShapeRadius = radiusNum;
+    if (sliderShapeRadius) sliderShapeRadius.value = String(radiusNum);
+    if (valShapeRadius) valShapeRadius.textContent = `${radiusNum}px`;
+
+    const cp = info.styles.clipPath || '';
+    const cutMatch = cp.match(/(?:calc\(100%\s*-\s*|polygon\()(\d+)px/i);
+    if (cutMatch) {
+      currentCutDepth = parseInt(cutMatch[1]) || 8;
+    } else {
+      currentCutDepth = (cp && cp !== 'none') ? 8 : 0;
+    }
+    if (sliderCutDepth) sliderCutDepth.value = String(currentCutDepth);
+    if (valCutDepth) valCutDepth.textContent = `${currentCutDepth}px`;
+
     if (valShapeName) {
-      const cp = info.styles.clipPath || '';
-      if (cp.includes('calc(100% - 8px)')) {
+      if (cp.includes('calc(100% -') && cp.includes(', 0 calc(')) {
         valShapeName.textContent = 'Slanted';
         currentElementShape = 'slanted';
-      } else if (cp.includes('calc(100% - 6px)')) {
+      } else if (cp.includes('calc(100% -') && cp.includes(', 0 ')) {
         valShapeName.textContent = 'Notched';
         currentElementShape = 'notched';
       } else if (radiusNum > 0) {
@@ -751,6 +769,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sliderRadius.addEventListener('input', () => {
     valRadius.textContent = `${sliderRadius.value}px`;
+    currentShapeRadius = parseInt(sliderRadius.value) || 0;
+    const sliderShapeRad = document.getElementById('slider-shape-radius') as HTMLInputElement;
+    const valShapeRad = document.getElementById('val-shape-radius');
+    if (sliderShapeRad) sliderShapeRad.value = sliderRadius.value;
+    if (valShapeRad) valShapeRad.textContent = `${sliderRadius.value}px`;
     previewPane.updateActiveElementStyle('borderRadius', `${sliderRadius.value}px`);
   });
 
@@ -782,72 +805,105 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnShapeElNotch = document.getElementById('btn-shape-el-notch');
   const btnShapeElSharp = document.getElementById('btn-shape-el-sharp');
   const btnCopyShapeCss = document.getElementById('btn-copy-shape-css');
+  const sliderCutDepth = document.getElementById('slider-cut-depth') as HTMLInputElement;
+  const valCutDepth = document.getElementById('val-cut-depth');
+  const sliderShapeRadius = document.getElementById('slider-shape-radius') as HTMLInputElement;
+  const valShapeRadius = document.getElementById('val-shape-radius');
 
-  const SHAPE_STYLES = {
-    round: {
-      name: 'Round',
-      clipPath: 'none',
-      borderRadius: '8px',
-      css: 'border-radius: 8px;\nclip-path: none;'
-    },
-    slanted: {
-      name: 'Slanted',
-      clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
-      borderRadius: '0px',
-      css: 'clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));\nborder-radius: 0px;'
-    },
-    notched: {
-      name: 'Notched',
-      clipPath: 'polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px)',
-      borderRadius: '0px',
-      css: 'clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);\nborder-radius: 0px;'
-    },
-    sharp: {
-      name: 'Sharp',
-      clipPath: 'none',
-      borderRadius: '0px',
-      css: 'border-radius: 0px;\nclip-path: none;'
+  let currentElementShape: 'round' | 'slanted' | 'notched' | 'sharp' = 'round';
+  let currentCutDepth = 8;
+  let currentShapeRadius = 8;
+
+  function buildClipPath(shape: string, depth: number): string {
+    if (shape === 'slanted' && depth > 0) {
+      return `polygon(0 0, calc(100% - ${depth}px) 0, 100% ${depth}px, 100% 100%, ${depth}px 100%, 0 calc(100% - ${depth}px))`;
     }
-  };
-
-  let currentElementShape = 'round';
-
-  function setElementShape(shapeKey: 'round' | 'slanted' | 'notched' | 'sharp') {
-    const s = SHAPE_STYLES[shapeKey];
-    currentElementShape = shapeKey;
-    if (valShapeName) valShapeName.textContent = s.name;
-    previewPane.updateActiveElementStyle('clipPath', s.clipPath);
-    previewPane.updateActiveElementStyle('borderRadius', s.borderRadius);
-    if (s.borderRadius !== '0px') {
-      sliderRadius.value = '8';
-      valRadius.textContent = '8px';
-    } else {
-      sliderRadius.value = '0';
-      valRadius.textContent = '0px';
+    if (shape === 'notched' && depth > 0) {
+      return `polygon(${depth}px 0, calc(100% - ${depth}px) 0, 100% ${depth}px, 100% calc(100% - ${depth}px), calc(100% - ${depth}px) 100%, ${depth}px 100%, 0 calc(100% - ${depth}px), 0 ${depth}px)`;
     }
-    showToast(`✦ Applied ${s.name} shape to element`);
+    return 'none';
   }
 
-  btnShapeElDefault?.addEventListener('click', () => setElementShape('round'));
-  btnShapeElSlant?.addEventListener('click', () => setElementShape('slanted'));
-  btnShapeElNotch?.addEventListener('click', () => setElementShape('notched'));
-  btnShapeElSharp?.addEventListener('click', () => setElementShape('sharp'));
+  function applyShapeToElement() {
+    const cp = buildClipPath(currentElementShape, currentCutDepth);
+    const rad = `${currentShapeRadius}px`;
+
+    previewPane.updateActiveElementStyle('clipPath', cp === 'none' ? '' : cp);
+    previewPane.updateActiveElementStyle('borderRadius', rad);
+
+    if (sliderRadius) sliderRadius.value = String(currentShapeRadius);
+    if (valRadius) valRadius.textContent = rad;
+  }
+
+  function setElementShapePreset(shapeKey: 'round' | 'slanted' | 'notched' | 'sharp') {
+    currentElementShape = shapeKey;
+    if (valShapeName) {
+      valShapeName.textContent = shapeKey.charAt(0).toUpperCase() + shapeKey.slice(1);
+    }
+    if (shapeKey === 'slanted') {
+      currentCutDepth = 8;
+      currentShapeRadius = 0;
+    } else if (shapeKey === 'notched') {
+      currentCutDepth = 6;
+      currentShapeRadius = 0;
+    } else if (shapeKey === 'round') {
+      currentCutDepth = 0;
+      currentShapeRadius = 8;
+    } else {
+      currentCutDepth = 0;
+      currentShapeRadius = 0;
+    }
+
+    if (sliderCutDepth) sliderCutDepth.value = String(currentCutDepth);
+    if (valCutDepth) valCutDepth.textContent = `${currentCutDepth}px`;
+    if (sliderShapeRadius) sliderShapeRadius.value = String(currentShapeRadius);
+    if (valShapeRadius) valShapeRadius.textContent = `${currentShapeRadius}px`;
+
+    applyShapeToElement();
+    showToast(`✦ Applied ${shapeKey.toUpperCase()} shape preset`);
+  }
+
+  btnShapeElDefault?.addEventListener('click', () => setElementShapePreset('round'));
+  btnShapeElSlant?.addEventListener('click', () => setElementShapePreset('slanted'));
+  btnShapeElNotch?.addEventListener('click', () => setElementShapePreset('notched'));
+  btnShapeElSharp?.addEventListener('click', () => setElementShapePreset('sharp'));
+
+  sliderCutDepth?.addEventListener('input', () => {
+    currentCutDepth = parseInt(sliderCutDepth.value) || 0;
+    if (valCutDepth) valCutDepth.textContent = `${currentCutDepth}px`;
+    if (currentElementShape === 'round' || currentElementShape === 'sharp') {
+      currentElementShape = 'slanted';
+      if (valShapeName) valShapeName.textContent = 'Slanted';
+    }
+    applyShapeToElement();
+  });
+
+  sliderShapeRadius?.addEventListener('input', () => {
+    currentShapeRadius = parseInt(sliderShapeRadius.value) || 0;
+    if (valShapeRadius) valShapeRadius.textContent = `${currentShapeRadius}px`;
+    applyShapeToElement();
+  });
 
   btnCopyShapeCss?.addEventListener('click', async () => {
     const el = previewPane.getActiveElement();
-    const s = SHAPE_STYLES[currentElementShape as keyof typeof SHAPE_STYLES] || SHAPE_STYLES.slanted;
-    let snippet = `/* Button / Card Shape CSS (${s.name}) */\n`;
-    snippet += `${s.css}\n`;
+    const cp = buildClipPath(currentElementShape, currentCutDepth);
+    let snippet = `/* Button / Card Shape CSS (${currentElementShape.toUpperCase()}) */\n`;
+    if (cp !== 'none') {
+      snippet += `clip-path: ${cp};\n`;
+    } else {
+      snippet += `clip-path: none;\n`;
+    }
+    snippet += `border-radius: ${currentShapeRadius}px;\n`;
     if (el) {
       if (el.style.backgroundColor) snippet += `background-color: ${el.style.backgroundColor};\n`;
       if (el.style.color) snippet += `color: ${el.style.color};\n`;
       if (el.style.padding) snippet += `padding: ${el.style.padding};\n`;
     } else {
-      snippet += `padding: 10px 20px;\nbackground: #48e0d2;\ncolor: #070a10;\nfont-weight: 700;\ncursor: pointer;\n`;
+      snippet += `padding: 10px 22px;\nbackground: #48e0d2;\ncolor: #070a10;\nfont-weight: 700;\ncursor: pointer;\n`;
     }
     try {
       await navigator.clipboard.writeText(snippet);
-      showToast('✦ Copied shape CSS to clipboard! Ready to paste into Wisp/CSS.');
+      showToast('✦ Copied shape CSS (clip-path & border-radius) to clipboard!');
     } catch {
       window.prompt('Copy Button CSS:', snippet);
     }
@@ -1248,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', (e) => {
       closeAllMenus();
       const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
-      const tpl = AUTONYM_TEMPLATES.find((t: AutonymTemplate) => t.id === id);
+      const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
       if (tpl) {
         if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
           return;
@@ -1630,7 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Autonym & Godot Project Presets Modal ---
+  // --- Web Starter Templates & Snippets Modal ---
   const modalTemplates = document.getElementById('modal-templates');
   const btnTemplatesToggle = document.getElementById('btn-templates-toggle');
   const btnCloseTemplates = document.getElementById('btn-close-templates');
@@ -1639,11 +1695,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTemplatesList() {
     if (!templatesList) return;
-    templatesList.innerHTML = AUTONYM_TEMPLATES.map((tpl: AutonymTemplate) => {
-      const badgeColor = tpl.project === 'Wisp' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
-        : tpl.project === 'Grimoire' ? 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30'
-        : tpl.project === 'Conlang' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
-        : tpl.project === 'Godot' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+    templatesList.innerHTML = WEB_TEMPLATES.map((tpl: WebTemplate) => {
+      const badgeColor = tpl.category === 'Components' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+        : tpl.category === 'Cards' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
+        : tpl.category === 'Layouts' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
+        : tpl.category === 'Dashboards' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+        : tpl.category === 'Forms' ? 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30'
         : 'text-[#e8eef8] bg-[#122036] border-[#203453]';
 
       return `
@@ -1665,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', () => {
     templatesList.querySelectorAll('.btn-load-template').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-tpl-id');
-        const tpl = AUTONYM_TEMPLATES.find((t: AutonymTemplate) => t.id === id);
+        const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
         if (tpl) {
           if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
             return;

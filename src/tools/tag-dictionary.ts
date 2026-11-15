@@ -311,7 +311,7 @@ export const HTML_TAG_DICTIONARY: TagInfo[] = [
     category: 'Text',
     purpose: 'Smaller text for copyright, disclaimers, or side notes',
     description: 'Renders text one font size smaller, ideal for disclaimers, legal notices, copyright lines, or secondary attribution.',
-    snippet: '<small>© 2026 Autonym Studio. All rights reserved.</small>',
+    snippet: '<small>© 2026 Interstatus Lab. All rights reserved.</small>',
     commonAttributes: ['class']
   },
   {
@@ -414,7 +414,7 @@ export const HTML_TAG_DICTIONARY: TagInfo[] = [
     category: 'Structure',
     purpose: 'Concluding bottom area for copyright, links, and contact info',
     description: 'Displays concluding info like copyright notices, legal disclaimers, credits, and secondary sitemap links.',
-    snippet: '<footer>\n  <p>© 2026 Autonym Studio. All rights reserved.</p>\n</footer>',
+    snippet: '<footer>\n  <p>© 2026 Interstatus Lab. All rights reserved.</p>\n</footer>',
     commonAttributes: ['class', 'id']
   },
   {

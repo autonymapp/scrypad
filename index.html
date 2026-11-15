@@ -115,26 +115,30 @@
         <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#122036] text-[#e8eef8] hover:text-[#a98bff] transition flex items-center gap-1">
           Presets <span class="text-[10px] text-[#8d9bb6]">▾</span>
         </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-56 bg-[#0c1320] border border-[#203453] rounded shadow-2xl py-1 z-50">
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="wisp-note">
-            <span>📝 Wisp Note Card</span>
-            <span class="text-[9px] text-[#8d9bb6]">Wisp</span>
+        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-60 bg-[#0c1320] border border-[#203453] rounded shadow-2xl py-1 z-50">
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="pricing-card">
+            <span>💳 Pricing Tier Card</span>
+            <span class="text-[9px] text-[#48e0d2]">Component</span>
           </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="grimoire-spell">
-            <span>📖 Grimoire Spell Tome</span>
-            <span class="text-[9px] text-[#a98bff]">Grimoire</span>
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="profile-card">
+            <span>👤 Profile &amp; Bio Card</span>
+            <span class="text-[9px] text-[#5cff9d]">Card</span>
           </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="conlang-matrix">
-            <span>🔤 Conlang Matrix</span>
-            <span class="text-[9px] text-[#5cff9d]">Conlang</span>
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="newsletter-hero">
+            <span>📬 Newsletter Hero</span>
+            <span class="text-[9px] text-[#ffbf4d]">Layout</span>
           </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="godot-dialogue">
-            <span>💬 Godot Dialogue Card</span>
-            <span class="text-[9px] text-[#48e0d2]">Godot 4</span>
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="blog-article">
+            <span>📰 Editorial Article</span>
+            <span class="text-[9px] text-[#a98bff]">Typography</span>
           </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="godot-web-shell">
-            <span>🎮 Godot Web Shell</span>
-            <span class="text-[9px] text-[#48e0d2]">Godot 4</span>
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="stats-dashboard">
+            <span>📊 Stats Metric Grid</span>
+            <span class="text-[9px] text-[#48e0d2]">Dashboard</span>
+          </button>
+          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#122036] hover:text-white text-[#e8eef8] btn-preset-direct" data-id="feedback-modal">
+            <span>💬 Feedback Dialog</span>
+            <span class="text-[9px] text-[#5cff9d]">Modal</span>
           </button>
         </div>
       </div>
@@ -479,19 +483,38 @@
           </div>
 
           <!-- Element Shape (Cyber Cuts & Corners for Buttons / Cards) -->
-          <div class="pt-2 border-t border-[#203453] space-y-2">
+          <div class="pt-2 border-t border-[#203453] space-y-2.5">
             <div class="flex items-center justify-between text-[#8d9bb6]">
-              <span>Shape (Cyber Cuts)</span>
+              <span>Shape (Cuts &amp; Corners)</span>
               <span id="val-shape-name" class="text-[10px] text-[#48e0d2]">Default</span>
             </div>
             <div class="grid grid-cols-4 gap-1 text-[10px]">
               <button id="btn-shape-el-default" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#e8eef8]">Round</button>
-              <button id="btn-shape-el-slant" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#48e0d2]" title="Slanted 8px angular polygon cut">Slanted</button>
-              <button id="btn-shape-el-notch" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#5cff9d]" title="Notched 6px chamfered corners">Notched</button>
+              <button id="btn-shape-el-slant" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#48e0d2]" title="Slanted angular polygon cut">Slanted</button>
+              <button id="btn-shape-el-notch" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#5cff9d]" title="Notched chamfered corners">Notched</button>
               <button id="btn-shape-el-sharp" class="px-1.5 py-1 rounded bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#ffbf4d]" title="Sharp rectangle">Sharp</button>
             </div>
+
+            <!-- Clip-Path Cut Depth Slider -->
+            <div id="cut-depth-container">
+              <div class="flex justify-between text-[#8d9bb6] mb-1">
+                <span>Cut Depth (Clip-Path)</span>
+                <span id="val-cut-depth" class="text-[#48e0d2]">8px</span>
+              </div>
+              <input type="range" id="slider-cut-depth" min="0" max="32" value="8" class="w-full accent-[#48e0d2] cursor-pointer" title="Adjust angle/chamfer cut size">
+            </div>
+
+            <!-- Border Radius Slider -->
+            <div>
+              <div class="flex justify-between text-[#8d9bb6] mb-1">
+                <span>Corner Rounding</span>
+                <span id="val-shape-radius" class="text-[#48e0d2]">8px</span>
+              </div>
+              <input type="range" id="slider-shape-radius" min="0" max="48" value="8" class="w-full accent-[#48e0d2] cursor-pointer" title="Adjust border radius">
+            </div>
+
             <button id="btn-copy-shape-css" class="w-full py-1.5 bg-[#070a10] hover:bg-[#122036] border border-[#203453] rounded text-[10px] text-[#48e0d2] text-center transition font-bold">
-              📋 Copy Button CSS for Wisp / Web
+              📋 Copy Shape CSS (Clip-Path &amp; Radius)
             </button>
           </div>
         </div>
@@ -632,13 +655,13 @@
     </div>
   </div>
 
-  <!-- Project Presets Modal (Autonym & Godot) -->
+  <!-- Web Starter Templates Modal -->
   <div id="modal-templates" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="w-full max-w-2xl bg-[#0c1320] border border-[#203453] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
       <div class="px-5 py-3 border-b border-[#203453] flex items-center justify-between bg-[#122036]">
         <div class="flex items-center gap-2">
           <i data-lucide="layout-template" class="w-4 h-4 text-[#a98bff]"></i>
-          <h2 class="font-['Rajdhani'] font-bold text-base text-white uppercase tracking-wider">Project Presets ✦ Autonym &amp; Godot</h2>
+          <h2 class="font-['Rajdhani'] font-bold text-base text-white uppercase tracking-wider">Web Starter Templates &amp; Snippets</h2>
         </div>
         <button id="btn-close-templates" class="text-[#8d9bb6] hover:text-white p-1">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -646,7 +669,7 @@
       </div>
 
       <div class="p-3.5 border-b border-[#203453] bg-[#090e17] text-xs text-[#8d9bb6]">
-        Instantly load a starter template designed specifically for your projects (Wisp, Grimoire, Conlang, or Godot).
+        Instantly load a clean, modern HTML/CSS component or layout to practice with, learn from, and customize.
       </div>
 
       <div id="templates-list" class="p-4 space-y-3 overflow-y-auto flex-1 font-['IBM_Plex_Mono']">
