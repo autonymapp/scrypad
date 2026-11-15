@@ -41,8 +41,9 @@ export class SyncCoordinator {
       window.clearTimeout(this.debounceTimer);
     }
 
-    this.debounceTimer = window.setTimeout(() => {
-      this.previewPane.render(newCode);
+    this.debounceTimer = window.setTimeout(async () => {
+      const resolved = await this.fileManager.resolvePreview(newCode);
+      this.previewPane.render(resolved);
       this.updateStats();
       this.setSyncing(false);
       this.isCodeUpdating = false;

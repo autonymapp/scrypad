@@ -21,7 +21,93 @@ export class FileManager {
   private onStateChangeCallbacks: Array<(state: FileState) => void> = [];
   private onProjectChangeCallbacks: Array<(project: ProjectFolder | null) => void> = [];
 
-  constructor() {}
+  // Memory buffer cache for active files so switching files does not lose edits or embedded CSS
+  private fileBufferCache: Map<string, string> = new Map();
+  // Persistent embedded CSS cache: maps filename & relative hrefs to CSS strings
+  private embeddedCssCache: Map<string, string> = new Map();
+
+  constructor() {
+    this.loadCachedCss();
+  }
+
+  private loadCachedCss() {
+    try {
+      const keys = Object.keys(localStorage);
+      for (const k of keys) {
+        if (k.startsWith('scrypad_css_cache_')) {
+          const name = k.replace('scrypad_css_cache_', '');
+          const val = localStorage.getItem(k);
+          if (val) {
+            this.embeddedCssCache.set(name, val);
+          }
+        }
+      }
+    } catch {
+      // localStorage unavailable or restricted
+    }
+  }
+
+  public registerCss(name: string, content: string, href?: string) {
+    const basename = name.split('/').pop() || name;
+    this.embeddedCssCache.set(basename, content);
+    if (href) {
+      this.embeddedCssCache.set(href, content);
+    }
+    try {
+      localStorage.setItem(`scrypad_css_cache_${basename}`, content);
+      if (href) {
+        localStorage.setItem(`scrypad_css_cache_${href}`, content);
+      }
+    } catch {
+      // ignore storage quota error
+    }
+
+    // Also register into active project folder if loaded
+    if (this.currentProject) {
+      this.currentProject.files.set(basename, {
+        path: basename,
+        name: basename,
+        kind: 'css',
+        inMemoryContent: content
+      });
+      if (href && href !== basename) {
+        this.currentProject.files.set(href, {
+          path: href,
+          name: basename,
+          kind: 'css',
+          inMemoryContent: content
+        });
+      }
+    }
+  }
+
+  public getCachedCss(href: string): string | null {
+    const basename = href.split('/').pop() || href;
+    return this.embeddedCssCache.get(href) || this.embeddedCssCache.get(basename) || null;
+  }
+
+  public hasCss(href: string): boolean {
+    const basename = href.split('/').pop() || href;
+    if (this.embeddedCssCache.has(href) || this.embeddedCssCache.has(basename)) {
+      return true;
+    }
+    if (this.currentProject) {
+      if (this.currentProject.files.has(href)) return true;
+      for (const [, f] of this.currentProject.files) {
+        if (f.name === basename && f.kind === 'css') return true;
+      }
+    }
+    return false;
+  }
+
+  public bufferCurrentFile(content: string) {
+    if (this.state.projectPath) {
+      this.fileBufferCache.set(this.state.projectPath, content);
+      this.currentProject?.updateInMemoryContent(this.state.projectPath, content);
+    } else if (this.state.name) {
+      this.fileBufferCache.set(this.state.name, content);
+    }
+  }
 
   public subscribe(cb: (state: FileState) => void) {
     this.onStateChangeCallbacks.push(cb);
@@ -113,9 +199,26 @@ export class FileManager {
   /**
    * Switch active file inside current project
    */
-  public async openProjectFile(relativePath: string): Promise<string | null> {
+  public async openProjectFile(relativePath: string, currentContentToBuffer?: string): Promise<string | null> {
     if (!this.currentProject) return null;
-    const content = await this.currentProject.readFile(relativePath);
+
+    // Buffer the file we are currently navigating away from
+    if (this.state.projectPath && currentContentToBuffer !== undefined) {
+      this.fileBufferCache.set(this.state.projectPath, currentContentToBuffer);
+      this.currentProject.updateInMemoryContent(this.state.projectPath, currentContentToBuffer);
+    }
+
+    // Check if the target file has in-memory buffered content
+    let content: string | null = null;
+    if (this.fileBufferCache.has(relativePath)) {
+      content = this.fileBufferCache.get(relativePath)!;
+    } else {
+      content = await this.currentProject.readFile(relativePath);
+      if (content !== null) {
+        this.fileBufferCache.set(relativePath, content);
+      }
+    }
+
     if (content !== null) {
       const entry = this.currentProject.files.get(relativePath);
       this.state = {
@@ -194,6 +297,14 @@ export class FileManager {
    * Save file using project handle, existing handle or prompt Save As
    */
   public async saveFile(content: string, forceSaveAs: boolean = false): Promise<boolean> {
+    // Keep in-memory buffer up to date
+    if (this.state.projectPath) {
+      this.fileBufferCache.set(this.state.projectPath, content);
+      this.currentProject?.updateInMemoryContent(this.state.projectPath, content);
+    } else if (this.state.name) {
+      this.fileBufferCache.set(this.state.name, content);
+    }
+
     // If currently editing a project file, write directly to project
     if (this.currentProject && this.state.projectPath && !forceSaveAs) {
       const ok = await this.currentProject.saveFile(this.state.projectPath, content);
@@ -253,9 +364,32 @@ export class FileManager {
   }
 
   public async resolvePreview(html: string): Promise<string> {
+    let resolved = html;
     if (this.currentProject) {
-      return await this.currentProject.resolvePreviewAssets(html, this.state.projectPath || '');
+      resolved = await this.currentProject.resolvePreviewAssets(html, this.state.projectPath || '');
     }
-    return html;
+
+    // Resolve any remaining relative stylesheets from persistent embeddedCssCache
+    const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/|data:)([^"']+)["'][^>]*>/gi;
+    let match: RegExpExecArray | null;
+    const toReplace: Array<{ original: string; inlined: string }> = [];
+
+    while ((match = linkRegex.exec(resolved)) !== null) {
+      const fullTag = match[0];
+      const relHref = match[1];
+      const cachedCss = this.getCachedCss(relHref);
+      if (cachedCss) {
+        toReplace.push({
+          original: fullTag,
+          inlined: `<style data-source="${relHref}">\n/* --- Cached Stylesheet (${relHref}) --- */\n${cachedCss}\n</style>`
+        });
+      }
+    }
+
+    for (const item of toReplace) {
+      resolved = resolved.replace(item.original, item.inlined);
+    }
+
+    return resolved;
   }
 }

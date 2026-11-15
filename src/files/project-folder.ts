@@ -9,6 +9,7 @@ export interface ProjectFileEntry {
   kind: 'html' | 'css' | 'js' | 'image' | 'font' | 'other';
   handle?: FileSystemFileHandle;
   file?: File;
+  inMemoryContent?: string;
 }
 
 export class ProjectFolder {
@@ -112,6 +113,9 @@ export class ProjectFolder {
     const entry = this.files.get(relativePath);
     if (!entry) return null;
 
+    if (entry.inMemoryContent !== undefined) {
+      return entry.inMemoryContent;
+    }
     if (entry.handle) {
       const file = await entry.handle.getFile();
       return await file.text();
@@ -121,10 +125,18 @@ export class ProjectFolder {
     return null;
   }
 
+  public updateInMemoryContent(relativePath: string, content: string) {
+    const entry = this.files.get(relativePath);
+    if (entry) {
+      entry.inMemoryContent = content;
+    }
+  }
+
   public async saveFile(relativePath: string, content: string): Promise<boolean> {
     const entry = this.files.get(relativePath);
     if (!entry) return false;
 
+    entry.inMemoryContent = content;
     if (entry.handle) {
       try {
         const writable = await (entry.handle as any).createWritable();
@@ -135,6 +147,8 @@ export class ProjectFolder {
         console.error(`Failed to save ${relativePath}:`, err);
         return false;
       }
+    } else if (entry.file) {
+      return true;
     }
     return false;
   }
@@ -159,7 +173,18 @@ export class ProjectFolder {
 
       // Normalize path relative to the current HTML file
       const normalizedPath = this.normalizePath(baseDir, relHref);
-      const cssContent = await this.readFile(normalizedPath);
+      let cssContent = await this.readFile(normalizedPath);
+
+      // If not found by exact path, try matching by filename across the project
+      if (cssContent === null) {
+        const basename = relHref.split('/').pop() || relHref;
+        for (const [p, f] of this.files) {
+          if (f.name === basename && f.kind === 'css') {
+            cssContent = await this.readFile(p);
+            break;
+          }
+        }
+      }
 
       if (cssContent !== null) {
         matchesToReplace.push({

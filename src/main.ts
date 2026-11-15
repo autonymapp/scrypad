@@ -340,12 +340,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const cssMatch = code.match(cssRegex);
     if (cssMatch) {
       const href = cssMatch[1];
-      smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
-      btnHelperActionCss.classList.remove('hidden');
-      btnHelperActionCss.style.display = 'inline-flex';
-      smartHelperBanner.classList.remove('hidden');
-      smartHelperBanner.style.display = 'flex';
-      return;
+      if (!fileManager.hasCss(href)) {
+        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+        btnHelperActionCss.classList.remove('hidden');
+        btnHelperActionCss.style.display = 'inline-flex';
+        smartHelperBanner.classList.remove('hidden');
+        smartHelperBanner.style.display = 'flex';
+        return;
+      }
     }
 
     // 2. Check unembedded local images
@@ -393,17 +395,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const cssText = await file.text();
     let currentCode = codePane.getValue();
     const regex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["'](?!https?:\/\/|\/\/)([^"']+)["'][^>]*>/i;
-    if (currentCode.match(regex)) {
-      currentCode = currentCode.replace(regex, `<style>\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>`);
+    const match = currentCode.match(regex);
+    const targetHref = match ? match[1] : file.name;
+
+    // Register into persistent cache so returning to this or other HTML files never requires re-embedding!
+    fileManager.registerCss(file.name, cssText, targetHref);
+
+    if (match) {
+      currentCode = currentCode.replace(regex, `<style data-source="${file.name}">\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>`);
     } else {
-      currentCode = `<style>\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>\n${currentCode}`;
+      currentCode = `<style data-source="${file.name}">\n/* --- Inlined ${file.name} --- */\n${cssText}\n</style>\n${currentCode}`;
     }
     codePane.setValue(currentCode);
-    previewPane.render(currentCode);
+    const resolved = await fileManager.resolvePreview(currentCode);
+    previewPane.render(resolved);
     coordinator.updateStats();
     fileManager.markDirty(true);
+    fileManager.bufferCurrentFile(currentCode);
     checkDocumentIntegrity(currentCode);
-    showToast(`✦ Inlined stylesheet: ${file.name}`);
+    showToast(`✦ Inlined and cached stylesheet: ${file.name}`);
   });
 
   // Action: Embed Local Image
@@ -489,7 +499,8 @@ document.addEventListener('DOMContentLoaded', () => {
       item.addEventListener('click', async (e) => {
         const path = (e.currentTarget as HTMLElement).getAttribute('data-path');
         if (!path) return;
-        const content = await fileManager.openProjectFile(path);
+        const currentCode = codePane.getValue();
+        const content = await fileManager.openProjectFile(path, currentCode);
         if (content !== null) {
           codePane.setValue(content);
           const resolved = await fileManager.resolvePreview(content);
