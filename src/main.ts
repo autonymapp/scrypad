@@ -462,6 +462,10 @@ document.addEventListener('DOMContentLoaded', () => {
       dirtyIndicator.classList.add('hidden');
       document.title = `${state.name} ✦ ScryPad`;
     }
+    const curProj = fileManager.getProject();
+    if (curProj) {
+      renderProjectFiles(curProj);
+    }
   });
 
   // Project Folder Handling
@@ -472,29 +476,276 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseProject = document.getElementById('btn-close-project')!;
   const folderInput = document.getElementById('folder-input') as HTMLInputElement;
 
+  const projectSearchInput = document.getElementById('project-search') as HTMLInputElement | null;
+  const btnClearProjectSearch = document.getElementById('btn-clear-project-search');
+  const btnViewTree = document.getElementById('btn-view-tree');
+  const btnViewType = document.getElementById('btn-view-type');
+  const btnExpandAll = document.getElementById('btn-expand-all');
+  const btnCollapseAll = document.getElementById('btn-collapse-all');
+  const projectFileCount = document.getElementById('project-file-count');
+
+  let projectTreeMode: 'tree' | 'type' = 'tree';
+  let projectSearchQuery: string = '';
+  const collapsedFolders: Set<string> = new Set();
+
+  interface TreeNode {
+    name: string;
+    path: string;
+    isFolder: boolean;
+    children: TreeNode[];
+    fileEntry?: any;
+    kind?: string;
+  }
+
+  function buildFileTree(files: any[]): TreeNode[] {
+    const root: TreeNode = { name: '', path: '', isFolder: true, children: [] };
+
+    for (const file of files) {
+      const parts = file.path.split('/');
+      let current = root;
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const isLast = i === parts.length - 1;
+        const currentPath = parts.slice(0, i + 1).join('/');
+
+        if (isLast) {
+          current.children.push({
+            name: part,
+            path: file.path,
+            isFolder: false,
+            children: [],
+            fileEntry: file,
+            kind: file.kind
+          });
+        } else {
+          let folder = current.children.find(c => c.isFolder && c.name === part);
+          if (!folder) {
+            folder = {
+              name: part,
+              path: currentPath,
+              isFolder: true,
+              children: []
+            };
+            current.children.push(folder);
+          }
+          current = folder;
+        }
+      }
+    }
+
+    function sortNodes(nodes: TreeNode[]) {
+      nodes.sort((a, b) => {
+        if (a.isFolder !== b.isFolder) {
+          return a.isFolder ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+      });
+      for (const node of nodes) {
+        if (node.isFolder) {
+          sortNodes(node.children);
+        }
+      }
+    }
+
+    sortNodes(root.children);
+    return root.children;
+  }
+
+  function countFilesInTree(node: TreeNode): number {
+    if (!node.isFolder) return 1;
+    return node.children.reduce((acc, c) => acc + countFilesInTree(c), 0);
+  }
+
+  function collectAllFolderPaths(nodes: TreeNode[], acc: Set<string> = new Set()): Set<string> {
+    for (const n of nodes) {
+      if (n.isFolder) {
+        acc.add(n.path);
+        collectAllFolderPaths(n.children, acc);
+      }
+    }
+    return acc;
+  }
+
+  function filterTree(nodes: TreeNode[], query: string): TreeNode[] {
+    if (!query) return nodes;
+    const q = query.toLowerCase();
+    const result: TreeNode[] = [];
+
+    for (const node of nodes) {
+      if (!node.isFolder) {
+        if (node.name.toLowerCase().includes(q) || node.path.toLowerCase().includes(q)) {
+          result.push(node);
+        }
+      } else {
+        const filteredChildren = filterTree(node.children, query);
+        if (filteredChildren.length > 0 || node.name.toLowerCase().includes(q)) {
+          result.push({
+            ...node,
+            children: filteredChildren
+          });
+        }
+      }
+    }
+    return result;
+  }
+
+  const TYPE_GROUPS = [
+    { id: 'html', label: 'HTML Documents', color: '#48e0d2', badge: 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30', icon: `<svg class="w-3.5 h-3.5 text-[#48e0d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
+    { id: 'css', label: 'Stylesheets', color: '#ffbf4d', badge: 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ffbf4d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
+    { id: 'js', label: 'Scripts', color: '#5cff9d', badge: 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30', icon: `<svg class="w-3.5 h-3.5 text-[#5cff9d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
+    { id: 'image', label: 'Images & Media', color: '#a98bff', badge: 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#a98bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
+    { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[#ff7be5] bg-[#ff7be5]/10 border-[#ff7be5]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ff7be5] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
+    { id: 'other', label: 'Other Assets', color: '#8d9bb6', badge: 'text-[#8d9bb6] bg-[#8d9bb6]/10 border-[#8d9bb6]/30', icon: `<svg class="w-3.5 h-3.5 text-[#8d9bb6] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
+  ];
+
+  function renderTreeHtml(nodes: TreeNode[], depth: number, activePath: string | null): string {
+    let out = '';
+    for (const node of nodes) {
+      const indent = depth * 14;
+      if (node.isFolder) {
+        const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(node.path);
+        const count = countFilesInTree(node);
+        const caretSvg = isCollapsed
+          ? `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+          : `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+        const folderSvg = isCollapsed
+          ? `<svg class="w-3.5 h-3.5 text-[#ffbf4d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[#ffbf4d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
+
+        out += `
+          <div class="tree-folder-group">
+            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition text-[#8d9bb6] hover:text-[#e8eef8]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
+              <span class="flex items-center gap-1.5 truncate">
+                <span class="shrink-0">${caretSvg}</span>
+                <span class="shrink-0">${folderSvg}</span>
+                <span class="font-bold text-xs truncate text-[#cbd5e1]">${node.name}</span>
+              </span>
+              <span class="text-[9px] text-[#556987] bg-[#0c1320] px-1 rounded ml-1 border border-[#203453] shrink-0">${count}</span>
+            </button>
+            <div class="tree-folder-children ${isCollapsed ? 'hidden' : ''}">
+              ${renderTreeHtml(node.children, depth + 1, activePath)}
+            </div>
+          </div>
+        `;
+      } else {
+        const f = node.fileEntry;
+        const isAct = (activePath && (activePath === f.path || activePath === f.name));
+        const badgeColor = f.kind === 'html' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+          : f.kind === 'css' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
+          : f.kind === 'js' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
+          : 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30';
+
+        const fileIcon = f.kind === 'html'
+          ? `<svg class="w-3.5 h-3.5 text-[#48e0d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
+          : f.kind === 'css'
+          ? `<svg class="w-3.5 h-3.5 text-[#ffbf4d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
+          : f.kind === 'js'
+          ? `<svg class="w-3.5 h-3.5 text-[#5cff9d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
+          : f.kind === 'image'
+          ? `<svg class="w-3.5 h-3.5 text-[#a98bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[#8d9bb6] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
+
+        out += `
+          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isAct ? 'bg-[#122036] border border-[#48e0d2]/60 text-white font-bold' : 'text-[#8d9bb6]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
+            <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
+              ${fileIcon}
+              <span class="truncate text-xs">${node.name}</span>
+            </span>
+            <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1 shrink-0 ${badgeColor}">${f.kind}</span>
+          </button>
+        `;
+      }
+    }
+    return out;
+  }
+
+  function renderGroupedHtml(files: any[], activePath: string | null): string {
+    const q = projectSearchQuery.toLowerCase();
+    const filteredFiles = q
+      ? files.filter((f: any) => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q))
+      : files;
+
+    let out = '';
+    for (const group of TYPE_GROUPS) {
+      const groupFiles = filteredFiles.filter((f: any) => f.kind === group.id);
+      if (groupFiles.length === 0) continue;
+
+      const groupKey = `group_${group.id}`;
+      const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(groupKey);
+      const caretSvg = isCollapsed
+        ? `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+        : `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+
+      out += `
+        <div class="type-folder-group">
+          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#122036] transition text-[#8d9bb6] hover:text-[#e8eef8]" data-group-key="${groupKey}">
+            <span class="flex items-center gap-1.5 truncate">
+              <span class="shrink-0">${caretSvg}</span>
+              <span class="shrink-0">${group.icon}</span>
+              <span class="font-bold text-xs truncate text-[#cbd5e1]">${group.label}</span>
+            </span>
+            <span class="text-[9px] text-[#556987] bg-[#0c1320] px-1 rounded ml-1 border border-[#203453] shrink-0">${groupFiles.length}</span>
+          </button>
+          <div class="type-group-children ${isCollapsed ? 'hidden' : ''} space-y-0.5">
+            ${groupFiles.map((f: any) => {
+              const isAct = (activePath && (activePath === f.path || activePath === f.name));
+              const dirPart = f.path.includes('/') ? f.path.substring(0, f.path.lastIndexOf('/')) : '';
+              return `
+                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isAct ? 'bg-[#122036] border border-[#48e0d2]/60 text-white font-bold' : 'text-[#8d9bb6]'}" data-path="${f.path}" title="${f.path}">
+                  <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
+                    <span class="truncate text-xs">${f.name}</span>
+                    ${dirPart ? `<span class="text-[10px] text-[#556987] truncate">(${dirPart})</span>` : ''}
+                  </span>
+                  <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1 shrink-0 ${group.badge}">${f.kind}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+    return out;
+  }
+
   function renderProjectFiles(project: any) {
-    const files = project.getFilesList();
-    if (files.length === 0) {
-      projectFileList.innerHTML = `<div class="p-2 text-center text-[#8d9bb6]">No supported files found.</div>`;
+    if (!project) return;
+    const allFiles = project.getFilesList();
+    if (allFiles.length === 0) {
+      projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No supported files found.</div>`;
+      if (projectFileCount) projectFileCount.textContent = '0 files';
       return;
     }
 
-    projectFileList.innerHTML = files.map((f: any) => {
-      const badgeColor = f.kind === 'html' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
-        : f.kind === 'css' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
-        : f.kind === 'js' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
-        : 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30';
+    const activePath = fileManager.getState().projectPath || fileManager.getFilename();
+    const tree = buildFileTree(allFiles);
 
-      const isActive = fileManager.getFilename() === f.name;
+    const q = projectSearchQuery.toLowerCase();
+    const matchingCount = q
+      ? allFiles.filter((f: any) => f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q)).length
+      : allFiles.length;
 
-      return `
-        <button class="project-file-item w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isActive ? 'bg-[#122036] border border-[#48e0d2]/40 text-white' : 'text-[#8d9bb6]'}" data-path="${f.path}">
-          <span class="truncate flex-1 font-['IBM_Plex_Mono'] text-xs">${f.path}</span>
-          <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1.5 shrink-0 ${badgeColor}">${f.kind}</span>
-        </button>
-      `;
-    }).join('');
+    if (projectFileCount) {
+      projectFileCount.textContent = q ? `${matchingCount} / ${allFiles.length}` : `${allFiles.length} files`;
+    }
 
+    if (projectTreeMode === 'tree') {
+      const filteredTree = filterTree(tree, projectSearchQuery);
+      if (filteredTree.length === 0) {
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No files matching "${projectSearchQuery}".</div>`;
+      } else {
+        projectFileList.innerHTML = renderTreeHtml(filteredTree, 0, activePath);
+      }
+    } else {
+      const groupedHtml = renderGroupedHtml(allFiles, activePath);
+      if (!groupedHtml) {
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No files matching "${projectSearchQuery}".</div>`;
+      } else {
+        projectFileList.innerHTML = groupedHtml;
+      }
+    }
+
+    // Attach File Click Listeners
     projectFileList.querySelectorAll('.project-file-item').forEach((item) => {
       item.addEventListener('click', async (e) => {
         const path = (e.currentTarget as HTMLElement).getAttribute('data-path');
@@ -512,7 +763,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+
+    // Attach Folder Toggle Listeners
+    projectFileList.querySelectorAll('.tree-folder-toggle').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const folderPath = (e.currentTarget as HTMLElement).getAttribute('data-folder-path');
+        if (folderPath) {
+          if (collapsedFolders.has(folderPath)) {
+            collapsedFolders.delete(folderPath);
+          } else {
+            collapsedFolders.add(folderPath);
+          }
+          renderProjectFiles(project);
+        }
+      });
+    });
+
+    // Attach Type Group Toggle Listeners
+    projectFileList.querySelectorAll('.type-group-toggle').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const groupKey = (e.currentTarget as HTMLElement).getAttribute('data-group-key');
+        if (groupKey) {
+          if (collapsedFolders.has(groupKey)) {
+            collapsedFolders.delete(groupKey);
+          } else {
+            collapsedFolders.add(groupKey);
+          }
+          renderProjectFiles(project);
+        }
+      });
+    });
   }
+
+  // Drawer Search & Mode Toolbar Listeners
+  projectSearchInput?.addEventListener('input', () => {
+    projectSearchQuery = projectSearchInput.value.trim();
+    if (btnClearProjectSearch) {
+      if (projectSearchQuery) btnClearProjectSearch.classList.remove('hidden');
+      else btnClearProjectSearch.classList.add('hidden');
+    }
+    const curProj = fileManager.getProject();
+    if (curProj) renderProjectFiles(curProj);
+  });
+
+  btnClearProjectSearch?.addEventListener('click', () => {
+    if (projectSearchInput) projectSearchInput.value = '';
+    projectSearchQuery = '';
+    btnClearProjectSearch.classList.add('hidden');
+    const curProj = fileManager.getProject();
+    if (curProj) renderProjectFiles(curProj);
+  });
+
+  btnViewTree?.addEventListener('click', () => {
+    projectTreeMode = 'tree';
+    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[#162742] text-[#48e0d2]';
+    btnViewType?.classList.remove('bg-[#162742]', 'text-[#48e0d2]', 'font-bold');
+    btnViewType?.classList.add('text-[#8d9bb6]');
+    const curProj = fileManager.getProject();
+    if (curProj) renderProjectFiles(curProj);
+  });
+
+  btnViewType?.addEventListener('click', () => {
+    projectTreeMode = 'type';
+    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[#162742] text-[#48e0d2]';
+    btnViewTree?.classList.remove('bg-[#162742]', 'text-[#48e0d2]', 'font-bold');
+    btnViewTree?.classList.add('text-[#8d9bb6]');
+    const curProj = fileManager.getProject();
+    if (curProj) renderProjectFiles(curProj);
+  });
+
+  btnExpandAll?.addEventListener('click', () => {
+    collapsedFolders.clear();
+    const curProj = fileManager.getProject();
+    if (curProj) renderProjectFiles(curProj);
+    showToast('✦ Expanded all folders');
+  });
+
+  btnCollapseAll?.addEventListener('click', () => {
+    const curProj = fileManager.getProject();
+    if (curProj) {
+      if (projectTreeMode === 'tree') {
+        const allFiles = curProj.getFilesList();
+        const tree = buildFileTree(allFiles);
+        collectAllFolderPaths(tree, collapsedFolders);
+      } else {
+        TYPE_GROUPS.forEach(g => collapsedFolders.add(`group_${g.id}`));
+      }
+      renderProjectFiles(curProj);
+      showToast('✦ Collapsed all folders');
+    }
+  });
 
   fileManager.subscribeProject((project) => {
     if (!project) {

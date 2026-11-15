@@ -147,6 +147,14 @@ export class FileManager {
     return this.state.isDirty;
   }
 
+  public getState(): FileState {
+    return { ...this.state };
+  }
+
+  public getProjectPath(): string | null {
+    return this.state.projectPath;
+  }
+
   public getProject(): ProjectFolder | null {
     return this.currentProject;
   }
