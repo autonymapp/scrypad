@@ -99,6 +99,32 @@ body {
   border-color: var(--line-hot);
 }
 
+/* Button Shape Modes (Configurable via data-btn-shape attribute on root) */
+:root {
+  --btn-clip: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  --btn-radius: 0px;
+}
+
+[data-btn-shape="slanted"] {
+  --btn-clip: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  --btn-radius: 0px;
+}
+
+[data-btn-shape="notched"] {
+  --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  --btn-radius: 0px;
+}
+
+[data-btn-shape="rounded"] {
+  --btn-clip: none;
+  --btn-radius: 6px;
+}
+
+[data-btn-shape="sharp"] {
+  --btn-clip: none;
+  --btn-radius: 0px;
+}
+
 /* Slanted HUD Action Buttons */
 .btn-hud {
   font-family: var(--f-display);
@@ -106,13 +132,14 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: 13px;
-  padding: 5px 14px;
+  padding: 5px 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   position: relative;
   transition: all 0.15s ease;
-  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  clip-path: var(--btn-clip);
+  border-radius: var(--btn-radius);
 }
 
 .btn-hud-primary {
@@ -134,6 +161,13 @@ body {
   background: var(--panel-hi);
   border-color: var(--hud-teal);
   color: var(--hud-teal);
+}
+
+.btn-hud-active {
+  background: var(--panel-hi);
+  border-color: var(--hud-teal);
+  color: var(--hud-teal);
+  box-shadow: 0 0 10px rgba(72, 224, 210, 0.25);
 }
 
 /* ATB Style Status Gauge */
@@ -177,6 +211,16 @@ body {
 .cm-cursor {
   border-left-color: var(--bio-green) !important;
   border-left-width: 2px !important;
+}
+
+/* CodeMirror Search Match Highlighting */
+.cm-searchMatch {
+  background-color: rgba(255, 191, 77, 0.28) !important;
+  border-bottom: 2px solid var(--amber) !important;
+}
+.cm-searchMatch-selected {
+  background-color: rgba(92, 255, 157, 0.45) !important;
+  outline: 1px solid var(--bio-green) !important;
 }
 
 /* Custom Scrollbar */

@@ -52,6 +52,11 @@ export class FileManager {
     return this.state.name;
   }
 
+  public setFilename(name: string) {
+    this.state.name = name;
+    this.notify();
+  }
+
   public isDirty(): boolean {
     return this.state.isDirty;
   }

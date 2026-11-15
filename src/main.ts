@@ -17,7 +17,18 @@ import {
   SlidersHorizontal,
   ClipboardCopy,
   Check,
-  FolderTree
+  FolderTree,
+  Undo2,
+  Redo2,
+  Search,
+  Replace,
+  BookOpen,
+  Sparkle,
+  HelpCircle,
+  ChevronUp,
+  ChevronDown,
+  Gamepad2,
+  LayoutTemplate
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -28,6 +39,9 @@ import { extractPalette, replaceColor, ColorSwatch } from './tools/palette-scann
 import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont } from './tools/font-detector.ts';
 import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage } from './tools/image-inliner.ts';
 import { extractCleanBody } from './tools/body-exporter.ts';
+import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
+import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
+import { AUTONYM_TEMPLATES, AutonymTemplate } from './templates/autonym-templates.ts';
 
 // Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
@@ -176,7 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
       SlidersHorizontal,
       ClipboardCopy,
       Check,
-      FolderTree
+      FolderTree,
+      Undo2,
+      Redo2,
+      Search,
+      Replace,
+      BookOpen,
+      Sparkle,
+      HelpCircle,
+      ChevronUp,
+      ChevronDown,
+      Gamepad2,
+      LayoutTemplate
     }
   });
 
@@ -254,6 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  let updateTagHint: (tagName: string) => void = () => {};
+
   // Initialize Preview Pane
   const previewPane = new PreviewPane({
     container: previewMount,
@@ -264,8 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (coordinator) coordinator.handleDomPathSelect(domPath);
     },
     onActiveElementChange: (info: ActiveElementInfo | null) => {
-      if (!info) return;
+      if (!info) {
+        updateTagHint('');
+        return;
+      }
       populateStyleDrawer(info);
+      updateTagHint(info.tagName);
     },
     onImageDropped: (_dataUrl, fileName) => {
       showToast(`✦ Embedded image: ${fileName}`);
@@ -996,6 +1027,423 @@ document.addEventListener('DOMContentLoaded', () => {
   modalLibrary.addEventListener('click', (e) => {
     if (e.target === modalLibrary) modalLibrary.classList.add('hidden');
   });
+
+  // --- Undo & Redo ---
+  const btnUndo = document.getElementById('btn-undo');
+  const btnRedo = document.getElementById('btn-redo');
+  if (btnUndo) {
+    btnUndo.addEventListener('click', () => {
+      codePane.undo();
+      codePane.focus();
+    });
+  }
+  if (btnRedo) {
+    btnRedo.addEventListener('click', () => {
+      codePane.redo();
+      codePane.focus();
+    });
+  }
+
+  // --- Find & Search & Replace HUD Bar ---
+  const findReplaceBar = document.getElementById('find-replace-bar')!;
+  const btnFindToggle = document.getElementById('btn-find-toggle')!;
+  const btnCloseFind = document.getElementById('btn-close-find')!;
+  const findInput = document.getElementById('find-input') as HTMLInputElement;
+  const replaceInput = document.getElementById('replace-input') as HTMLInputElement;
+  const findCount = document.getElementById('find-count')!;
+  const btnFindPrev = document.getElementById('btn-find-prev')!;
+  const btnFindNext = document.getElementById('btn-find-next')!;
+  const btnFindCase = document.getElementById('btn-find-case')!;
+  const btnReplaceNext = document.getElementById('btn-replace-next')!;
+  const btnReplaceAll = document.getElementById('btn-replace-all')!;
+
+  let isCaseSensitive = false;
+
+  function updateSearchMatches() {
+    const query = findInput.value;
+    const replaceStr = replaceInput.value;
+    const { total, current } = codePane.setSearch(query, replaceStr, isCaseSensitive);
+    if (!query) {
+      findCount.textContent = '0/0';
+      findCount.className = 'text-[11px] text-[#8d9bb6] px-1 shrink-0 min-w-[36px] text-right';
+    } else if (total === 0) {
+      findCount.textContent = '0';
+      findCount.className = 'text-[11px] text-[#ffbf4d] px-1 shrink-0 min-w-[36px] text-right';
+    } else {
+      findCount.textContent = `${current > 0 ? current : 1}/${total}`;
+      findCount.className = 'text-[11px] text-[#5cff9d] px-1 shrink-0 min-w-[36px] text-right';
+    }
+  }
+
+  function openFindBar(focusReplace = false) {
+    findReplaceBar.classList.remove('hidden');
+    findReplaceBar.style.display = 'flex';
+    btnFindToggle.classList.add('btn-hud-active');
+    if (focusReplace) {
+      replaceInput.focus();
+      replaceInput.select();
+    } else {
+      findInput.focus();
+      findInput.select();
+    }
+    updateSearchMatches();
+  }
+
+  function closeFindBar() {
+    findReplaceBar.classList.add('hidden');
+    findReplaceBar.style.display = 'none';
+    btnFindToggle.classList.remove('btn-hud-active');
+    codePane.setSearch('', '');
+    codePane.focus();
+  }
+
+  if (btnFindToggle) {
+    btnFindToggle.addEventListener('click', () => {
+      if (findReplaceBar.classList.contains('hidden') || findReplaceBar.style.display === 'none') {
+        openFindBar();
+      } else {
+        closeFindBar();
+      }
+    });
+  }
+
+  if (btnCloseFind) {
+    btnCloseFind.addEventListener('click', closeFindBar);
+  }
+
+  findInput.addEventListener('input', updateSearchMatches);
+  replaceInput.addEventListener('input', updateSearchMatches);
+
+  btnFindNext.addEventListener('click', () => {
+    codePane.findNext();
+    updateSearchMatches();
+  });
+
+  btnFindPrev.addEventListener('click', () => {
+    codePane.findPrevious();
+    updateSearchMatches();
+  });
+
+  btnFindCase.addEventListener('click', () => {
+    isCaseSensitive = !isCaseSensitive;
+    btnFindCase.className = isCaseSensitive 
+      ? "px-2 py-1 bg-[#122036] border border-[#48e0d2] text-[#48e0d2] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(72,224,210,0.3)] transition"
+      : "px-2 py-1 bg-[#122036] border border-[#203453] rounded text-[11px] font-bold text-[#8d9bb6] hover:text-[#e8eef8] transition";
+    updateSearchMatches();
+  });
+
+  btnReplaceNext.addEventListener('click', () => {
+    codePane.replaceNext();
+    updateSearchMatches();
+  });
+
+  btnReplaceAll.addEventListener('click', () => {
+    codePane.replaceAll();
+    updateSearchMatches();
+    showToast('✦ Replaced all occurrences in document');
+  });
+
+  findInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        codePane.findPrevious();
+      } else {
+        codePane.findNext();
+      }
+      updateSearchMatches();
+    } else if (e.key === 'Escape') {
+      closeFindBar();
+    }
+  });
+
+  replaceInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      codePane.replaceNext();
+      updateSearchMatches();
+    } else if (e.key === 'Escape') {
+      closeFindBar();
+    }
+  });
+
+  // Global hotkeys for search: Ctrl/Cmd+F, Ctrl/Cmd+H
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      openFindBar(false);
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      openFindBar(true);
+    } else if (e.key === 'Escape' && !findReplaceBar.classList.contains('hidden') && findReplaceBar.style.display !== 'none') {
+      closeFindBar();
+    }
+  });
+
+  // --- Button Shape Switcher ---
+  const btnShapeOpts = document.querySelectorAll('.btn-shape-opt');
+  function applyButtonShape(shape: string) {
+    document.documentElement.setAttribute('data-btn-shape', shape);
+    localStorage.setItem('scrypad_btn_shape', shape);
+    btnShapeOpts.forEach((btn) => {
+      const s = btn.getAttribute('data-shape');
+      if (s === shape) {
+        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]";
+      } else {
+        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white";
+      }
+    });
+  }
+  const savedShape = localStorage.getItem('scrypad_btn_shape') || 'slanted';
+  applyButtonShape(savedShape);
+
+  btnShapeOpts.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const shape = btn.getAttribute('data-shape') || 'slanted';
+      applyButtonShape(shape);
+      showToast(`✦ Button shape changed to ${shape.toUpperCase()}`);
+    });
+  });
+
+  // --- Educational Tag Guides & Grimoire of Tags ---
+  const btnToggleGuides = document.getElementById('btn-toggle-guides')!;
+  const labelGuides = document.getElementById('label-guides')!;
+  const inspectorTagHint = document.getElementById('inspector-tag-hint')!;
+  const hintTagName = document.getElementById('hint-tag-name')!;
+  const hintTagDesc = document.getElementById('hint-tag-desc')!;
+
+  let guidesEnabled = localStorage.getItem('scrypad_guides') !== 'off';
+
+  function updateGuidesState() {
+    if (guidesEnabled) {
+      labelGuides.textContent = 'Guides: ON';
+      btnToggleGuides.className = "px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#5cff9d]/50 text-[#5cff9d] rounded text-xs flex items-center gap-1.5 transition";
+    } else {
+      labelGuides.textContent = 'Guides: OFF';
+      btnToggleGuides.className = "px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#8d9bb6] rounded text-xs flex items-center gap-1.5 transition";
+      inspectorTagHint.classList.add('hidden');
+      inspectorTagHint.style.display = 'none';
+    }
+    localStorage.setItem('scrypad_guides', guidesEnabled ? 'on' : 'off');
+  }
+  updateGuidesState();
+
+  btnToggleGuides.addEventListener('click', () => {
+    guidesEnabled = !guidesEnabled;
+    updateGuidesState();
+    showToast(`✦ Beginner Guides ${guidesEnabled ? 'enabled' : 'disabled'}`);
+  });
+
+  // Define updateTagHint for active preview element
+  updateTagHint = (tagName: string) => {
+    if (!guidesEnabled || !tagName) {
+      inspectorTagHint.classList.add('hidden');
+      inspectorTagHint.style.display = 'none';
+      return;
+    }
+    const tagInfo = findTagInfo(tagName);
+    if (tagInfo) {
+      hintTagName.textContent = `<${tagInfo.tag}>`;
+      hintTagDesc.textContent = tagInfo.analogy;
+      inspectorTagHint.classList.remove('hidden');
+      inspectorTagHint.style.display = 'flex';
+    } else {
+      inspectorTagHint.classList.add('hidden');
+      inspectorTagHint.style.display = 'none';
+    }
+  };
+
+  // Tag Grimoire Modal
+  const modalTagGuide = document.getElementById('modal-tag-guide')!;
+  const btnTagGuideToggle = document.getElementById('btn-tag-guide-toggle')!;
+  const btnCloseTagGuide = document.getElementById('btn-close-tag-guide')!;
+  const btnTagGuideDone = document.getElementById('btn-tag-guide-done')!;
+  const tagGuideSearch = document.getElementById('tag-guide-search') as HTMLInputElement;
+  const btnClearTagSearch = document.getElementById('btn-clear-tag-search')!;
+  const tagCardsContainer = document.getElementById('tag-cards-container')!;
+  const tagGuideCount = document.getElementById('tag-guide-count')!;
+  const tagCategoryPills = document.querySelectorAll('.tag-cat-pill');
+
+  let currentTagCategory = 'All';
+
+  function renderTagGuideCards(filterText = '') {
+    const q = filterText.toLowerCase().trim();
+    const filtered = HTML_TAG_DICTIONARY.filter((t: TagInfo) => {
+      const matchesCategory = currentTagCategory === 'All' || t.category === currentTagCategory;
+      const matchesSearch = !q || 
+        t.tag.toLowerCase().includes(q) || 
+        t.name.toLowerCase().includes(q) || 
+        t.analogy.toLowerCase().includes(q) || 
+        t.description.toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+
+    tagGuideCount.textContent = `Showing ${filtered.length} of ${HTML_TAG_DICTIONARY.length} tags`;
+
+    if (filtered.length === 0) {
+      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#8d9bb6]">No tags matching "${filterText}". Try searching for layout, portal, button, or container.</div>`;
+      return;
+    }
+
+    tagCardsContainer.innerHTML = filtered.map((t: TagInfo) => `
+      <div class="hud-frame p-3.5 rounded-md border border-[#203453] bg-[#0c1320] hover:border-[#48e0d2] transition flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <code class="text-sm font-bold text-[#48e0d2] bg-[#122036] px-2 py-0.5 rounded border border-[#203453]">&lt;${t.tag}&gt;</code>
+            <span class="text-xs font-semibold text-white">${t.name}</span>
+            <span class="text-[10px] text-[#5cff9d] bg-[#5cff9d]/10 border border-[#5cff9d]/30 px-1.5 py-0.2 rounded">${t.analogy}</span>
+          </div>
+          <button class="btn-hud btn-hud-primary btn-insert-tag text-xs py-0.5 px-2.5" data-tag="${t.tag}">
+            <span>+ Insert</span>
+          </button>
+        </div>
+        <p class="text-xs text-[#8d9bb6] leading-relaxed">${t.description}</p>
+        <div class="flex items-center justify-between pt-1 border-t border-[#203453]/60 text-[11px]">
+          <div class="flex items-center gap-1.5 text-[#8d9bb6] truncate">
+            <span class="text-[10px] uppercase text-[#8d9bb6]/70">Attributes:</span>
+            ${t.commonAttributes.map(a => `<code class="text-[#a98bff] bg-[#070a10] px-1 py-0.2 rounded border border-[#203453]">${a}</code>`).join(' ')}
+          </div>
+          <span class="text-[10px] text-[#48e0d2]/70 uppercase tracking-wider shrink-0">${t.category}</span>
+        </div>
+      </div>
+    `).join('');
+
+    tagCardsContainer.querySelectorAll('.btn-insert-tag').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tag = (e.currentTarget as HTMLElement).getAttribute('data-tag');
+        const item = HTML_TAG_DICTIONARY.find((x: TagInfo) => x.tag === tag);
+        if (item) {
+          codePane.insertSnippet(item.snippet);
+          modalTagGuide.classList.add('hidden');
+          showToast(`✦ Inserted <${item.tag}> snippet into editor`);
+        }
+      });
+    });
+  }
+
+  function openTagGuide(searchQuery = '') {
+    modalTagGuide.classList.remove('hidden');
+    tagGuideSearch.value = searchQuery;
+    btnClearTagSearch.classList.toggle('hidden', !searchQuery);
+    renderTagGuideCards(searchQuery);
+    tagGuideSearch.focus();
+  }
+
+  btnTagGuideToggle.addEventListener('click', () => openTagGuide(''));
+  btnCloseTagGuide.addEventListener('click', () => modalTagGuide.classList.add('hidden'));
+  btnTagGuideDone.addEventListener('click', () => modalTagGuide.classList.add('hidden'));
+  modalTagGuide.addEventListener('click', (e) => {
+    if (e.target === modalTagGuide) modalTagGuide.classList.add('hidden');
+  });
+
+  tagGuideSearch.addEventListener('input', () => {
+    const val = tagGuideSearch.value;
+    btnClearTagSearch.classList.toggle('hidden', !val);
+    renderTagGuideCards(val);
+  });
+
+  btnClearTagSearch.addEventListener('click', () => {
+    tagGuideSearch.value = '';
+    btnClearTagSearch.classList.add('hidden');
+    renderTagGuideCards('');
+    tagGuideSearch.focus();
+  });
+
+  tagCategoryPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      tagCategoryPills.forEach(p => {
+        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]";
+      });
+      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]";
+      currentTagCategory = pill.getAttribute('data-category') || 'All';
+      renderTagGuideCards(tagGuideSearch.value);
+    });
+  });
+
+  inspectorTagHint.addEventListener('click', () => {
+    const currentTag = hintTagName.textContent?.replace(/[<>]/g, '') || '';
+    openTagGuide(currentTag);
+  });
+
+  // --- Godot BBCode Exporter ---
+  const btnGodotBbcode = document.getElementById('btn-godot-bbcode');
+  if (btnGodotBbcode) {
+    btnGodotBbcode.addEventListener('click', async () => {
+      const currentHtml = codePane.getValue();
+      const bbcode = htmlToGodotBBCode(currentHtml);
+      try {
+        await navigator.clipboard.writeText(bbcode);
+        showToast('✦ Copied Godot RichTextLabel BBCode!');
+      } catch {
+        window.prompt('Copy Godot BBCode:', bbcode);
+      }
+    });
+  }
+
+  // --- Autonym & Godot Project Presets Modal ---
+  const modalTemplates = document.getElementById('modal-templates');
+  const btnTemplatesToggle = document.getElementById('btn-templates-toggle');
+  const btnCloseTemplates = document.getElementById('btn-close-templates');
+  const btnTemplatesDone = document.getElementById('btn-templates-done');
+  const templatesList = document.getElementById('templates-list');
+
+  function renderTemplatesList() {
+    if (!templatesList) return;
+    templatesList.innerHTML = AUTONYM_TEMPLATES.map((tpl: AutonymTemplate) => {
+      const badgeColor = tpl.project === 'Wisp' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
+        : tpl.project === 'Grimoire' ? 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30'
+        : tpl.project === 'Conlang' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
+        : tpl.project === 'Godot' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
+        : 'text-[#e8eef8] bg-[#122036] border-[#203453]';
+
+      return `
+        <div class="hud-frame p-3.5 rounded-md border border-[#203453] bg-[#0c1320] hover:border-[#48e0d2] transition flex items-center justify-between gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-white text-sm">${tpl.name}</span>
+              <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${badgeColor}">${tpl.badge}</span>
+            </div>
+            <p class="text-xs text-[#8d9bb6] m-0 leading-relaxed">${tpl.description}</p>
+          </div>
+          <button class="btn-hud btn-hud-primary btn-load-template text-xs py-1 px-3 whitespace-nowrap" data-tpl-id="${tpl.id}">
+            <span>Load Preset</span>
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    templatesList.querySelectorAll('.btn-load-template').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-tpl-id');
+        const tpl = AUTONYM_TEMPLATES.find((t: AutonymTemplate) => t.id === id);
+        if (tpl) {
+          if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
+            return;
+          }
+          codePane.setValue(tpl.html);
+          previewPane.render(tpl.html);
+          coordinator.updateStats();
+          fileManager.setFilename(`${tpl.id}.html`);
+          fileManager.markDirty(false);
+          checkDocumentIntegrity(tpl.html);
+          modalTemplates?.classList.add('hidden');
+          showToast(`✦ Loaded ${tpl.name} template!`);
+        }
+      });
+    });
+  }
+
+  if (btnTemplatesToggle && modalTemplates) {
+    btnTemplatesToggle.addEventListener('click', () => {
+      renderTemplatesList();
+      modalTemplates.classList.remove('hidden');
+    });
+    btnCloseTemplates?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
+    btnTemplatesDone?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
+    modalTemplates.addEventListener('click', (e) => {
+      if (e.target === modalTemplates) modalTemplates.classList.add('hidden');
+    });
+  }
 
   // Run initial integrity check
   checkDocumentIntegrity(STARTER_HTML);

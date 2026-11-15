@@ -13,10 +13,11 @@
 <body class="bg-[#070a10] text-[#e8eef8] select-none h-screen flex flex-col overflow-hidden">
 
   <!-- Interstatus Lab Top HUD Nav -->
-  <header class="h-13 bg-[#0c1320] border-b border-[#203453] px-4 flex items-center justify-between shrink-0 z-30">
-    <div class="flex items-center gap-4">
+  <header class="h-13 bg-[#0c1320] border-b border-[#203453] px-3 sm:px-4 flex items-center justify-between shrink-0 z-30 gap-2">
+    <!-- Left: Brand & File Operations Deck -->
+    <div class="flex items-center gap-3">
       <!-- App Brand & Eye Logo -->
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2.5 shrink-0">
         <img src="/logo.svg" alt="< 👁️ >" class="h-7 w-auto drop-shadow-[0_0_8px_rgba(72,224,210,0.5)]">
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5 leading-none">
@@ -27,66 +28,86 @@
         </div>
       </div>
 
-      <div class="h-5 w-px bg-[#203453]"></div>
+      <div class="h-5 w-px bg-[#203453] hidden sm:block"></div>
 
-      <!-- File Deck -->
-      <div class="flex items-center gap-2">
+      <!-- File Deck (Grouped Pill) -->
+      <div class="flex items-center gap-1.5 bg-[#090e17] border border-[#203453] p-1 rounded-sm">
         <button id="btn-new" class="btn-hud btn-hud-ghost" title="Create New HTML File">
           <i data-lucide="file-plus" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-          <span>New</span>
+          <span class="hidden md:inline">New</span>
         </button>
         <button id="btn-open" class="btn-hud btn-hud-ghost" title="Open Local HTML File">
           <i data-lucide="folder-open" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-          <span>Open</span>
+          <span class="hidden md:inline">Open</span>
         </button>
         <button id="btn-open-folder" class="btn-hud btn-hud-ghost" title="Open Project Folder (e.g. Wisp/src)">
           <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
-          <span>Folder</span>
+          <span class="hidden md:inline">Folder</span>
         </button>
         <button id="btn-save" class="btn-hud btn-hud-primary" title="Save HTML (Ctrl+S)">
           <i data-lucide="save" class="w-3.5 h-3.5"></i>
-          <span id="save-label">Save HTML</span>
+          <span id="save-label" class="hidden sm:inline">Save</span>
         </button>
         <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden" />
       </div>
 
       <!-- Active File Badge -->
-      <div id="file-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-[#122036]/80 border border-[#203453] rounded-sm text-xs font-['IBM_Plex_Mono'] text-[#8d9bb6]">
+      <div id="file-badge" class="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-[#122036]/80 border border-[#203453] rounded-sm text-xs font-['IBM_Plex_Mono'] text-[#8d9bb6]">
         <i data-lucide="file-code" class="w-3 h-3 text-[#48e0d2]"></i>
         <span id="active-filename" class="text-[#e8eef8]">untitled.html</span>
         <span id="dirty-indicator" class="text-[#ffbf4d] hidden">✦</span>
       </div>
     </div>
 
-    <!-- Right Controls: Exporters, Palette, Libraries, Beautify, Layout Modes -->
+    <!-- Center/Right: Edit Deck & Tools Deck & Mode Deck -->
     <div class="flex items-center gap-2.5">
-      <!-- Copy Clean Body -->
-      <button id="btn-copy-body" class="btn-hud btn-hud-ghost" title="Copy clean inner <body> markup for CMS, Webflow, or React">
-        <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
-        <span class="hidden md:inline">Copy Body</span>
-      </button>
+      <!-- Edit Operations Deck -->
+      <div class="flex items-center gap-1 bg-[#090e17] border border-[#203453] p-1 rounded-sm">
+        <button id="btn-undo" class="btn-hud btn-hud-ghost px-2" title="Undo (Ctrl+Z)">
+          <i data-lucide="undo-2" class="w-3.5 h-3.5 text-[#8d9bb6]"></i>
+        </button>
+        <button id="btn-redo" class="btn-hud btn-hud-ghost px-2" title="Redo (Ctrl+Y)">
+          <i data-lucide="redo-2" class="w-3.5 h-3.5 text-[#8d9bb6]"></i>
+        </button>
+        <button id="btn-find-toggle" class="btn-hud btn-hud-ghost" title="Find & Replace (Ctrl+F)">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <span class="hidden lg:inline">Find</span>
+        </button>
+        <button id="btn-beautify" class="btn-hud btn-hud-ghost" title="Format & Indent HTML">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
+          <span class="hidden lg:inline">Clean</span>
+        </button>
+      </div>
 
-      <!-- Palette Inspector -->
-      <button id="btn-palette-toggle" class="btn-hud btn-hud-ghost" title="Document Palette & Color Find/Replace">
-        <i data-lucide="palette" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-        <span class="hidden md:inline">Palette</span>
-      </button>
+      <!-- Tools Deck -->
+      <div class="flex items-center gap-1 bg-[#090e17] border border-[#203453] p-1 rounded-sm">
+        <button id="btn-templates-toggle" class="btn-hud btn-hud-ghost" title="Project Presets: Wisp, Grimoire, Conlang, Godot">
+          <i data-lucide="layout-template" class="w-3.5 h-3.5 text-[#a98bff]"></i>
+          <span class="hidden md:inline">Presets</span>
+        </button>
+        <button id="btn-tag-guide-toggle" class="btn-hud btn-hud-ghost" title="Grimoire of HTML Tags & Adventurer's Codex">
+          <i data-lucide="book-open" class="w-3.5 h-3.5 text-[#ffbf4d]"></i>
+          <span class="hidden md:inline">Tag Guide</span>
+        </button>
+        <button id="btn-godot-bbcode" class="btn-hud btn-hud-ghost" title="Convert & Copy current HTML to Godot 4 RichTextLabel BBCode">
+          <i data-lucide="gamepad-2" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <span class="hidden xl:inline">Godot BBCode</span>
+        </button>
+        <button id="btn-palette-toggle" class="btn-hud btn-hud-ghost" title="Document Palette & Color Find/Replace">
+          <i data-lucide="palette" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <span class="hidden md:inline">Palette</span>
+        </button>
+        <button id="btn-library-toggle" class="btn-hud btn-hud-ghost" title="Inject Popular CDNs">
+          <i data-lucide="book-copy" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
+          <span class="hidden lg:inline">Libraries</span>
+        </button>
+        <button id="btn-copy-body" class="btn-hud btn-hud-ghost" title="Copy clean inner <body> markup for CMS, Webflow, or React">
+          <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
+          <span class="hidden xl:inline">Copy Body</span>
+        </button>
+      </div>
 
-      <!-- Add Library Button -->
-      <button id="btn-library-toggle" class="btn-hud btn-hud-ghost" title="Inject Popular CDNs">
-        <i data-lucide="book-copy" class="w-3.5 h-3.5 text-[#5cff9d]"></i>
-        <span class="hidden md:inline">Libraries</span>
-      </button>
-
-      <!-- Clean Code / Beautify -->
-      <button id="btn-beautify" class="btn-hud btn-hud-ghost" title="Format & Indent HTML">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-        <span class="hidden lg:inline">Clean</span>
-      </button>
-
-      <div class="h-5 w-px bg-[#203453]"></div>
-
-      <!-- Mode Selector -->
+      <!-- Mode Selector Deck -->
       <div class="flex items-center bg-[#070a10] border border-[#203453] p-0.5 rounded">
         <button id="mode-split" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]">Split</button>
         <button id="mode-code" class="px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]">Code</button>
@@ -95,9 +116,37 @@
     </div>
   </header>
 
-  <!-- Sub-Toolbar (Visual Tweaker Controls, Sliders Drawer & Theme Simulator) -->
-  <div class="h-10 bg-[#0c1320]/90 border-b border-[#203453] px-4 flex items-center justify-between text-xs shrink-0 z-20">
-    <div class="flex items-center gap-3">
+  <!-- Find & Replace HUD Bar (Drop-down bar) -->
+  <div id="find-replace-bar" class="hidden h-10 bg-[#080d15] border-b border-[#203453] px-4 flex items-center justify-between text-xs font-['IBM_Plex_Mono'] shrink-0 z-20">
+    <div class="flex items-center gap-2 flex-1 max-w-3xl overflow-x-auto">
+      <div class="flex items-center gap-1.5 px-2.5 py-1 bg-[#122036] border border-[#203453] rounded">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-[#48e0d2] shrink-0"></i>
+        <input type="text" id="find-input" placeholder="Find in document..." class="bg-transparent text-xs text-white focus:outline-none w-32 sm:w-44">
+        <span id="find-count" class="text-[11px] text-[#8d9bb6] px-1 shrink-0 min-w-[36px] text-right">0/0</span>
+      </div>
+      <button id="btn-find-prev" class="btn-hud btn-hud-ghost py-1 px-2" title="Previous Match (Shift+Enter)">
+        <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+      </button>
+      <button id="btn-find-next" class="btn-hud btn-hud-ghost py-1 px-2" title="Next Match (Enter)">
+        <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+      </button>
+      <button id="btn-find-case" class="px-2 py-1 bg-[#122036] border border-[#203453] rounded text-[11px] font-bold text-[#8d9bb6] hover:text-[#e8eef8] transition" title="Toggle Case Sensitivity">Aa</button>
+
+      <div class="h-4 w-px bg-[#203453] shrink-0"></div>
+
+      <div class="flex items-center gap-1.5 px-2.5 py-1 bg-[#122036] border border-[#203453] rounded">
+        <i data-lucide="replace" class="w-3.5 h-3.5 text-[#5cff9d] shrink-0"></i>
+        <input type="text" id="replace-input" placeholder="Replace with..." class="bg-transparent text-xs text-white focus:outline-none w-32 sm:w-40">
+      </div>
+      <button id="btn-replace-next" class="btn-hud btn-hud-ghost py-1 px-2.5 text-xs" title="Replace Current Match">Replace</button>
+      <button id="btn-replace-all" class="btn-hud btn-hud-primary py-1 px-2.5 text-xs" title="Replace All Matches">Replace All</button>
+    </div>
+    <button id="btn-close-find" class="text-[#8d9bb6] hover:text-white p-1 ml-2" title="Close Search (Escape)">✕</button>
+  </div>
+
+  <!-- Sub-Toolbar (Visual Tweaker Controls, Sliders Drawer, Guides, Button Shape & Theme Simulator) -->
+  <div class="h-10 bg-[#0c1320]/90 border-b border-[#203453] px-3 sm:px-4 flex items-center justify-between text-xs shrink-0 z-20 gap-2">
+    <div class="flex items-center gap-2.5">
       <!-- Visual Edit Toggle -->
       <label class="flex items-center gap-2 cursor-pointer bg-[#122036] hover:bg-[#162742] border border-[#203453] px-2.5 py-1 rounded transition text-xs font-medium">
         <input type="checkbox" id="toggle-visual-edit" class="accent-[#5cff9d] rounded cursor-pointer" checked />
@@ -108,7 +157,7 @@
       </label>
 
       <!-- Quick Tweak Actions -->
-      <div class="flex items-center gap-2 pl-2 border-l border-[#203453]">
+      <div class="flex items-center gap-1.5 pl-2 border-l border-[#203453]">
         <button id="btn-bold" class="px-2 py-0.5 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-[#e8eef8] font-bold" title="Toggle Bold">B</button>
         <button id="btn-italic" class="px-2 py-0.5 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-[#e8eef8] italic font-serif" title="Toggle Italic">I</button>
         
@@ -121,12 +170,36 @@
       <!-- Style Drawer Toggle -->
       <button id="btn-toggle-styles" class="btn-hud btn-hud-ghost text-xs py-1 px-2.5 flex items-center gap-1.5" title="Open CSS Quick-Sliders for the selected element">
         <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
-        <span>Style Drawer</span>
+        <span class="hidden sm:inline">Style Drawer</span>
       </button>
+
+      <!-- Live Tag Inspector Hint Pill (Learner Guide) -->
+      <div id="inspector-tag-hint" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#122036] border border-[#48e0d2]/40 hover:border-[#48e0d2] rounded text-[11px] font-['IBM_Plex_Mono'] cursor-pointer transition" title="Click to view full entry in Grimoire of Tags">
+        <span class="text-[#5cff9d] font-bold" id="hint-tag-name">&lt;div&gt;</span>
+        <span class="text-[#8d9bb6] hidden md:inline truncate max-w-xs" id="hint-tag-desc">Invisible Sorting Box</span>
+        <i data-lucide="help-circle" class="w-3 h-3 text-[#48e0d2]"></i>
+      </div>
     </div>
 
-    <!-- Right: Theme Simulator & Responsive Viewport Presets -->
-    <div class="flex items-center gap-3">
+    <!-- Right: Guides Toggle, Button Shape Switcher, Theme Sim, Viewports -->
+    <div class="flex items-center gap-2.5">
+      <!-- Guides Toggle -->
+      <button id="btn-toggle-guides" class="px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Toggle Educational Tag Guides & Learning Tips">
+        <i data-lucide="sparkle" class="w-3.5 h-3.5 text-[#ffbf4d]"></i>
+        <span id="label-guides" class="font-['IBM_Plex_Mono'] text-[11px] text-[#e8eef8]">Guides: ON</span>
+      </button>
+
+      <!-- Button Shape Switcher -->
+      <div class="hidden lg:flex items-center gap-0.5 bg-[#070a10] border border-[#203453] p-0.5 rounded text-[11px] font-['IBM_Plex_Mono']">
+        <span class="text-[#8d9bb6] px-1 text-[10px] uppercase tracking-wider">Shape:</span>
+        <button class="btn-shape-opt px-1.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]" data-shape="slanted" title="Slanted Cyberpunk polygon cut">Slant</button>
+        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="notched" title="Notched chamfered sci-fi corners">Notch</button>
+        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="rounded" title="Smooth rounded corners">Round</button>
+        <button class="btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white" data-shape="sharp" title="Sharp rectangular cut">Sharp</button>
+      </div>
+
+      <div class="h-4 w-px bg-[#203453] hidden sm:block"></div>
+
       <!-- Theme Simulator -->
       <div class="flex items-center gap-1.5">
         <button id="btn-theme-sim" class="px-2.5 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] rounded text-xs flex items-center gap-1.5 transition" title="Cycle Theme: Auto -> Dark -> Light">
@@ -136,10 +209,10 @@
         <button id="btn-bake-theme" class="hidden text-[11px] text-[#5cff9d] hover:underline font-['IBM_Plex_Mono'] px-1" title="Bake this theme class permanently into HTML source">Bake in</button>
       </div>
 
-      <div class="h-4 w-px bg-[#203453]"></div>
+      <div class="h-4 w-px bg-[#203453] hidden md:block"></div>
 
       <!-- Responsive Viewport Presets -->
-      <div class="flex items-center gap-1 text-xs font-['IBM_Plex_Mono']">
+      <div class="hidden md:flex items-center gap-1 text-xs font-['IBM_Plex_Mono']">
         <button class="viewport-btn px-2 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]" data-width="100%">100%</button>
         <button class="viewport-btn px-2 py-0.5 rounded text-[#8d9bb6] hover:bg-[#122036] hover:text-[#e8eef8]" data-width="768px">768px</button>
         <button class="viewport-btn px-2 py-0.5 rounded text-[#8d9bb6] hover:bg-[#122036] hover:text-[#e8eef8]" data-width="390px">390px</button>
@@ -386,6 +459,77 @@
       <div class="px-5 py-3 bg-[#070a10] border-t border-[#203453] flex justify-between items-center text-xs text-[#8d9bb6]">
         <span id="palette-summary-count">0 unique colors detected</span>
         <button id="btn-palette-done" class="btn-hud btn-hud-ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag Grimoire Modal (Adventurer's HTML Codex) -->
+  <div id="modal-tag-guide" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#0c1320] border border-[#203453] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="px-5 py-3 border-b border-[#203453] flex items-center justify-between bg-[#122036]">
+        <div class="flex items-center gap-2">
+          <i data-lucide="book-open" class="w-4 h-4 text-[#ffbf4d]"></i>
+          <h2 class="font-['Rajdhani'] font-bold text-base text-white uppercase tracking-wider">Grimoire of HTML Tags ✦ Adventurer's Codex</h2>
+        </div>
+        <button id="btn-close-tag-guide" class="text-[#8d9bb6] hover:text-white p-1">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <!-- Search & Category Filters -->
+      <div class="p-4 border-b border-[#203453] bg-[#090e17] space-y-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-[#122036] border border-[#203453] rounded text-xs font-['IBM_Plex_Mono']">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-[#48e0d2]"></i>
+          <input type="text" id="tag-guide-search" placeholder="Search tags by name, purpose, or analogy (e.g. portal, button, layout)..." class="bg-transparent text-xs text-white focus:outline-none flex-1">
+          <button id="btn-clear-tag-search" class="text-[#8d9bb6] hover:text-white hidden text-xs">✕</button>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-['IBM_Plex_Mono'] pb-0.5" id="tag-category-pills">
+          <button class="tag-cat-pill px-2.5 py-1 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]" data-category="All">All</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Structure">Structure</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Text">Text</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Interactive">Interactive</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Media">Media</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Lists & Tables">Lists &amp; Tables</button>
+          <button class="tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]" data-category="Code & Meta">Code &amp; Meta</button>
+        </div>
+      </div>
+
+      <!-- Tag Cards Catalog -->
+      <div id="tag-cards-container" class="p-4 space-y-3 overflow-y-auto flex-1 font-['IBM_Plex_Mono']">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="px-5 py-3 bg-[#070a10] border-t border-[#203453] flex justify-between items-center text-xs text-[#8d9bb6]">
+        <span id="tag-guide-count">Showing 24 tags</span>
+        <button id="btn-tag-guide-done" class="btn-hud btn-hud-ghost">Close Codex</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Presets Modal (Autonym & Godot) -->
+  <div id="modal-templates" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#0c1320] border border-[#203453] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="px-5 py-3 border-b border-[#203453] flex items-center justify-between bg-[#122036]">
+        <div class="flex items-center gap-2">
+          <i data-lucide="layout-template" class="w-4 h-4 text-[#a98bff]"></i>
+          <h2 class="font-['Rajdhani'] font-bold text-base text-white uppercase tracking-wider">Project Presets ✦ Autonym &amp; Godot</h2>
+        </div>
+        <button id="btn-close-templates" class="text-[#8d9bb6] hover:text-white p-1">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 border-b border-[#203453] bg-[#090e17] text-xs text-[#8d9bb6]">
+        Instantly load a starter template designed specifically for your projects (Wisp, Grimoire, Conlang, or Godot).
+      </div>
+
+      <div id="templates-list" class="p-4 space-y-3 overflow-y-auto flex-1 font-['IBM_Plex_Mono']">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="px-5 py-3 bg-[#070a10] border-t border-[#203453] flex justify-between items-center text-xs text-[#8d9bb6]">
+        <span>Loading a preset replaces current editor content</span>
+        <button id="btn-templates-done" class="btn-hud btn-hud-ghost">Close</button>
       </div>
     </div>
   </div>

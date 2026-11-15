@@ -1,9 +1,19 @@
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
-import { html } from "@codemirror/lang-html";
+import { html, autoCloseTags } from "@codemirror/lang-html";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { keymap } from "@codemirror/view";
-import { indentWithTab } from "@codemirror/commands";
+import { indentWithTab, undo, redo } from "@codemirror/commands";
+import { 
+  search, 
+  SearchQuery, 
+  setSearchQuery, 
+  findNext, 
+  findPrevious, 
+  replaceNext, 
+  replaceAll, 
+  SearchCursor 
+} from "@codemirror/search";
 
 export interface CodeEditorOptions {
   container: HTMLElement;
@@ -47,6 +57,8 @@ export class CodePane {
       extensions: [
         basicSetup,
         html(),
+        autoCloseTags,
+        search({ top: false }),
         oneDark,
         customTheme,
         keymap.of([indentWithTab]),
@@ -79,6 +91,101 @@ export class CodePane {
 
   public getLineCount(): number {
     return this.view.state.doc.lines;
+  }
+
+  public focus() {
+    this.view.focus();
+  }
+
+  // --- Undo & Redo ---
+  public undo(): boolean {
+    return undo(this.view);
+  }
+
+  public redo(): boolean {
+    return redo(this.view);
+  }
+
+  // --- Find & Search & Replace ---
+  public setSearch(
+    queryText: string, 
+    replaceText: string = '', 
+    caseSensitive: boolean = false, 
+    regexp: boolean = false
+  ): { total: number; current: number } {
+    const query = new SearchQuery({
+      search: queryText,
+      replace: replaceText,
+      caseSensitive,
+      regexp
+    });
+
+    this.view.dispatch({
+      effects: setSearchQuery.of(query)
+    });
+
+    if (!queryText) {
+      return { total: 0, current: 0 };
+    }
+
+    // Calculate match count & active match index
+    let total = 0;
+    let current = 0;
+    const doc = this.view.state.doc;
+    const selection = this.view.state.selection.main;
+
+    try {
+      const cursor = new SearchCursor(
+        doc,
+        queryText,
+        0,
+        doc.length,
+        caseSensitive ? undefined : (s: string) => s.toLowerCase()
+      );
+
+      while (!cursor.next().done) {
+        total++;
+        if (cursor.value.from <= selection.from && selection.to <= cursor.value.to) {
+          current = total;
+        }
+      }
+    } catch {
+      // Ignore cursor errors (e.g. malformed regex)
+    }
+
+    return { total, current };
+  }
+
+  public findNext(): boolean {
+    return findNext(this.view);
+  }
+
+  public findPrevious(): boolean {
+    return findPrevious(this.view);
+  }
+
+  public replaceNext(): boolean {
+    return replaceNext(this.view);
+  }
+
+  public replaceAll(): boolean {
+    return replaceAll(this.view);
+  }
+
+  // --- Insert Snippet / Tag ---
+  public insertSnippet(snippet: string) {
+    const selection = this.view.state.selection.main;
+    this.view.dispatch({
+      changes: {
+        from: selection.from,
+        to: selection.to,
+        insert: snippet
+      },
+      selection: {
+        anchor: selection.from + snippet.length
+      }
+    });
+    this.view.focus();
   }
 
   public formatHtml() {
