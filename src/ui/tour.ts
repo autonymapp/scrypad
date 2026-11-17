@@ -102,14 +102,15 @@ export function showTour(): Promise<void> {
       const s = STEPS[i];
       art.innerHTML = '';
       if (s.wisp) {
-        // ScryPad's code eye  < ( ✦ ) >  drawn in the same line style as the other cards
+        // ScryPad's code eye: the same logo as the top bar, in the tour's glowing tile
         const tile = document.createElement('div');
         tile.className = 'tour-tile';
-        tile.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="1 6.5 22 11" style="width:44px;height:22px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="ScryPad">'
-          + '<path d="M5 8 2 12l3 4"/><path d="m19 8 3 4-3 4"/>'
-          + '<path d="M7 12c1.6-3.6 8.4-3.6 10 0-1.6 3.6-8.4 3.6-10 0Z"/>'
-          + '<path d="M12 9.6c0 1.6.8 2.4 2.4 2.4-1.6 0-2.4.8-2.4 2.4 0-1.6-.8-2.4-2.4-2.4 1.6 0 2.4-.8 2.4-2.4Z" fill="currentColor" stroke-width="1"/>'
-          + '</svg>';
+        const img = document.createElement('img');
+        img.src = '/logo.svg';
+        img.alt = 'ScryPad';
+        img.style.width = '46px';
+        img.style.height = 'auto';
+        tile.appendChild(img);
         art.appendChild(tile);
       } else if (s.icon) {
         const tile = document.createElement('div');
