@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cssMatch) {
       const href = cssMatch[1];
       if (!fileManager.hasCss(href)) {
-        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-[var(--ink)] bg-[var(--void)] px-1.5 py-0.5 rounded border border-[var(--line)]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
         btnHelperActionCss.classList.remove('hidden');
         btnHelperActionCss.style.display = 'inline-flex';
         smartHelperBanner.classList.remove('hidden');
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unembeddedImages: UnembeddedImage[] = findUnembeddedImages(code);
     if (unembeddedImages.length > 0) {
       currentPendingTargetImgSrc = unembeddedImages[0].src;
-      smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
+      smartHelperMsg.innerHTML = `Local image detected: <code class="text-[var(--ink)] bg-[var(--void)] px-1.5 py-0.5 rounded border border-[var(--line)]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
       btnHelperActionImg.classList.remove('hidden');
       btnHelperActionImg.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unlinkedFonts: UnlinkedFont[] = detectUnlinkedFonts(code);
     if (unlinkedFonts.length > 0) {
       currentPendingFont = unlinkedFonts[0];
-      smartHelperMsg.innerHTML = `Google Font <strong class="text-white">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
+      smartHelperMsg.innerHTML = `Google Font <strong class="text-[var(--ink)]">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
       btnHelperActionFont.classList.remove('hidden');
       btnHelperActionFont.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
@@ -508,12 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const TYPE_GROUPS = [
-    { id: 'html', label: 'HTML Documents', color: '#c56bff', badge: 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
-    { id: 'css', label: 'Stylesheets', color: '#f2d27a', badge: 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30', icon: `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
-    { id: 'js', label: 'Scripts', color: '#d896ff', badge: 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
-    { id: 'image', label: 'Images & Media', color: '#8fb6ff', badge: 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
-    { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[#ff7be5] bg-[#ff7be5]/10 border-[#ff7be5]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ff7be5] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
-    { id: 'other', label: 'Other Assets', color: '#a597c2', badge: 'text-[#a597c2] bg-[#a597c2]/10 border-[#a597c2]/30', icon: `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
+    { id: 'html', label: 'HTML Documents', color: '#c56bff', badge: 'text-[var(--forge)] bg-[color-mix(in_srgb,var(--forge)_10%,transparent)] border-[color-mix(in_srgb,var(--forge)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--forge)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
+    { id: 'css', label: 'Stylesheets', color: '#f2d27a', badge: 'text-[var(--gold)] bg-[color-mix(in_srgb,var(--gold)_10%,transparent)] border-[color-mix(in_srgb,var(--gold)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--gold)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
+    { id: 'js', label: 'Scripts', color: '#d896ff', badge: 'text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--forge-hi)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
+    { id: 'image', label: 'Images & Media', color: '#8fb6ff', badge: 'text-[var(--blue)] bg-[color-mix(in_srgb,var(--blue)_10%,transparent)] border-[color-mix(in_srgb,var(--blue)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--blue)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
+    { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[var(--pink)] bg-[color-mix(in_srgb,var(--pink)_10%,transparent)] border-[color-mix(in_srgb,var(--pink)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--pink)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
+    { id: 'other', label: 'Other Assets', color: '#a597c2', badge: 'text-[var(--dim)] bg-[color-mix(in_srgb,var(--dim)_10%,transparent)] border-[color-mix(in_srgb,var(--dim)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--dim)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
   ];
 
   function renderTreeHtml(nodes: TreeNode[], depth: number, activePath: string | null): string {
@@ -524,21 +524,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(node.path);
         const count = countFilesInTree(node);
         const caretSvg = isCollapsed
-          ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-          : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+          ? `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+          : `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
         const folderSvg = isCollapsed
-          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
 
         out += `
           <div class="tree-folder-group">
-            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
+            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition text-[var(--dim)] hover:text-[var(--ink)]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
               <span class="flex items-center gap-1.5 truncate">
                 <span class="shrink-0">${caretSvg}</span>
                 <span class="shrink-0">${folderSvg}</span>
-                <span class="font-bold text-xs truncate text-[#d9e2f2]">${node.name}</span>
+                <span class="font-bold text-xs truncate text-[var(--moonsilver)]">${node.name}</span>
               </span>
-              <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${count}</span>
+              <span class="text-[9px] text-[var(--faint)] bg-[var(--panel)] px-1 rounded ml-1 border border-[var(--line)] shrink-0">${count}</span>
             </button>
             <div class="tree-folder-children ${isCollapsed ? 'hidden' : ''}">
               ${renderTreeHtml(node.children, depth + 1, activePath)}
@@ -548,23 +548,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const f = node.fileEntry;
         const isAct = (activePath && (activePath === f.path || activePath === f.name));
-        const badgeColor = f.kind === 'html' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-          : f.kind === 'css' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
-          : f.kind === 'js' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
-          : 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30';
+        const badgeColor = f.kind === 'html' ? 'text-[var(--forge)] bg-[color-mix(in_srgb,var(--forge)_10%,transparent)] border-[color-mix(in_srgb,var(--forge)_30%,transparent)]'
+          : f.kind === 'css' ? 'text-[var(--gold)] bg-[color-mix(in_srgb,var(--gold)_10%,transparent)] border-[color-mix(in_srgb,var(--gold)_30%,transparent)]'
+          : f.kind === 'js' ? 'text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)]'
+          : 'text-[var(--blue)] bg-[color-mix(in_srgb,var(--blue)_10%,transparent)] border-[color-mix(in_srgb,var(--blue)_30%,transparent)]';
 
         const fileIcon = f.kind === 'html'
-          ? `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--forge)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
           : f.kind === 'css'
-          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--gold)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
           : f.kind === 'js'
-          ? `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--forge-hi)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
           : f.kind === 'image'
-          ? `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[var(--blue)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[var(--dim)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
 
         out += `
-          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
+          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition ${isAct ? 'bg-[var(--panel-hi)] border border-[color-mix(in_srgb,var(--forge)_60%,transparent)] text-[var(--ink)] font-bold' : 'text-[var(--dim)]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
             <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
               ${fileIcon}
               <span class="truncate text-xs">${node.name}</span>
@@ -591,28 +591,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupKey = `group_${group.id}`;
       const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(groupKey);
       const caretSvg = isCollapsed
-        ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-        : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+        ? `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+        : `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
 
       out += `
         <div class="type-folder-group">
-          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-group-key="${groupKey}">
+          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition text-[var(--dim)] hover:text-[var(--ink)]" data-group-key="${groupKey}">
             <span class="flex items-center gap-1.5 truncate">
               <span class="shrink-0">${caretSvg}</span>
               <span class="shrink-0">${group.icon}</span>
-              <span class="font-bold text-xs truncate text-[#d9e2f2]">${group.label}</span>
+              <span class="font-bold text-xs truncate text-[var(--moonsilver)]">${group.label}</span>
             </span>
-            <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${groupFiles.length}</span>
+            <span class="text-[9px] text-[var(--faint)] bg-[var(--panel)] px-1 rounded ml-1 border border-[var(--line)] shrink-0">${groupFiles.length}</span>
           </button>
           <div class="type-group-children ${isCollapsed ? 'hidden' : ''} space-y-0.5">
             ${groupFiles.map((f: any) => {
               const isAct = (activePath && (activePath === f.path || activePath === f.name));
               const dirPart = f.path.includes('/') ? f.path.substring(0, f.path.lastIndexOf('/')) : '';
               return `
-                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" title="${f.path}">
+                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition ${isAct ? 'bg-[var(--panel-hi)] border border-[color-mix(in_srgb,var(--forge)_60%,transparent)] text-[var(--ink)] font-bold' : 'text-[var(--dim)]'}" data-path="${f.path}" title="${f.path}">
                   <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
                     <span class="truncate text-xs">${f.name}</span>
-                    ${dirPart ? `<span class="text-[10px] text-[#675c7d] truncate">(${dirPart})</span>` : ''}
+                    ${dirPart ? `<span class="text-[10px] text-[var(--faint)] truncate">(${dirPart})</span>` : ''}
                   </span>
                   <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1 shrink-0 ${group.badge}">${f.kind}</span>
                 </button>
@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!project) return;
     const allFiles = project.getFilesList();
     if (allFiles.length === 0) {
-      projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No supported files found.</div>`;
+      projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No supported files found.</div>`;
       if (projectFileCount) projectFileCount.textContent = '0 files';
       return;
     }
@@ -649,14 +649,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (projectTreeMode === 'tree') {
       const filteredTree = filterTree(tree, projectSearchQuery);
       if (filteredTree.length === 0) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = renderTreeHtml(filteredTree, 0, activePath);
       }
     } else {
       const groupedHtml = renderGroupedHtml(allFiles, activePath);
       if (!groupedHtml) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = groupedHtml;
       }
@@ -733,18 +733,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnViewTree?.addEventListener('click', () => {
     projectTreeMode = 'tree';
-    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
-    btnViewType?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
-    btnViewType?.classList.add('text-[#a597c2]');
+    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[var(--panel-mid)] text-[var(--forge)]';
+    btnViewType?.classList.remove('bg-[var(--panel-mid)]', 'text-[var(--forge)]', 'font-bold');
+    btnViewType?.classList.add('text-[var(--dim)]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
 
   btnViewType?.addEventListener('click', () => {
     projectTreeMode = 'type';
-    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
-    btnViewTree?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
-    btnViewTree?.classList.add('text-[#a597c2]');
+    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[var(--panel-mid)] text-[var(--forge)]';
+    btnViewTree?.classList.remove('bg-[var(--panel-mid)]', 'text-[var(--forge)]', 'font-bold');
+    btnViewTree?.classList.add('text-[var(--dim)]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
@@ -883,7 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
     previewPane.setVisualEditMode(active);
     previewModeTag.textContent = active ? 'Click to Edit On' : 'Click to Edit Off';
     document.getElementById('tweak-zone')?.classList.toggle('is-off', !active);
-    previewModeTag.className = active ? 'text-[#c56bff]' : 'text-[#a597c2]';
+    previewModeTag.className = active ? 'text-[var(--forge)]' : 'text-[var(--dim)]';
   });
 
   // Quick Format Bar
@@ -1208,16 +1208,16 @@ document.addEventListener('DOMContentLoaded', () => {
     paletteSummaryCount.textContent = `${swatches.length} unique colors detected`;
 
     if (swatches.length === 0) {
-      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#a597c2]">No colors detected in document styles.</div>`;
+      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[var(--dim)]">No colors detected in document styles.</div>`;
       return;
     }
 
     paletteSwatches.innerHTML = swatches.map((s) => `
-      <button class="swatch-card p-2 bg-[#211a2c] hover:bg-[#2c2140] border ${activeTargetColor === s.color ? 'border-[#d896ff]' : 'border-[#36294a]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
+      <button class="swatch-card p-2 bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border ${activeTargetColor === s.color ? 'border-[var(--forge-hi)]' : 'border-[var(--line)]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
         <span class="w-6 h-6 rounded shadow border border-white/20 shrink-0" style="background-color: ${s.color};"></span>
         <div class="flex-1 min-w-0">
-          <div class="text-[11px] font-['Fira_Code'] text-white font-bold truncate">${s.color}</div>
-          <div class="text-[10px] text-[#a597c2]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
+          <div class="text-[11px] font-['Fira_Code'] text-[var(--ink)] font-bold truncate">${s.color}</div>
+          <div class="text-[10px] text-[var(--dim)]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
         </div>
       </button>
     `).join('');
@@ -1430,13 +1430,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render library list
   libraryList.innerHTML = CDN_LIBRARIES.map((lib) => `
-    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[#c56bff] transition">
+    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[var(--forge)] transition">
       <div class="flex-1">
         <div class="flex items-center gap-2">
-          <span class="font-['Chakra_Petch'] font-bold text-white text-sm tracking-wide">${lib.name}</span>
-          <span class="text-[10px] font-['Fira_Code'] uppercase px-1.5 py-0.2 bg-[#211a2c] text-[#c56bff] border border-[#36294a] rounded">${lib.badge}</span>
+          <span class="font-['Chakra_Petch'] font-bold text-[var(--ink)] text-sm tracking-wide">${lib.name}</span>
+          <span class="text-[10px] font-['Fira_Code'] uppercase px-1.5 py-0.2 bg-[var(--panel-hi)] text-[var(--forge)] border border-[var(--line)] rounded">${lib.badge}</span>
         </div>
-        <p class="text-xs text-[#a597c2] mt-0.5">${lib.description}</p>
+        <p class="text-xs text-[var(--dim)] mt-0.5">${lib.description}</p>
       </div>
       <button class="btn-hud btn-hud-ghost btn-inject text-xs whitespace-nowrap" data-lib-id="${lib.id}">
         <span>+ Add</span>
@@ -1658,13 +1658,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const { total, current } = codePane.setSearch(query, replaceStr, isCaseSensitive);
     if (!query) {
       findCount.textContent = '0/0';
-      findCount.className = 'text-[11px] text-[#a597c2] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--dim)] px-1 shrink-0 min-w-[36px] text-right';
     } else if (total === 0) {
       findCount.textContent = '0';
-      findCount.className = 'text-[11px] text-[#f2d27a] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--gold)] px-1 shrink-0 min-w-[36px] text-right';
     } else {
       findCount.textContent = `${current > 0 ? current : 1}/${total}`;
-      findCount.className = 'text-[11px] text-[#d896ff] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--forge-hi)] px-1 shrink-0 min-w-[36px] text-right';
     }
   }
 
@@ -1720,8 +1720,8 @@ document.addEventListener('DOMContentLoaded', () => {
   btnFindCase.addEventListener('click', () => {
     isCaseSensitive = !isCaseSensitive;
     btnFindCase.className = isCaseSensitive 
-      ? "px-2 py-1 bg-[#211a2c] border border-[#c56bff] text-[#c56bff] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(197,107,255,0.3)] transition"
-      : "px-2 py-1 bg-[#211a2c] border border-[#36294a] rounded text-[11px] font-bold text-[#a597c2] hover:text-[#efe8fb] transition";
+      ? "px-2 py-1 bg-[var(--panel-hi)] border border-[var(--forge)] text-[var(--forge)] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(197,107,255,0.3)] transition"
+      : "px-2 py-1 bg-[var(--panel-hi)] border border-[var(--line)] rounded text-[11px] font-bold text-[var(--dim)] hover:text-[var(--ink)] transition";
     updateSearchMatches();
   });
 
@@ -1882,29 +1882,29 @@ document.addEventListener('DOMContentLoaded', () => {
     tagGuideCount.textContent = `Showing ${filtered.length} of ${HTML_TAG_DICTIONARY.length} tags`;
 
     if (filtered.length === 0) {
-      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#a597c2]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
+      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[var(--dim)]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
       return;
     }
 
     tagCardsContainer.innerHTML = filtered.map((t: TagInfo) => `
-      <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex flex-col gap-2">
+      <div class="hud-frame p-3.5 rounded-md border border-[var(--line)] bg-[var(--panel)] hover:border-[var(--forge)] transition flex flex-col gap-2">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <code class="text-sm font-bold text-[#c56bff] bg-[#211a2c] px-2 py-0.5 rounded border border-[#36294a]">&lt;${t.tag}&gt;</code>
-            <span class="text-xs font-semibold text-white">${t.name}</span>
-            <span class="text-[10px] text-[#d896ff] bg-[#d896ff]/10 border border-[#d896ff]/30 px-1.5 py-0.2 rounded">${t.purpose}</span>
+            <code class="text-sm font-bold text-[var(--forge)] bg-[var(--panel-hi)] px-2 py-0.5 rounded border border-[var(--line)]">&lt;${t.tag}&gt;</code>
+            <span class="text-xs font-semibold text-[var(--ink)]">${t.name}</span>
+            <span class="text-[10px] text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)] px-1.5 py-0.2 rounded">${t.purpose}</span>
           </div>
           <button class="btn-hud btn-hud-primary btn-insert-tag text-xs py-0.5 px-2.5" data-tag="${t.tag}">
             <span>+ Insert</span>
           </button>
         </div>
-        <p class="text-xs text-[#a597c2] leading-relaxed">${t.description}</p>
-        <div class="flex items-center justify-between pt-1 border-t border-[#36294a]/60 text-[11px]">
-          <div class="flex items-center gap-1.5 text-[#a597c2] truncate">
-            <span class="text-[10px] uppercase text-[#a597c2]/70">Attributes:</span>
-            ${t.commonAttributes.map(a => `<code class="text-[#8fb6ff] bg-[#0f0b16] px-1 py-0.2 rounded border border-[#36294a]">${a}</code>`).join(' ')}
+        <p class="text-xs text-[var(--dim)] leading-relaxed">${t.description}</p>
+        <div class="flex items-center justify-between pt-1 border-t border-[color-mix(in_srgb,var(--line)_60%,transparent)] text-[11px]">
+          <div class="flex items-center gap-1.5 text-[var(--dim)] truncate">
+            <span class="text-[10px] uppercase text-[color-mix(in_srgb,var(--dim)_70%,transparent)]">Attributes:</span>
+            ${t.commonAttributes.map(a => `<code class="text-[var(--blue)] bg-[var(--void)] px-1 py-0.2 rounded border border-[var(--line)]">${a}</code>`).join(' ')}
           </div>
-          <span class="text-[10px] text-[#c56bff]/70 uppercase tracking-wider shrink-0">${t.category}</span>
+          <span class="text-[10px] text-[color-mix(in_srgb,var(--forge)_70%,transparent)] uppercase tracking-wider shrink-0">${t.category}</span>
         </div>
       </div>
     `).join('');
@@ -1953,9 +1953,9 @@ document.addEventListener('DOMContentLoaded', () => {
   tagCategoryPills.forEach(pill => {
     pill.addEventListener('click', () => {
       tagCategoryPills.forEach(p => {
-        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[#a597c2] hover:bg-[#211a2c]";
+        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[var(--dim)] hover:bg-[var(--panel-hi)]";
       });
-      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
+      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[var(--panel-hi)] text-[var(--forge)] border border-[var(--line-hot)]";
       currentTagCategory = pill.getAttribute('data-category') || 'All';
       renderTagGuideCards(tagGuideSearch.value);
     });
@@ -2103,6 +2103,21 @@ document.addEventListener('DOMContentLoaded', () => {
   try { wrapPref = localStorage.getItem('scrypad_wrap') === 'on'; } catch { /* ignore */ }
   applyWrap(wrapPref);
   document.getElementById('menu-view-wrap')?.addEventListener('click', () => applyWrap(!codePane.isWordWrap()));
+
+  // App Theme: ScryPad itself in Dark or Light (the toolbar's Light/Dark only previews your page)
+  const applyAppTheme = (theme: 'dark' | 'light') => {
+    if (theme === 'light') document.documentElement.setAttribute('data-app-theme', 'light');
+    else document.documentElement.removeAttribute('data-app-theme');
+    const label = document.getElementById('label-app-theme');
+    if (label) label.textContent = theme === 'light' ? 'Light' : 'Dark';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f1f9' : '#0f0b16');
+    try { localStorage.setItem('scrypad_app_theme', theme); } catch { /* ignore */ }
+  };
+  applyAppTheme(document.documentElement.getAttribute('data-app-theme') === 'light' ? 'light' : 'dark');
+  document.getElementById('menu-view-app-theme')?.addEventListener('click', () => {
+    closeAllMenus();
+    applyAppTheme(document.documentElement.getAttribute('data-app-theme') === 'light' ? 'dark' : 'light');
+  });
 
   // --- Help menu ---
   document.getElementById('menu-help-tour')?.addEventListener('click', () => { closeAllMenus(); showTour(); });

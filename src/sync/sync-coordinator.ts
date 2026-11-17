@@ -91,8 +91,8 @@ export class SyncCoordinator {
       this.elSyncStatus.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-1.5 animate-ping"></span>Updating';
       this.elSyncStatus.className = 'text-amber-400 text-xs font-mono flex items-center';
     } else {
-      this.elSyncStatus.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[#d896ff] mr-1.5"></span>Live Preview On';
-      this.elSyncStatus.className = 'text-[#d896ff] text-xs font-mono flex items-center';
+      this.elSyncStatus.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[var(--forge-hi)] mr-1.5"></span>Live Preview On';
+      this.elSyncStatus.className = 'text-[var(--forge-hi)] text-xs font-mono flex items-center';
     }
   }
 }

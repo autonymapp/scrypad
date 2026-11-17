@@ -7,15 +7,15 @@ import { tags as t } from "@lezer/highlight";
 
 // Forge syntax colors: violet tags, moonsilver attributes, gold strings, calm everything else
 const forgeHighlight = HighlightStyle.define([
-  { tag: [t.tagName, t.keyword, t.definitionKeyword, t.modifier], color: "#d896ff" },
-  { tag: [t.attributeName, t.propertyName], color: "#d9e2f2" },
-  { tag: [t.string, t.special(t.string), t.attributeValue], color: "#f2d27a" },
-  { tag: [t.number, t.bool, t.atom, t.color, t.unit], color: "#8fb6ff" },
-  { tag: [t.comment, t.lineComment, t.blockComment], color: "#675c7d", fontStyle: "italic" },
-  { tag: [t.angleBracket, t.punctuation, t.separator, t.bracket], color: "#a597c2" },
-  { tag: [t.function(t.variableName), t.className], color: "#e3b8ff" },
-  { tag: [t.variableName, t.name], color: "#efe8fb" },
-  { tag: t.invalid, color: "#ff7b9c" },
+  { tag: [t.tagName, t.keyword, t.definitionKeyword, t.modifier], color: "var(--forge-hi)" },
+  { tag: [t.attributeName, t.propertyName], color: "var(--moonsilver)" },
+  { tag: [t.string, t.special(t.string), t.attributeValue], color: "var(--gold)" },
+  { tag: [t.number, t.bool, t.atom, t.color, t.unit], color: "var(--blue)" },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: "var(--faint)", fontStyle: "italic" },
+  { tag: [t.angleBracket, t.punctuation, t.separator, t.bracket], color: "var(--dim)" },
+  { tag: [t.function(t.variableName), t.className], color: "var(--forge-soft)" },
+  { tag: [t.variableName, t.name], color: "var(--ink)" },
+  { tag: t.invalid, color: "var(--red)" },
 ]);
 import { keymap } from "@codemirror/view";
 import { indentWithTab, undo, redo } from "@codemirror/commands";
@@ -61,9 +61,9 @@ export class CodePane {
         lineHeight: "1.6"
       },
       ".cm-gutters": {
-        backgroundColor: "#09070e",
-        borderRight: "1px solid #36294a",
-        color: "#5a4e70"
+        backgroundColor: "var(--deep)",
+        borderRight: "1px solid var(--line)",
+        color: "var(--faint2)"
       },
       "&.cm-focused": {
         outline: "none"

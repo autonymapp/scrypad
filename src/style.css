@@ -87,6 +87,62 @@
   --f-mono: 'Fira Code', ui-monospace, Consolas, monospace;
 
   --cut: 12px;
+
+  /* Extra theme colors (dark) */
+  --blue: #8fb6ff;
+  --faint: #675c7d;
+  --faint2: #5a4e70;
+  --panel-mid: #1a1324;
+  --panel-hover: #2a2038;
+  --deep: #0b0812;
+  --gutter: #09070e;
+  --pink: #ff7be5;
+  --forge-soft: #e3b8ff;
+  --red: #ff7b9c;
+  --on-accent: #ffffff;
+  --on-forge: #0f0b16;
+  --ghost-bg: rgba(33, 26, 44, 0.6);
+  --active-line: rgba(33, 26, 44, 0.35);
+  --selection: rgba(197, 107, 255, 0.22);
+  --shadow: rgba(0, 0, 0, 0.55);
+  --scrim: rgba(8, 6, 12, 0.72);
+  color-scheme: dark;
+}
+
+/* ===== Light theme (View › App Theme). Pearl and lilac, darker violet so text stays easy to read ===== */
+:root[data-app-theme="light"] {
+  --void: #f4f1f9;
+  --panel: #ffffff;
+  --panel-hi: #f0ebf8;
+  --panel-mid: #f3eefa;
+  --panel-hover: #e9e1f5;
+  --deep: #fbfaff;
+  --gutter: #f4f1f9;
+  --line: #d9d0e8;
+  --line-hot: #b9a6d9;
+  --ink: #1e1730;
+  --dim: #675c7d;
+  --faint: #8a7fa0;
+  --faint2: #a397b8;
+  --forge: #7a35c9;
+  --forge-hi: #8a3fd6;
+  --forge-soft: #6b2fb3;
+  --scry-accent: #7a35c9;
+  --moonsilver: #44608f;
+  --gold: #96690a;
+  --amber: #96690a;
+  --violet: #2f62b8;
+  --blue: #2f62b8;
+  --pink: #b8329c;
+  --red: #c22b52;
+  --on-forge: #ffffff;
+  --ghost-bg: #f7f4fb;
+  --active-line: rgba(122, 53, 201, 0.06);
+  --selection: rgba(122, 53, 201, 0.18);
+  --scry-glow: rgba(122, 53, 201, 0.22);
+  --shadow: rgba(60, 40, 100, 0.18);
+  --scrim: rgba(30, 23, 48, 0.35);
+  color-scheme: light;
 }
 
 body {
@@ -157,16 +213,16 @@ body {
 
 .btn-hud-primary {
   background: linear-gradient(135deg, var(--forge-hi), var(--forge));
-  color: #0f0b16;
+  color: var(--on-forge);
   text-shadow: 0 1px 0 rgba(255,255,255,0.2);
 }
 .btn-hud-primary:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 14px rgba(216, 150, 255, 0.4);
+  box-shadow: 0 0 14px var(--scry-glow);
 }
 
 .btn-hud-ghost {
-  background: rgba(33, 26, 44, 0.6);
+  background: var(--ghost-bg);
   border: 1px solid var(--line);
   color: var(--ink);
 }
@@ -180,7 +236,7 @@ body {
   background: var(--panel-hi);
   border-color: var(--forge);
   color: var(--forge);
-  box-shadow: 0 0 10px rgba(197, 107, 255, 0.25);
+  box-shadow: 0 0 10px var(--scry-glow);
 }
 
 /* ATB Style Status Gauge */
@@ -204,22 +260,22 @@ body {
   height: 100%;
   font-family: var(--f-mono) !important;
   font-size: 13px;
-  background-color: #0b0812 !important;
+  background-color: var(--deep) !important;
 }
 .cm-gutters {
-  background-color: #09070e !important;
+  background-color: var(--gutter) !important;
   border-right: 1px solid var(--line) !important;
-  color: #5a4e70 !important;
+  color: var(--faint2) !important;
 }
 .cm-activeLineGutter {
-  background-color: #1a1324 !important;
+  background-color: var(--panel-mid) !important;
   color: var(--forge) !important;
 }
 .cm-activeLine {
-  background-color: rgba(33, 26, 44, 0.35) !important;
+  background-color: var(--active-line) !important;
 }
 .cm-selectionBackground, ::selection {
-  background: rgba(197, 107, 255, 0.22) !important;
+  background: var(--selection) !important;
 }
 .cm-cursor {
   border-left-color: var(--forge-hi) !important;
@@ -289,7 +345,7 @@ body {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
-  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+  box-shadow: 0 18px 40px var(--shadow);
   padding: 5px;
   z-index: 50;
   display: flex;
@@ -388,7 +444,7 @@ body {
   transition: background .12s, color .12s, border-color .12s;
 }
 .tb-btn svg { width: 14px; height: 14px; color: var(--dim); }
-.tb-btn:hover { background: #2a2038; color: var(--forge-hi); }
+.tb-btn:hover { background: var(--panel-hover); color: var(--forge-hi); }
 .tb-btn:hover svg { color: var(--forge); }
 .tb-btn.is-on, .tb-seg .tb-btn.is-on { background: var(--panel-hi); border-color: var(--line-hot); color: var(--forge); box-shadow: 0 0 10px var(--scry-glow); }
 .tb-btn.is-on svg { color: var(--forge); }
@@ -478,7 +534,7 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
     overflow-y: auto;
     background: var(--panel);
     border-bottom: 1px solid var(--line);
-    box-shadow: 0 24px 40px rgba(0,0,0,.6);
+    box-shadow: 0 24px 40px var(--shadow);
     padding: 6px 10px 14px;
     flex-direction: column;
     align-items: stretch;
@@ -511,7 +567,7 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
 /* ===== ScryPad dialog ===== */
 .sp-dialog-backdrop {
   position: fixed; inset: 0; z-index: 80;
-  background: rgba(8, 6, 12, .72);
+  background: var(--scrim);
   backdrop-filter: blur(3px);
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
@@ -524,7 +580,7 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
   border: 1px solid var(--line);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   padding: 20px 22px 18px;
-  box-shadow: 0 30px 60px rgba(0,0,0,.6);
+  box-shadow: 0 30px 60px var(--shadow);
 }
 .sp-dialog.wide { width: min(600px, 100%); }
 .sp-dialog h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0 0 8px; color: var(--ink); letter-spacing: .02em; }
@@ -533,7 +589,7 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
 .sp-dialog .sp-body b { color: var(--ink); font-weight: 600; }
 .sp-dialog textarea {
   width: 100%; min-height: 150px; margin-top: 4px;
-  background: #0b0812; color: var(--ink);
+  background: var(--deep); color: var(--ink);
   border: 1px solid var(--line); border-radius: 4px;
   font-family: var(--f-mono); font-size: 12px; padding: 10px;
   resize: vertical;
@@ -584,7 +640,7 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
   gap: 6px;
   padding: 24px;
   text-align: center;
-  background: radial-gradient(circle at 50% 38%, rgba(197, 107, 255, 0.10) 0%, rgba(15, 11, 22, 0) 55%), var(--void);
+  background: radial-gradient(circle at 50% 38%, rgba(197, 107, 255, 0.10) 0%, transparent 55%), var(--void);
 }
 .blank-wisp {
   width: 112px;
