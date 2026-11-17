@@ -124,7 +124,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // PWA Service Worker Registration
   // Not on itch.io: it serves many games from one address, and its own player handles loading
   const onItch = /(^|\.)itch\.(io|zone)$/.test(location.hostname);
-  if ('serviceWorker' in navigator && !onItch) {
+  // Not in the Windows app either: its files are built in, and an old worker left behind by an
+  // earlier version can keep showing that old version. Remove any such worker and its cache once.
+  const inDesktopApp = !!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__;
+  if ('serviceWorker' in navigator && inDesktopApp) {
+    navigator.serviceWorker.getRegistrations().then(async (regs) => {
+      if (!regs.length) return;
+      await Promise.all(regs.map((r) => r.unregister()));
+      if ('caches' in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+      location.reload();
+    }).catch(() => { /* nothing to clean up */ });
+  }
+  if ('serviceWorker' in navigator && !onItch && !inDesktopApp) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').catch((err) => {
         console.warn('PWA service worker registration failed:', err);
