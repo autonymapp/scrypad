@@ -78,6 +78,8 @@ export class PreviewPane {
 
     this.attachIframeEvents(doc);
     this.applyCurrentTheme(doc);
+    // Linked stylesheets arrive a moment later
+    doc.defaultView?.addEventListener('load', () => this.applyCurrentTheme(doc), { once: true });
     this.isWritingToIframe = false;
   }
 
@@ -130,26 +132,40 @@ export class PreviewPane {
     this.notifyDocChange();
   }
 
-  private applyCurrentTheme(doc: Document) {
-    const root = doc.documentElement;
-    const body = doc.body;
-    if (!root) return;
+  // Light/Dark preview: the iframe's own color-scheme is what the page's
+  // @media (prefers-color-scheme) rules follow, so the page itself is never changed
+  // (nothing leaks into your code; "Keep This Theme" writes it in on purpose).
+  private originalMedia = new WeakMap<CSSMediaRule, string>();
 
-    if (this.currentThemeMode === 'dark') {
-      root.classList.add('dark');
-      root.setAttribute('data-theme', 'dark');
-      root.style.colorScheme = 'dark';
-      if (body) body.style.colorScheme = 'dark';
-    } else if (this.currentThemeMode === 'light') {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      root.setAttribute('data-theme', 'light');
-      root.style.colorScheme = 'light';
-      if (body) body.style.colorScheme = 'light';
-    } else {
-      // auto / default
-      root.style.colorScheme = '';
-      if (body) body.style.colorScheme = '';
+  private applyCurrentTheme(doc: Document) {
+    const mode = this.currentThemeMode;
+    this.iframe.style.colorScheme = mode === 'auto' ? '' : mode;
+    // Browsers don't let a page pretend the system is light or dark, so ScryPad
+    // flips the page's own (prefers-color-scheme) rules in the live preview only.
+    // This changes the browser's copy of the styles, never the text of your code.
+    const flip = (text: string) => {
+      if (mode === 'auto') return text;
+      const other = mode === 'dark' ? 'light' : 'dark';
+      return text
+        .replace(new RegExp(`\\(\\s*prefers-color-scheme\\s*:\\s*${mode}\\s*\\)`, 'gi'), '(min-width: 0px)')
+        .replace(new RegExp(`\\(\\s*prefers-color-scheme\\s*:\\s*${other}\\s*\\)`, 'gi'), '(max-width: -1px)');
+    };
+    const walk = (rules: CSSRuleList) => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof (doc.defaultView as any).CSSMediaRule) {
+          const mr = rule as CSSMediaRule;
+          if (!this.originalMedia.has(mr)) this.originalMedia.set(mr, mr.media.mediaText);
+          const original = this.originalMedia.get(mr)!;
+          if (/prefers-color-scheme/i.test(original)) {
+            const next = flip(original);
+            if (mr.media.mediaText !== next) mr.media.mediaText = next;
+          }
+        }
+        if ((rule as CSSGroupingRule).cssRules) walk((rule as CSSGroupingRule).cssRules);
+      }
+    };
+    for (const sheet of Array.from(doc.styleSheets)) {
+      try { walk(sheet.cssRules); } catch { /* a stylesheet from another site can't be read */ }
     }
   }
 

@@ -326,9 +326,6 @@ body {
   padding: 6px 9px 3px;
 }
 .swatch { width: 13px; height: 9px; flex-shrink: 0; display: inline-block; }
-.swatch-slant { background: var(--forge); clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%); }
-.swatch-notch { background: var(--forge-hi); clip-path: polygon(2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px), 0 2px); }
-.swatch-pill { background: var(--gold); border-radius: 99px; }
 .file-badge {
   display: flex; align-items: center; gap: 6px;
   padding: 2px 9px;

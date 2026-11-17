@@ -31,7 +31,7 @@ const STEPS: TourStep[] = [
   {
     icon: BookOpen,
     title: 'Learn as You Go',
-    body: '<p>Click something in the preview and the <b>Tag Bar</b> under it says what that tag is and what it\'s for.</p><p>Want the whole collection? <b>Insert › Tag Guide</b> lists every tag with an example to copy.</p>',
+    body: '<p>Click something in the preview and the <b>Tag Bar</b> under it says what that tag is and what it\'s for.</p><p>Want the whole collection? <b>Help › Tag Guide</b> lists every tag with an example to copy.</p>',
   },
   {
     icon: Save,

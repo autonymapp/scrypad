@@ -150,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Theme Simulator Elements
   const btnThemeSim = document.getElementById('btn-theme-sim')!;
   const themeSimLabel = document.getElementById('theme-sim-label')!;
-  const btnBakeTheme = document.getElementById('btn-bake-theme')!;
 
   // Toast Helper
   const hudToast = document.getElementById('hud-toast')!;
@@ -925,20 +924,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     previewPane.setThemeSimulation(next);
     themeSimLabel.textContent = next.charAt(0).toUpperCase() + next.slice(1);
-    if (next === 'auto') {
-      btnBakeTheme.classList.add('hidden');
-    } else {
-      btnBakeTheme.classList.remove('hidden');
-    }
+    showToast(next === 'auto' ? '✦ Preview follows your system theme' : `✦ Previewing your page in ${next} mode`);
   });
 
-  btnBakeTheme.addEventListener('click', () => {
-    previewPane.bakeThemeSimulation();
-    previewPane.setThemeSimulation('auto');
-    themeSimLabel.textContent = 'Auto';
-    btnBakeTheme.classList.add('hidden');
-    showToast('✦ Theme written into your page');
-  });
 
   // Feature: Visual Style Drawer (CSS Quick-Sliders)
   btnToggleStyles.addEventListener('click', () => {
@@ -1609,25 +1597,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tidyCode();
   });
 
-  // Insert Menu
-  document.getElementById('menu-insert-btn-slant')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); background: #c56bff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Cyber Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Slanted Cyber Button snippet');
-  });
-  document.getElementById('menu-insert-btn-notch')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); background: #d896ff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Notched Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Notched Button snippet');
-  });
-  document.getElementById('menu-insert-btn-pill')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="border-radius: 9999px; background: #f2d27a; color: #0f0b16; font-weight: 700; padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;">Pill Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Pill Button snippet');
-  });
   document.getElementById('menu-insert-tag-guide')?.addEventListener('click', () => {
     closeAllMenus();
     openTagGuide('');
@@ -1802,31 +1771,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Escape' && !findReplaceBar.classList.contains('hidden') && findReplaceBar.style.display !== 'none') {
       closeFindBar();
     }
-  });
-
-  // --- Button Shape Switcher ---
-  const btnShapeOpts = document.querySelectorAll('.btn-shape-opt');
-  function applyButtonShape(shape: string) {
-    document.documentElement.setAttribute('data-btn-shape', shape);
-    localStorage.setItem('scrypad_btn_shape', shape);
-    btnShapeOpts.forEach((btn) => {
-      const s = btn.getAttribute('data-shape');
-      if (s === shape) {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
-      } else {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded text-[#a597c2] hover:text-white";
-      }
-    });
-  }
-  const savedShape = localStorage.getItem('scrypad_btn_shape') || 'slanted';
-  applyButtonShape(savedShape);
-
-  btnShapeOpts.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const shape = btn.getAttribute('data-shape') || 'slanted';
-      applyButtonShape(shape);
-      showToast(`✦ Button shape changed to ${shape.toUpperCase()}`);
-    });
   });
 
   // --- Educational Tag Guides & Grimoire of Tags ---
