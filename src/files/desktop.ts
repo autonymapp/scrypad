@@ -30,6 +30,11 @@ export async function desktopSaveAs(suggestedName: string, content: string): Pro
   return (await core()!.invoke('save_file_as', { suggestedName, content })) ?? null;
 }
 
+/** Reads a file by its path (File › Recent). */
+export async function desktopReadPath(path: string): Promise<DesktopFile> {
+  return await core()!.invoke('read_path', { path });
+}
+
 /** The .html file ScryPad was opened with (double-click in Explorer), if any. */
 export async function desktopLaunchFile(): Promise<DesktopFile | null> {
   const c = core();

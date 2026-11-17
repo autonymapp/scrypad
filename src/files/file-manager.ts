@@ -1,5 +1,6 @@
 import { ProjectFolder } from './project-folder.ts';
-import { isDesktop, desktopOpen, desktopWrite, desktopSaveAs, DesktopFile } from './desktop.ts';
+import { isDesktop, desktopOpen, desktopWrite, desktopSaveAs, desktopReadPath, DesktopFile } from './desktop.ts';
+import type { RecentFile } from './recent-files.ts';
 
 
 /** The browser's file pickers only work when ScryPad is the whole page. Inside another
@@ -326,6 +327,34 @@ export class FileManager {
   /**
    * Save file using project handle, existing handle or prompt Save As
    */
+  /** What File › Recent needs to reopen the current file later. */
+  public recentInfo(): { name: string; path?: string | null; handle?: any } {
+    return { name: this.state.name, path: this.state.diskPath ?? null, handle: this.state.handle ?? null };
+  }
+
+  /** Reopen a file from File › Recent. Throws if the file is gone or permission is refused. */
+  public async openRecent(rec: RecentFile): Promise<string> {
+    if (rec.path && isDesktop()) {
+      return this.adoptDesktopFile(await desktopReadPath(rec.path));
+    }
+    const handle = rec.handle;
+    if (!handle) throw new Error('missing');
+    if (handle.queryPermission && (await handle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+      if ((await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error('permission');
+    }
+    const file = await handle.getFile();
+    const content = await file.text();
+    this.state = {
+      handle,
+      name: file.name,
+      isDirty: false,
+      projectPath: null,
+      projectName: this.currentProject ? this.currentProject.name : null
+    };
+    this.notify();
+    return content;
+  }
+
   /** Use a file the desktop app read from disk (Open dialog or double-click). */
   public adoptDesktopFile(f: DesktopFile): string {
     this.state = {

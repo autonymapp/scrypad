@@ -372,6 +372,8 @@ body {
 .menu-item:hover svg, .menu-item:focus-visible svg { color: var(--forge); }
 .menu-item kbd { font-family: var(--f-mono); font-size: 10.5px; color: var(--dim); }
 .menu-item.is-on kbd, .menu-item.is-on > span { color: var(--forge-hi); }
+.menu-item.menu-item-quiet { color: var(--dim); font-size: 12px; }
+.menu-item .recent-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; display: block; }
 .menu-sep { height: 1px; background: var(--line); margin: 5px 4px; }
 .menu-label {
   font-family: var(--f-mono);
@@ -583,6 +585,18 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
   box-shadow: 0 30px 60px var(--shadow);
 }
 .sp-dialog.wide { width: min(600px, 100%); }
+.sp-field { margin: 0 0 12px; }
+.sp-field label { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 5px; }
+.sp-field-row { display: flex; gap: 8px; }
+.sp-field input { flex: 1; min-width: 0; background: var(--deep); border: 1px solid var(--line); border-radius: 4px; color: var(--ink); font-family: var(--f-mono); font-size: 13px; padding: 7px 9px; }
+.sp-field input:focus { outline: none; border-color: var(--forge); box-shadow: 0 0 0 2px var(--forge-soft); }
+.sp-field.sp-check label { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: 14px; color: var(--ink); cursor: pointer; margin: 0; }
+.sp-field.sp-check input { flex: none; width: 16px; height: 16px; accent-color: var(--forge); padding: 0; }
+.sp-field small { display: block; margin-top: 4px; font-size: 12px; color: var(--faint, var(--dim)); }
+.el-chip { position: absolute; bottom: 20px; left: 20px; z-index: 15; display: flex; gap: 6px; }
+.el-chip button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; background: var(--panel); border: 1px solid var(--forge); color: var(--forge-hi); font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 6px 18px var(--shadow); cursor: pointer; }
+.el-chip button:hover, .el-chip button:focus-visible { background: var(--panel-hi); outline: none; }
+.el-chip svg { width: 13px; height: 13px; }
 .sp-dialog h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0 0 8px; color: var(--ink); letter-spacing: .02em; }
 .sp-dialog .sp-body { color: var(--dim); font-size: 14px; line-height: 1.6; }
 .sp-dialog .sp-body p { margin: 0 0 10px; }

@@ -39,7 +39,10 @@ import {
   Keyboard,
   FileSearch,
   MessageCircle,
-  Info
+  Info,
+  Link,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -55,12 +58,17 @@ import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
 import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
 import { desktopLaunchFile } from './files/desktop.ts';
 import { showTour, hasSeenTour, isTourOpen } from './ui/tour.ts';
+import { listRecent, rememberFile, forgetFile, clearRecent, RecentFile } from './files/recent-files.ts';
+import { createElement as lucideIcon, History } from 'lucide';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   // Render Lucide Icons (Tree-shaken)
   createIcons({
     icons: {
+      Link,
+      Image: ImageIcon,
+      ExternalLink,
       FilePlus,
       FolderOpen,
       Save,
@@ -195,10 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
       checkDocumentIntegrity(code);
     },
     // The Blank Page shows whenever the editor is empty, however the text changed
-    onAnyChange: (code) => updateBlankPage(code)
+    onAnyChange: (code) => { updateBlankPage(code); window.setTimeout(() => updateEditChip(), 450); }
   });
 
   let updateTagHint: (tagName: string) => void = () => {};
+  let updateEditChip: () => void = () => {};
+  let lastFoundKey = '';
 
   // Initialize Preview Pane
   const previewPane = new PreviewPane({
@@ -211,11 +221,20 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onActiveElementChange: (info: ActiveElementInfo | null) => {
       if (!info) {
+        lastFoundKey = '';
         updateTagHint('');
+        updateEditChip();
         return;
       }
       populateStyleDrawer(info);
       updateTagHint(info.tagName);
+      updateEditChip();
+      // Click to Find: show where this element lives in the code (once per newly clicked element)
+      const key = info.tagName + '#' + info.ordinal;
+      if (key !== lastFoundKey) {
+        lastFoundKey = key;
+        codePane.revealTag(info.tagName, info.ordinal);
+      }
     },
     onImageDropped: (_dataUrl, fileName) => {
       showToast(`✦ Embedded image: ${fileName}`);
@@ -813,6 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       showToast('✦ Saved');
       clearDraft();
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
     }
   };
   document.getElementById('btn-save')?.addEventListener('click', () => { saveAction(false); });
@@ -828,9 +848,148 @@ document.addEventListener('DOMContentLoaded', () => {
       checkDocumentIntegrity(content);
       updateBlankPage(content);
       showToast(`✦ Opened ${fileManager.getFilename()}`);
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
     }
   };
   document.getElementById('btn-open')?.addEventListener('click', openFileAction);
+
+  // Edit links and pictures right in the preview: a small chip appears over the preview
+  // when the clicked element is a link (or inside one) or a picture
+  const editChip = document.getElementById('element-edit-chip');
+  const btnEditLink = document.getElementById('btn-edit-link');
+  const btnEditImage = document.getElementById('btn-edit-image');
+  const linkOf = (el: HTMLElement | null) => (el && el.isConnected ? el.closest('a') as HTMLAnchorElement | null : null);
+  const imageOf = (el: HTMLElement | null) => (el && el.isConnected && el.tagName === 'IMG' ? el as HTMLImageElement : null);
+  updateEditChip = () => {
+    const el = previewPane.getActiveElement();
+    const a = linkOf(el), img = imageOf(el);
+    btnEditLink?.classList.toggle('hidden', !a);
+    btnEditImage?.classList.toggle('hidden', !img);
+    editChip?.classList.toggle('hidden', !a && !img);
+  };
+  btnEditLink?.addEventListener('click', async () => {
+    const a = linkOf(previewPane.getActiveElement());
+    if (!a) return;
+    const textOnly = a.children.length === 0;
+    const href = { label: 'Goes To', value: a.getAttribute('href') || '', placeholder: 'https://example.com', hint: 'A web address, a file like about.html, or #section-id' };
+    const text = { label: 'Link Text', value: a.textContent || '', placeholder: 'Read More' };
+    const newTab = { label: 'Open in a New Tab', check: true, value: a.getAttribute('target') === '_blank' ? 'yes' : 'no' };
+    const fields = textOnly ? [href, text, newTab] : [href, newTab];
+    const choice = await showDialog({
+      title: 'Edit Link',
+      fields,
+      actions: [
+        { label: 'Remove Link', value: 'remove' },
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Save Link', value: 'ok', primary: true },
+      ],
+    });
+    if (choice === 'remove') {
+      previewPane.editElement(() => { a.replaceWith(...Array.from(a.childNodes)); });
+      updateEditChip();
+      showToast('✦ Link removed, text kept');
+    } else if (choice === 'ok') {
+      previewPane.editElement(() => {
+        a.setAttribute('href', href.value.trim());
+        if (textOnly && text.value !== a.textContent) a.textContent = text.value;
+        if (newTab.value === 'yes') { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+        else if (a.getAttribute('target') === '_blank') { a.removeAttribute('target'); if (a.getAttribute('rel') === 'noopener') a.removeAttribute('rel'); }
+      });
+      showToast('✦ Link updated');
+    }
+  });
+  btnEditImage?.addEventListener('click', async () => {
+    const img = imageOf(previewPane.getActiveElement());
+    if (!img) return;
+    const src = {
+      label: 'Picture', value: img.getAttribute('src') || '', placeholder: 'images/cat.png or https://...',
+      hint: 'A file path, a web address, or choose one from your computer to embed it',
+      browse: {
+        label: 'Choose…',
+        pick: () => new Promise<{ value: string; display: string } | null>((resolve) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.addEventListener('change', async () => {
+            const f = input.files?.[0];
+            if (!f) { resolve(null); return; }
+            try { resolve({ value: await fileToDataUrl(f), display: `Embedded: ${f.name}` }); } catch { resolve(null); }
+          });
+          input.click();
+        }),
+      },
+    };
+    const alt = { label: 'Description (Alt Text)', value: img.getAttribute('alt') || '', placeholder: 'A sleepy cat on a keyboard', hint: 'Read aloud by screen readers, and shown if the picture can\'t load' };
+    const choice = await showDialog({
+      title: 'Change Picture',
+      fields: [src, alt],
+      actions: [
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Save Picture', value: 'ok', primary: true },
+      ],
+    });
+    if (choice !== 'ok') return;
+    previewPane.editElement(() => {
+      if (src.value.trim()) img.setAttribute('src', src.value.trim());
+      img.setAttribute('alt', alt.value);
+    });
+    showToast('✦ Picture updated');
+  });
+
+  // File › Recent: up to 6 files you opened or saved here, newest first
+  const recentBox = document.getElementById('recent-files');
+  async function renderRecent() {
+    if (!recentBox) return;
+    const list = await listRecent();
+    recentBox.innerHTML = '';
+    if (!list.length) return;
+    const label = document.createElement('div');
+    label.className = 'menu-label';
+    label.textContent = 'Recent';
+    recentBox.appendChild(label);
+    list.forEach((rec) => {
+      const b = document.createElement('button');
+      b.className = 'menu-item';
+      b.setAttribute('role', 'menuitem');
+      b.title = rec.path || rec.name;
+      const span = document.createElement('span');
+      const icon = lucideIcon(History);
+      const nm = document.createElement('span');
+      nm.className = 'recent-name';
+      nm.textContent = rec.name;
+      span.append(icon, nm);
+      b.appendChild(span);
+      b.addEventListener('click', () => { closeAllMenus(); openRecentAction(rec); });
+      recentBox.appendChild(b);
+    });
+    const clear = document.createElement('button');
+    clear.className = 'menu-item menu-item-quiet';
+    clear.setAttribute('role', 'menuitem');
+    clear.textContent = 'Clear Recent';
+    clear.addEventListener('click', async () => { closeAllMenus(); await clearRecent(); renderRecent(); });
+    recentBox.appendChild(clear);
+  }
+  async function openRecentAction(rec: RecentFile) {
+    if (fileManager.isDirty()) {
+      const ok = await confirmDialog('Open Another File?', '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>', 'Open Anyway', 'Keep Editing');
+      if (!ok) return;
+    }
+    try {
+      const content = await fileManager.openRecent(rec);
+      codePane.setValue(content);
+      previewPane.render(await fileManager.resolvePreview(content));
+      coordinator.updateStats();
+      checkDocumentIntegrity(content);
+      showToast(`✦ Opened ${fileManager.getFilename()}`);
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
+    } catch (err: any) {
+      if (err && err.message === 'permission') return;
+      await forgetFile(rec.key);
+      renderRecent();
+      showDialog({ title: 'ScryPad Can\'t Find That File', bodyHtml: `<p><b>${escapeHtml(rec.name)}</b> may have been moved, renamed or deleted, so it's been taken off the Recent list.</p>` });
+    }
+  }
+  renderRecent();
 
   // New File: a truly blank page. The Blank Page screen (with Wisp) shows while it's empty
   const newFileAction = async () => {
@@ -1623,6 +1782,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('menu-view-preview')?.addEventListener('click', () => {
     closeAllMenus();
     setViewMode('preview');
+  });
+  document.getElementById('menu-view-popout')?.addEventListener('click', () => {
+    closeAllMenus();
+    if (!previewPane.openPopOut()) {
+      showDialog({
+        title: 'Pop Out Was Blocked',
+        bodyHtml: '<p>Your browser stopped the new window from opening. Allow pop-ups for ScryPad, then try View › Pop Out Preview again.</p>',
+      });
+    }
   });
 
   // --- Undo & Redo ---

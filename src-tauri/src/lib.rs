@@ -78,6 +78,12 @@ async fn save_file_as(app: tauri::AppHandle, suggested_name: String, content: St
     }
 }
 
+/// File > Recent: reopen a file ScryPad opened or saved before.
+#[tauri::command]
+async fn read_path(path: String) -> Result<DiskFile, String> {
+    read_disk_file(PathBuf::from(path))
+}
+
 /// The file ScryPad was started with (double-clicking an .html file in Explorer).
 #[tauri::command]
 fn launch_file() -> Option<DiskFile> {
@@ -93,7 +99,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file])
+        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file, read_path])
         .run(tauri::generate_context!())
         .expect("error while running ScryPad application");
 }

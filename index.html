@@ -70,6 +70,7 @@
             <button id="menu-view-split" class="menu-item" role="menuitem"><span><i data-lucide="columns-2"></i>Split</span></button>
             <button id="menu-view-code" class="menu-item" role="menuitem"><span><i data-lucide="code"></i>Code Only</span></button>
             <button id="menu-view-preview" class="menu-item" role="menuitem"><span><i data-lucide="eye"></i>Preview Only</span></button>
+            <button id="menu-view-popout" class="menu-item" role="menuitem"><span><i data-lucide="external-link"></i>Pop Out Preview</span></button>
             <div class="menu-sep"></div>
             <div class="menu-label">Preview Size</div>
             <button class="menu-item menu-vp" role="menuitem" data-width="100%"><span><i data-lucide="monitor"></i>Desktop</span></button>
@@ -295,6 +296,10 @@
       </div>
 
       <div id="preview-mount" class="w-full flex-1 flex justify-center items-stretch p-3 overflow-auto relative">
+        <div id="element-edit-chip" class="el-chip hidden">
+          <button id="btn-edit-link" class="hidden" title="Change where this link goes and what it says"><i data-lucide="link"></i><span>Edit Link</span></button>
+          <button id="btn-edit-image" class="hidden" title="Swap this picture or its description"><i data-lucide="image"></i><span>Change Picture</span></button>
+        </div>
         <!-- Preview iframe is mounted here -->
       </div>
 
