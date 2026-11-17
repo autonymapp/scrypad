@@ -2,7 +2,7 @@
 name = "scrypad"
 version = "0.1.0"
 description = "ScryPad: Sci-Fantasy WYSIWYG & HTML Code Editor by Interstatus Lab"
-authors = ["Graves Ghostly"]
+authors = ["Interstatus Lab"]
 edition = "2021"
 
 [lib]

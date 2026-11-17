@@ -10,6 +10,16 @@ export interface ActiveElementStyles {
   backgroundColor: string;
   opacity: string;
   clipPath?: string;
+  fontFamily: string;
+  fontWeight: string;
+  lineHeight: string;
+  textAlign: string;
+  /** Only the element's own width setting (style=""), not the measured width */
+  width: string;
+  borderWidth: string;
+  borderStyle: string;
+  borderColor: string;
+  boxShadow: string;
 }
 
 export interface ActiveElementInfo {
@@ -17,6 +27,8 @@ export interface ActiveElementInfo {
   id: string;
   className: string;
   domPath: string;
+  /** Which one of its kind it is in the page (0 = the first <p>), used by Click to Find */
+  ordinal: number;
   styles: ActiveElementStyles;
 }
 
@@ -67,7 +79,50 @@ export class PreviewPane {
     this.iframe.style.width = width;
   }
 
+  // Pop Out Preview: a second window that mirrors the preview as you work
+  private mirror: Window | null = null;
+  private lastHtml = '';
+  private mirrorTimer: number | undefined;
+
+  /** Opens (or focuses) the pop-out window. Returns false when the browser blocked it. */
+  public openPopOut(): boolean {
+    if (this.mirror && !this.mirror.closed) { this.mirror.focus(); return true; }
+    const w = window.open('', 'scrypad-preview', 'popup,width=960,height=720');
+    if (!w) return false;
+    this.mirror = w;
+    this.writeMirror(this.lastHtml);
+    return true;
+  }
+
+  public isPoppedOut(): boolean {
+    return !!this.mirror && !this.mirror.closed;
+  }
+
+  private scheduleMirror(html: string) {
+    this.lastHtml = html;
+    if (!this.mirror) return;
+    window.clearTimeout(this.mirrorTimer);
+    this.mirrorTimer = window.setTimeout(() => this.writeMirror(this.lastHtml), 200);
+  }
+
+  private writeMirror(html: string) {
+    if (!this.mirror || this.mirror.closed) { this.mirror = null; return; }
+    try {
+      const d = this.mirror.document;
+      const x = this.mirror.scrollX, y = this.mirror.scrollY;
+      d.open();
+      d.write(html.trim() ? html : '<!DOCTYPE html><title>ScryPad Preview</title><body style="font-family:sans-serif;color:#888;display:grid;place-items:center;height:90vh;margin:0">Your page will show up here.</body>');
+      d.close();
+      if (!d.title) d.title = 'ScryPad Preview';
+      this.mirror.scrollTo(x, y);
+    } catch {
+      this.mirror = null;
+    }
+  }
+
   public render(html: string) {
+    this.scheduleMirror(html);
+    this.activeElement = null;
     this.isWritingToIframe = true;
     const doc = this.getDoc();
     if (!doc) return;
@@ -83,9 +138,16 @@ export class PreviewPane {
     this.isWritingToIframe = false;
   }
 
-  public applyStyleCommand(command: string, value: string | null = null) {
+  public applyStyleCommand(command: string, value: string | null = null, range?: Range) {
     const win = this.iframe.contentWindow;
     if (win) {
+      win.focus();
+      if (range) {
+        // Put back a selection that a dialog took away
+        const sel = win.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
       win.document.execCommand(command, false, value as any);
       this.notifyDocChange();
     }
@@ -93,6 +155,17 @@ export class PreviewPane {
 
   public getActiveElement(): HTMLElement | null {
     return this.activeElement;
+  }
+
+  /** The page's document, for small edits like adding a font link */
+  public getDocument(): Document | null {
+    return this.getDoc();
+  }
+
+  /** Make a change to the page (like a new link address), then sync it to the code. */
+  public editElement(change: () => void) {
+    change();
+    this.notifyDocChange();
   }
 
   public updateActiveElementStyle(property: string, value: string) {
@@ -182,7 +255,24 @@ export class PreviewPane {
     const doc = this.getDoc();
     if (!doc) return;
     const docType = doc.doctype ? `<!DOCTYPE ${doc.doctype.name}>\n` : '<!DOCTYPE html>\n';
-    const serialized = docType + doc.documentElement.outerHTML;
+    // Leave out ScryPad's own editing switches so they never end up in your code
+    const root = doc.documentElement.cloneNode(true) as HTMLElement;
+    root.querySelectorAll('[contenteditable]').forEach((el) => el.removeAttribute('contenteditable'));
+    root.querySelectorAll('[style=""]').forEach((el) => el.removeAttribute('style'));
+    // Put back the real stylesheet links and picture paths the preview swapped in for display
+    root.querySelectorAll('style[data-scrypad-href]').forEach((st) => {
+      const link = doc.createElement('link');
+      link.setAttribute('rel', 'stylesheet');
+      link.setAttribute('href', st.getAttribute('data-scrypad-href') || '');
+      st.replaceWith(link);
+    });
+    root.querySelectorAll('img[data-scrypad-src]').forEach((img) => {
+      img.setAttribute('src', img.getAttribute('data-scrypad-src') || '');
+      img.removeAttribute('data-scrypad-src');
+    });
+    if (root.getAttribute('style') === '') root.removeAttribute('style');
+    const serialized = docType + root.outerHTML;
+    this.scheduleMirror(serialized);
     this.onVisualDocChange(serialized);
   }
 
@@ -206,6 +296,7 @@ export class PreviewPane {
           id: el.id,
           className: el.className,
           domPath: path,
+          ordinal: Array.prototype.indexOf.call(doc.getElementsByTagName(el.tagName), el),
           styles: {
             padding: computed?.padding || el.style.padding || '',
             margin: computed?.margin || el.style.margin || '',
@@ -215,7 +306,16 @@ export class PreviewPane {
             color: computed?.color || el.style.color || '',
             backgroundColor: computed?.backgroundColor || el.style.backgroundColor || '',
             opacity: computed?.opacity || el.style.opacity || '1',
-            clipPath: el.style.clipPath || computed?.clipPath || ''
+            clipPath: el.style.clipPath || computed?.clipPath || '',
+            fontFamily: el.style.fontFamily || '',
+            fontWeight: computed?.fontWeight || '',
+            lineHeight: computed?.lineHeight || '',
+            textAlign: el.style.textAlign || '',
+            width: el.style.width || '',
+            borderWidth: computed?.borderTopWidth || '',
+            borderStyle: computed?.borderTopStyle || '',
+            borderColor: computed?.borderTopColor || '',
+            boxShadow: el.style.boxShadow || ''
           }
         });
       }

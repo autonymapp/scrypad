@@ -2,7 +2,7 @@ import { EditorView, basicSetup } from "codemirror";
 import { EditorState, Compartment } from "@codemirror/state";
 import { html, autoCloseTags } from "@codemirror/lang-html";
 import { oneDarkTheme } from "@codemirror/theme-one-dark";
-import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { HighlightStyle, syntaxHighlighting, ensureSyntaxTree } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 
 // Forge syntax colors: violet tags, moonsilver attributes, gold strings, calm everything else
@@ -34,6 +34,8 @@ export interface CodeEditorOptions {
   container: HTMLElement;
   initialValue: string;
   onDocChange: (newContent: string) => void;
+  /** Every change, typed or set by ScryPad (opening a file, New File...). */
+  onAnyChange?: (newContent: string) => void;
 }
 
 export class CodePane {
@@ -48,6 +50,7 @@ export class CodePane {
       if (update.docChanged && !this.isExternalUpdate) {
         options.onDocChange(this.getValue());
       }
+      if (update.docChanged) options.onAnyChange?.(this.getValue());
     });
 
     const customTheme = EditorView.theme({
@@ -103,6 +106,37 @@ export class CodePane {
 
   public getValue(): string {
     return this.view.state.doc.toString();
+  }
+
+  /** Click to Find: scroll the code to the nth <tag> (0-based) and select its opening tag.
+   *  Does not take focus away from the preview. Returns false when it can't be found. */
+  public revealTag(tag: string, ordinal: number): boolean {
+    const state = this.view.state;
+    const tree = ensureSyntaxTree(state, state.doc.length, 200);
+    if (!tree || ordinal < 0) return false;
+    const want = tag.toLowerCase();
+    let seen = 0;
+    let found: { from: number; to: number } | null = null;
+    tree.iterate({
+      enter: (node) => {
+        if (found) return false;
+        if (node.name === 'OpenTag' || node.name === 'SelfClosingTag') {
+          const nameNode = node.node.getChild('TagName');
+          if (nameNode && state.doc.sliceString(nameNode.from, nameNode.to).toLowerCase() === want) {
+            if (seen === ordinal) found = { from: node.from, to: node.to };
+            seen++;
+          }
+        }
+        return undefined;
+      }
+    });
+    if (!found) return false;
+    const hit = found as { from: number; to: number };
+    this.view.dispatch({
+      selection: { anchor: hit.from, head: hit.to },
+      effects: EditorView.scrollIntoView(hit.from, { y: 'center' })
+    });
+    return true;
   }
 
   public setValue(newCode: string) {

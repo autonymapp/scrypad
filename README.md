@@ -61,4 +61,4 @@ npm run preview
 
 ## ✦ License
 
-Open source under the MIT License. Crafted with care by Graves Ghostly at Interstatus Lab.
+Open source under the MIT License. Built by Interstatus Lab.

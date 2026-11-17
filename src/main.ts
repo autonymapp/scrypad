@@ -39,7 +39,14 @@ import {
   Keyboard,
   FileSearch,
   MessageCircle,
-  Info
+  Info,
+  Link,
+  Image as ImageIcon,
+  ExternalLink,
+  FolderArchive,
+  Globe,
+  Minus,
+  RemoveFormatting
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -47,7 +54,7 @@ import { FileManager, FileState } from './files/file-manager.ts';
 import { SyncCoordinator } from './sync/sync-coordinator.ts';
 import { CDN_LIBRARIES, injectSnippetIntoHtml } from './libraries/cdn-catalog.ts';
 import { extractPalette, replaceColor, ColorSwatch } from './tools/palette-scanner.ts';
-import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont } from './tools/font-detector.ts';
+import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont, POPULAR_GOOGLE_FONTS } from './tools/font-detector.ts';
 import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage } from './tools/image-inliner.ts';
 import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
@@ -55,12 +62,22 @@ import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
 import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
 import { desktopLaunchFile } from './files/desktop.ts';
 import { showTour, hasSeenTour, isTourOpen } from './ui/tour.ts';
+import { listRecent, rememberFile, forgetFile, clearRecent, RecentFile } from './files/recent-files.ts';
+import { createElement as lucideIcon, History } from 'lucide';
+import { openExportModal } from './ui/export-modal.ts';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   // Render Lucide Icons (Tree-shaken)
   createIcons({
     icons: {
+      Link,
+      Image: ImageIcon,
+      ExternalLink,
+      FolderArchive,
+      Globe,
+      Minus,
+      RemoveFormatting,
       FilePlus,
       FolderOpen,
       Save,
@@ -105,9 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // PWA Service Worker Registration
-  if ('serviceWorker' in navigator) {
+  // Not on itch.io: it serves many games from one address, and its own player handles loading
+  const onItch = /(^|\.)itch\.(io|zone)$/.test(location.hostname);
+  if ('serviceWorker' in navigator && !onItch) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
         console.warn('PWA service worker registration failed:', err);
       });
     });
@@ -191,11 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
       checkDocumentIntegrity(code);
-      updateBlankPage(code);
-    }
+    },
+    // The Blank Page shows whenever the editor is empty, however the text changed
+    onAnyChange: (code) => { updateBlankPage(code); window.setTimeout(() => updateEditChip(), 450); }
   });
 
   let updateTagHint: (tagName: string) => void = () => {};
+  let updateEditChip: () => void = () => {};
+  let lastFoundKey = '';
 
   // Initialize Preview Pane
   const previewPane = new PreviewPane({
@@ -208,11 +230,20 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onActiveElementChange: (info: ActiveElementInfo | null) => {
       if (!info) {
+        lastFoundKey = '';
         updateTagHint('');
+        updateEditChip();
         return;
       }
       populateStyleDrawer(info);
       updateTagHint(info.tagName);
+      updateEditChip();
+      // Click to Find: show where this element lives in the code (once per newly clicked element)
+      const key = info.tagName + '#' + info.ordinal;
+      if (key !== lastFoundKey) {
+        lastFoundKey = key;
+        codePane.revealTag(info.tagName, info.ordinal);
+      }
     },
     onImageDropped: (_dataUrl, fileName) => {
       showToast(`✦ Embedded image: ${fileName}`);
@@ -810,6 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       showToast('✦ Saved');
       clearDraft();
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
     }
   };
   document.getElementById('btn-save')?.addEventListener('click', () => { saveAction(false); });
@@ -823,10 +855,150 @@ document.addEventListener('DOMContentLoaded', () => {
       previewPane.render(resolved);
       coordinator.updateStats();
       checkDocumentIntegrity(content);
+      updateBlankPage(content);
       showToast(`✦ Opened ${fileManager.getFilename()}`);
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
     }
   };
-  document.getElementById('btn-open')?.addEventListener('click', openFileAction);
+
+  // Edit links and pictures right in the preview: a small chip appears over the preview
+  // when the clicked element is a link (or inside one) or a picture
+  const editChip = document.getElementById('element-edit-chip');
+  const btnEditLink = document.getElementById('btn-edit-link');
+  const btnEditImage = document.getElementById('btn-edit-image');
+  const linkOf = (el: HTMLElement | null) => (el && el.isConnected ? el.closest('a') as HTMLAnchorElement | null : null);
+  const imageOf = (el: HTMLElement | null) => (el && el.isConnected && el.tagName === 'IMG' ? el as HTMLImageElement : null);
+  updateEditChip = () => {
+    const el = previewPane.getActiveElement();
+    const a = linkOf(el), img = imageOf(el);
+    btnEditLink?.classList.toggle('hidden', !a);
+    btnEditImage?.classList.toggle('hidden', !img);
+    editChip?.classList.toggle('hidden', !a && !img);
+  };
+  btnEditLink?.addEventListener('click', async () => {
+    const a = linkOf(previewPane.getActiveElement());
+    if (!a) return;
+    const textOnly = a.children.length === 0;
+    const href = { label: 'Goes To', value: a.getAttribute('href') || '', placeholder: 'https://example.com', hint: 'A web address, a file like about.html, or #section-id' };
+    const text = { label: 'Link Text', value: a.textContent || '', placeholder: 'Read More' };
+    const newTab = { label: 'Open in a New Tab', check: true, value: a.getAttribute('target') === '_blank' ? 'yes' : 'no' };
+    const fields = textOnly ? [href, text, newTab] : [href, newTab];
+    const choice = await showDialog({
+      title: 'Edit Link',
+      fields,
+      actions: [
+        { label: 'Remove Link', value: 'remove' },
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Save Link', value: 'ok', primary: true },
+      ],
+    });
+    if (choice === 'remove') {
+      previewPane.editElement(() => { a.replaceWith(...Array.from(a.childNodes)); });
+      updateEditChip();
+      showToast('✦ Link removed, text kept');
+    } else if (choice === 'ok') {
+      previewPane.editElement(() => {
+        a.setAttribute('href', href.value.trim());
+        if (textOnly && text.value !== a.textContent) a.textContent = text.value;
+        if (newTab.value === 'yes') { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+        else if (a.getAttribute('target') === '_blank') { a.removeAttribute('target'); if (a.getAttribute('rel') === 'noopener') a.removeAttribute('rel'); }
+      });
+      showToast('✦ Link updated');
+    }
+  });
+  btnEditImage?.addEventListener('click', async () => {
+    const img = imageOf(previewPane.getActiveElement());
+    if (!img) return;
+    const src = {
+      label: 'Picture', value: img.getAttribute('data-scrypad-src') || img.getAttribute('src') || '', placeholder: 'images/cat.png or https://...',
+      hint: 'A file path, a web address, or choose one from your computer to embed it',
+      browse: {
+        label: 'Choose…',
+        pick: () => new Promise<{ value: string; display: string } | null>((resolve) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.addEventListener('change', async () => {
+            const f = input.files?.[0];
+            if (!f) { resolve(null); return; }
+            try { resolve({ value: await fileToDataUrl(f), display: `Embedded: ${f.name}` }); } catch { resolve(null); }
+          });
+          input.click();
+        }),
+      },
+    };
+    const alt = { label: 'Description (Alt Text)', value: img.getAttribute('alt') || '', placeholder: 'A sleepy cat on a keyboard', hint: 'Read aloud by screen readers, and shown if the picture can\'t load' };
+    const choice = await showDialog({
+      title: 'Change Picture',
+      fields: [src, alt],
+      actions: [
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Save Picture', value: 'ok', primary: true },
+      ],
+    });
+    if (choice !== 'ok') return;
+    previewPane.editElement(() => {
+      const was = img.getAttribute('data-scrypad-src') || img.getAttribute('src') || '';
+      if (src.value.trim() && src.value.trim() !== was) { img.setAttribute('src', src.value.trim()); img.removeAttribute('data-scrypad-src'); }
+      img.setAttribute('alt', alt.value);
+    });
+    showToast('✦ Picture updated');
+  });
+
+  // File › Recent: up to 6 files you opened or saved here, newest first
+  const recentBox = document.getElementById('recent-files');
+  async function renderRecent() {
+    if (!recentBox) return;
+    const list = await listRecent();
+    recentBox.innerHTML = '';
+    if (!list.length) return;
+    const label = document.createElement('div');
+    label.className = 'menu-label';
+    label.textContent = 'Recent';
+    recentBox.appendChild(label);
+    list.forEach((rec) => {
+      const b = document.createElement('button');
+      b.className = 'menu-item';
+      b.setAttribute('role', 'menuitem');
+      b.title = rec.path || rec.name;
+      const span = document.createElement('span');
+      const icon = lucideIcon(History);
+      const nm = document.createElement('span');
+      nm.className = 'recent-name';
+      nm.textContent = rec.name;
+      span.append(icon, nm);
+      b.appendChild(span);
+      b.addEventListener('click', () => { closeAllMenus(); openRecentAction(rec); });
+      recentBox.appendChild(b);
+    });
+    const clear = document.createElement('button');
+    clear.className = 'menu-item menu-item-quiet';
+    clear.setAttribute('role', 'menuitem');
+    clear.textContent = 'Clear Recent';
+    clear.addEventListener('click', async () => { closeAllMenus(); await clearRecent(); renderRecent(); });
+    recentBox.appendChild(clear);
+  }
+  async function openRecentAction(rec: RecentFile) {
+    if (fileManager.isDirty()) {
+      const ok = await confirmDialog('Open Another File?', '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>', 'Open Anyway', 'Keep Editing');
+      if (!ok) return;
+    }
+    try {
+      const content = await fileManager.openRecent(rec);
+      codePane.setValue(content);
+      previewPane.render(await fileManager.resolvePreview(content));
+      coordinator.updateStats();
+      checkDocumentIntegrity(content);
+      showToast(`✦ Opened ${fileManager.getFilename()}`);
+      rememberFile(fileManager.recentInfo()).then(renderRecent);
+    } catch (err: any) {
+      if (err && err.message === 'permission') return;
+      await forgetFile(rec.key);
+      renderRecent();
+      showDialog({ title: 'ScryPad Can\'t Find That File', bodyHtml: `<p><b>${escapeHtml(rec.name)}</b> may have been moved, renamed or deleted, so it's been taken off the Recent list.</p>` });
+    }
+  }
+  renderRecent();
 
   // New File: a truly blank page. The Blank Page screen (with Wisp) shows while it's empty
   const newFileAction = async () => {
@@ -841,7 +1013,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkDocumentIntegrity('');
     updateBlankPage('');
   };
-  document.getElementById('btn-new')?.addEventListener('click', newFileAction);
 
   // Blank Page screen buttons
   document.getElementById('blank-open')?.addEventListener('click', () => { openFileAction(); });
@@ -871,10 +1042,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (k === 'o' && !e.shiftKey) { e.preventDefault(); openFileAction(); }
     else if (k === 'n' && (e.altKey || isDesktopApp)) { e.preventDefault(); newFileAction(); }
     else if (k === 'f' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); tidyCode(); }
-    else if ((k === 'b' || k === 'i') && !inCode && !e.shiftKey && !e.altKey) {
+    else if ((k === 'b' || k === 'i' || k === 'u') && !inCode && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      document.getElementById(k === 'b' ? 'btn-bold' : 'btn-italic')?.click();
+      document.getElementById(k === 'b' ? 'btn-bold' : k === 'i' ? 'btn-italic' : 'btn-underline')?.click();
     }
+    else if (k === 'k' && !inCode && !e.shiftKey && !e.altKey) { e.preventDefault(); document.getElementById('btn-insert-link')?.click(); }
   }, true);
 
   // Visual Edit Toggle
@@ -893,6 +1065,99 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-italic')?.addEventListener('click', () => {
     previewPane.applyStyleCommand('italic');
   });
+  document.getElementById('btn-underline')?.addEventListener('click', () => {
+    previewPane.applyStyleCommand('underline');
+  });
+  // Text Type: paragraph, headings, quote, lists
+  const selectBlock = document.getElementById('select-block') as HTMLSelectElement | null;
+  selectBlock?.addEventListener('change', () => {
+    const v = selectBlock.value;
+    if (v === 'ul') previewPane.applyStyleCommand('insertUnorderedList');
+    else if (v === 'ol') previewPane.applyStyleCommand('insertOrderedList');
+    else if (v) previewPane.applyStyleCommand('formatBlock', `<${v}>`);
+    selectBlock.value = '';
+  });
+  // Link the selected text, or edit the link you're in
+  document.getElementById('btn-insert-link')?.addEventListener('click', async () => {
+    const doc = previewPane.getDocument();
+    const sel = doc?.getSelection();
+    const anchorEl = sel?.anchorNode ? (sel.anchorNode.nodeType === Node.TEXT_NODE ? sel.anchorNode.parentElement : sel.anchorNode as HTMLElement) : null;
+    if (anchorEl?.closest('a')) { btnEditLink?.click(); return; }
+    if (!sel || sel.isCollapsed || !sel.rangeCount) {
+      showToast('✦ Select some text in the preview first, then press Link');
+      return;
+    }
+    const range = sel.getRangeAt(0).cloneRange();
+    const href = { label: 'Goes To', value: 'https://', hint: 'A web address, a file like about.html, or #section-id' };
+    const newTab = { label: 'Open in a New Tab', check: true, value: 'no' };
+    const choice = await showDialog({ title: 'Add a Link', fields: [href, newTab], actions: [{ label: 'Cancel', value: 'cancel' }, { label: 'Add Link', value: 'ok', primary: true }] });
+    if (choice !== 'ok' || !href.value.trim() || href.value.trim() === 'https://') return;
+    previewPane.applyStyleCommand('createLink', href.value.trim(), range);
+    if (newTab.value === 'yes') {
+      const a = (doc!.getSelection()?.anchorNode as Node | null);
+      const link = (a && (a.nodeType === Node.TEXT_NODE ? a.parentElement : a as HTMLElement))?.closest('a');
+      if (link) previewPane.editElement(() => { link.setAttribute('target', '_blank'); link.setAttribute('rel', 'noopener'); });
+    }
+    showToast('✦ Link added');
+  });
+  // Edit menu: picture, divider, clear formatting (they go where the cursor is in the preview)
+  document.getElementById('menu-edit-divider')?.addEventListener('click', () => {
+    closeAllMenus();
+    // Goes after the block you're in, so it never splits a paragraph or box in two
+    const doc = previewPane.getDocument();
+    if (!doc) return;
+    const sel = doc.getSelection();
+    const node = sel?.anchorNode ?? null;
+    const el = node ? (node.nodeType === Node.TEXT_NODE ? node.parentElement : node as HTMLElement) : null;
+    const block = el?.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, div, section, article, header, footer, figure, img, table, ul, ol');
+    previewPane.editElement(() => {
+      const hr = doc.createElement('hr');
+      if (block && block !== doc.body && doc.body.contains(block)) block.after(hr);
+      else doc.body.appendChild(hr);
+    });
+    showToast('✦ Divider line added');
+  });
+  document.getElementById('menu-edit-clear-format')?.addEventListener('click', () => {
+    closeAllMenus();
+    previewPane.applyStyleCommand('removeFormat');
+  });
+  document.getElementById('menu-edit-picture')?.addEventListener('click', async () => {
+    closeAllMenus();
+    const doc = previewPane.getDocument();
+    const sel = doc?.getSelection();
+    const range = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const src = {
+      label: 'Picture', value: '', placeholder: 'images/cat.png or https://...',
+      hint: 'A file path, a web address, or choose one from your computer to embed it',
+      browse: {
+        label: 'Choose…',
+        pick: () => new Promise<{ value: string; display: string } | null>((resolve) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.addEventListener('change', async () => {
+            const f = input.files?.[0];
+            if (!f) { resolve(null); return; }
+            try { resolve({ value: await fileToDataUrl(f), display: `Embedded: ${f.name}` }); } catch { resolve(null); }
+          });
+          input.click();
+        }),
+      },
+    };
+    const alt = { label: 'Description (Alt Text)', value: '', placeholder: 'A sleepy cat on a keyboard', hint: 'Read aloud by screen readers, and shown if the picture can\'t load' };
+    const choice = await showDialog({ title: 'Add a Picture', fields: [src, alt], actions: [{ label: 'Cancel', value: 'cancel' }, { label: 'Add Picture', value: 'ok', primary: true }] });
+    if (choice !== 'ok' || !src.value.trim() || !doc) return;
+    previewPane.editElement(() => {
+      const img = doc.createElement('img');
+      img.setAttribute('src', src.value.trim());
+      img.setAttribute('alt', alt.value);
+      img.style.maxWidth = '100%';
+      if (range && doc.body.contains(range.startContainer)) { range.collapse(false); range.insertNode(img); }
+      else doc.body.appendChild(img);
+    });
+    showToast('✦ Picture added');
+  });
+
   quickColor.addEventListener('input', (e) => {
     const val = (e.target as HTMLInputElement).value;
     previewPane.applyStyleCommand('foreColor', val);
@@ -907,6 +1172,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Feature: Copy Clean Body
+  // --- Export & Publish (GitHub Pages, Site Zip, One HTML File) ---
+  const exportDeps = { fileManager, getCode: () => codePane.getValue(), showToast: (m: string) => showToast(m) };
+  document.getElementById('menu-export-github')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'github'); });
+  document.getElementById('menu-export-zip')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'zip'); });
+  document.getElementById('menu-export-onefile')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'single'); });
+
   document.getElementById('btn-copy-body')?.addEventListener('click', async () => {
     const rawHtml = codePane.getValue();
     const cleanBody = extractCleanBody(rawHtml);
@@ -951,12 +1222,103 @@ document.addEventListener('DOMContentLoaded', () => {
     return `#${r}${g}${b}`;
   }
 
+  // --- Styles drawer: Font, Weight, Line Height, Align, Width, Border, Shadow ---
+  const selectFont = document.getElementById('select-font') as HTMLSelectElement;
+  const selectWeight = document.getElementById('select-weight') as HTMLSelectElement;
+  const selectAlign = document.getElementById('select-align') as HTMLSelectElement;
+  const sliderLineHeight = document.getElementById('slider-line-height') as HTMLInputElement;
+  const valLineHeight = document.getElementById('val-line-height')!;
+  const sliderWidth = document.getElementById('slider-width') as HTMLInputElement;
+  const valWidth = document.getElementById('val-width')!;
+  const sliderBorder = document.getElementById('slider-border') as HTMLInputElement;
+  const valBorder = document.getElementById('val-border')!;
+  const selectBorderStyle = document.getElementById('select-border-style') as HTMLSelectElement;
+  const pickerBorderColor = document.getElementById('picker-border-color') as HTMLInputElement;
+  const valBorderColor = document.getElementById('val-border-color')!;
+  const selectShadow = document.getElementById('select-shadow') as HTMLSelectElement;
+
+  const GOOGLE_FONT_QUERY: Record<string, string> = {
+    'VT323': 'VT323', 'Pixelify Sans': 'Pixelify+Sans:wght@400;700', 'Caveat': 'Caveat:wght@400;700', 'Comfortaa': 'Comfortaa:wght@400;700',
+  };
+  const fontQuery = (name: string) => POPULAR_GOOGLE_FONTS[name] || GOOGLE_FONT_QUERY[name] || name.replace(/ /g, '+');
+
+  function populateExtraStyles(info: ActiveElementInfo) {
+    const st = info.styles;
+    const fam = (st.fontFamily || '').split(',')[0].trim().replace(/^["']|["']$/g, '');
+    const opt = Array.from(selectFont.options).find((o) => o.value && (o.value === `gf:${fam}` || o.value.split(',')[0].trim() === fam));
+    selectFont.value = opt ? opt.value : (fam ? '__own' : '');
+    const w = parseInt(st.fontWeight) || 400;
+    selectWeight.value = ['300', '400', '500', '600', '700', '800'].includes(String(w)) ? String(w) : '';
+    const fs = parsePxValue(st.fontSize, 16);
+    const lh = st.lineHeight === 'normal' || !st.lineHeight ? 1.2 : parsePxValue(st.lineHeight, fs * 1.2) / fs;
+    sliderLineHeight.value = String(Math.round(Math.min(3, Math.max(0.8, lh)) * 10));
+    valLineHeight.textContent = (Number(sliderLineHeight.value) / 10).toFixed(1);
+    selectAlign.value = st.textAlign || '';
+    const wPct = /%$/.test(st.width) ? Math.round(parseFloat(st.width)) : 0;
+    sliderWidth.value = String(wPct);
+    valWidth.textContent = wPct ? `${wPct}%` : (st.width || 'Auto');
+    const bw = st.borderStyle === 'none' ? 0 : Math.round(parsePxValue(st.borderWidth, 0));
+    sliderBorder.value = String(Math.min(12, bw));
+    valBorder.textContent = `${sliderBorder.value}px`;
+    if (['solid', 'dashed', 'dotted', 'double'].includes(st.borderStyle)) selectBorderStyle.value = st.borderStyle;
+    if (st.borderColor && bw > 0) {
+      const hex = st.borderColor.startsWith('#') ? st.borderColor : rgbToHex(st.borderColor);
+      pickerBorderColor.value = hex;
+      valBorderColor.textContent = hex;
+    }
+    selectShadow.value = Array.from(selectShadow.options).some((o) => o.value === st.boxShadow) ? st.boxShadow : '';
+  }
+
+  selectFont.addEventListener('change', () => {
+    const v = selectFont.value;
+    if (v === '__own') return;
+    if (v.startsWith('gf:')) {
+      const name = v.slice(3);
+      const doc = previewPane.getDocument();
+      if (doc) {
+        previewPane.editElement(() => {
+          const already = Array.from(doc.querySelectorAll('link[href*="fonts.googleapis.com"]')).some((l) => (l.getAttribute('href') || '').includes(`family=${name.replace(/ /g, '+')}`));
+          if (!already) {
+            const link = doc.createElement('link');
+            link.setAttribute('rel', 'stylesheet');
+            link.setAttribute('href', `https://fonts.googleapis.com/css2?family=${fontQuery(name)}&display=swap`);
+            doc.head.appendChild(link);
+          }
+        });
+      }
+      previewPane.updateActiveElementStyle('fontFamily', `'${name}', ${/Mono|Code|VT323/.test(name) ? 'monospace' : /Lora|Playfair|Merriweather|Cinzel/.test(name) ? 'serif' : /Caveat/.test(name) ? 'cursive' : 'sans-serif'}`);
+    } else {
+      previewPane.updateActiveElementStyle('fontFamily', v);
+    }
+  });
+  selectWeight.addEventListener('change', () => previewPane.updateActiveElementStyle('fontWeight', selectWeight.value));
+  selectAlign.addEventListener('change', () => previewPane.updateActiveElementStyle('textAlign', selectAlign.value));
+  sliderLineHeight.addEventListener('input', () => {
+    const v = (Number(sliderLineHeight.value) / 10).toFixed(1);
+    valLineHeight.textContent = v;
+    previewPane.updateActiveElementStyle('lineHeight', v);
+  });
+  sliderWidth.addEventListener('input', () => {
+    const v = Number(sliderWidth.value);
+    valWidth.textContent = v ? `${v}%` : 'Auto';
+    previewPane.updateActiveElementStyle('width', v ? `${v}%` : '');
+  });
+  const applyBorder = () => {
+    const w = Number(sliderBorder.value);
+    valBorder.textContent = `${w}px`;
+    previewPane.updateActiveElementStyle('border', w ? `${w}px ${selectBorderStyle.value} ${pickerBorderColor.value}` : '');
+  };
+  sliderBorder.addEventListener('input', applyBorder);
+  selectBorderStyle.addEventListener('change', () => { if (Number(sliderBorder.value) === 0) sliderBorder.value = '2'; applyBorder(); });
+  pickerBorderColor.addEventListener('input', () => { valBorderColor.textContent = pickerBorderColor.value; if (Number(sliderBorder.value) === 0) sliderBorder.value = '2'; applyBorder(); });
+  selectShadow.addEventListener('change', () => previewPane.updateActiveElementStyle('boxShadow', selectShadow.value));
+
   function populateStyleDrawer(info: ActiveElementInfo) {
     drawerElementTag.textContent = `<${info.tagName}${info.id ? '#' + info.id : ''}${info.className ? '.' + info.className.trim().split(/\s+/)[0] : ''}>`;
 
     // Font size
     const fontSizeNum = Math.round(parsePxValue(info.styles.fontSize, 16));
-    sliderFontSize.value = String(Math.min(64, Math.max(10, fontSizeNum)));
+    sliderFontSize.value = String(Math.min(96, Math.max(10, fontSizeNum)));
     valFontSize.textContent = `${sliderFontSize.value}px`;
 
     // Padding
@@ -995,6 +1357,8 @@ document.addEventListener('DOMContentLoaded', () => {
       pickerBgColor.value = hex;
       valBgColor.textContent = hex;
     }
+
+    populateExtraStyles(info);
 
     // Element Shape Detection
     const valShapeName = document.getElementById('val-shape-name');
@@ -1424,7 +1788,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // CDN Library Injector Modal
   const modalLibrary = document.getElementById('modal-library')!;
   const libraryList = document.getElementById('library-list')!;
-  const btnLibraryToggle = document.getElementById('btn-library-toggle');
   const btnCloseModal = document.getElementById('btn-close-modal')!;
   const btnModalDone = document.getElementById('btn-modal-done')!;
 
@@ -1471,9 +1834,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  btnLibraryToggle?.addEventListener('click', () => {
-    modalLibrary.classList.remove('hidden');
-  });
   btnCloseModal.addEventListener('click', () => {
     modalLibrary.classList.add('hidden');
   });
@@ -1588,18 +1948,9 @@ document.addEventListener('DOMContentLoaded', () => {
     codePane.redo();
     codePane.focus();
   });
-  document.getElementById('menu-edit-find')?.addEventListener('click', () => {
-    closeAllMenus();
-    openFindBar(false);
-  });
   document.getElementById('menu-edit-clean')?.addEventListener('click', () => {
     closeAllMenus();
     tidyCode();
-  });
-
-  document.getElementById('menu-insert-tag-guide')?.addEventListener('click', () => {
-    closeAllMenus();
-    openTagGuide('');
   });
 
   document.getElementById('menu-tools-libraries')?.addEventListener('click', () => {
@@ -1620,22 +1971,15 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
     setViewMode('preview');
   });
-
-  // --- Undo & Redo ---
-  const btnUndo = document.getElementById('btn-undo');
-  const btnRedo = document.getElementById('btn-redo');
-  if (btnUndo) {
-    btnUndo.addEventListener('click', () => {
-      codePane.undo();
-      codePane.focus();
-    });
-  }
-  if (btnRedo) {
-    btnRedo.addEventListener('click', () => {
-      codePane.redo();
-      codePane.focus();
-    });
-  }
+  document.getElementById('menu-view-popout')?.addEventListener('click', () => {
+    closeAllMenus();
+    if (!previewPane.openPopOut()) {
+      showDialog({
+        title: 'Pop Out Was Blocked',
+        bodyHtml: '<p>Your browser stopped the new window from opening. Allow pop-ups for ScryPad, then try View › Pop Out Preview again.</p>',
+      });
+    }
+  });
 
   // --- Find & Search & Replace HUD Bar ---
   const findReplaceBar = document.getElementById('find-replace-bar')!;
@@ -2126,7 +2470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows: [string, string][] = [
       ['New Page', nk], ['Open File', 'Ctrl+O'], ['Save', 'Ctrl+S'], ['Save As', 'Ctrl+Shift+S'],
       ['Undo', 'Ctrl+Z'], ['Redo', 'Ctrl+Y'], ['Find', 'Ctrl+F'], ['Find &amp; Replace', 'Ctrl+H'],
-      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'],
+      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'], ['Underline (in the preview)', 'Ctrl+U'], ['Link (in the preview)', 'Ctrl+K'],
       ['Indent', 'Tab'], ['Close a window or menu', 'Esc'],
     ];
     showDialog({
@@ -2151,11 +2495,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showDialog({
       title: 'About ScryPad',
       wide: true,
-      bodyHtml: '<img src="/icon.svg" alt="" class="sp-wisp">'
+      bodyHtml: '<img src="icon.svg" alt="" class="sp-wisp">'
         + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
         + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
         + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
-        + '<p>Made by Graves Ghostly at <a href="https://lab.interstatus.app" target="_blank" rel="noopener" style="color:var(--forge-hi)">Interstatus Lab</a>. Open source under the MIT License.</p>',
+        + '<p>Built by Interstatus Lab. Open source under the MIT License.</p>',
     });
   });
 
