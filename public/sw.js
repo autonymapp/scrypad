@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scrypad-v2';
+const CACHE_NAME = 'scrypad-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -37,20 +37,33 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests originating from same-origin
+  // Only handle same-origin GET requests
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  if (url.origin === location.origin) {
+  if (url.origin !== location.origin) return;
+
+  const save = (response) => {
+    if (response.status === 200) {
+      const clone = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+    }
+    return response;
+  };
+
+  // Pages: network first, so every update shows up right away (cache is only the offline fallback)
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return cached || fetch(event.request).then((response) => {
-          if (response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
+      fetch(event.request).then(save).catch(() => caches.match(event.request).then((c) => c || caches.match('/index.html')))
     );
+    return;
+  }
+
+  // Built files have a new name each build, fonts never change: cache first is safe there.
+  // Everything else (icons, svg art): network first with the cache as fallback.
+  const immutable = url.pathname.startsWith('/assets/index-') || url.pathname.startsWith('/assets/fonts/');
+  if (immutable) {
+    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then(save)));
+  } else {
+    event.respondWith(fetch(event.request).then(save).catch(() => caches.match(event.request)));
   }
 });
