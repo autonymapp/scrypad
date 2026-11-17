@@ -34,6 +34,8 @@ export interface CodeEditorOptions {
   container: HTMLElement;
   initialValue: string;
   onDocChange: (newContent: string) => void;
+  /** Every change, typed or set by ScryPad (opening a file, New File...). */
+  onAnyChange?: (newContent: string) => void;
 }
 
 export class CodePane {
@@ -48,6 +50,7 @@ export class CodePane {
       if (update.docChanged && !this.isExternalUpdate) {
         options.onDocChange(this.getValue());
       }
+      if (update.docChanged) options.onAnyChange?.(this.getValue());
     });
 
     const customTheme = EditorView.theme({

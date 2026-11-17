@@ -1,6 +1,15 @@
 import { ProjectFolder } from './project-folder.ts';
 import { isDesktop, desktopOpen, desktopWrite, desktopSaveAs, DesktopFile } from './desktop.ts';
 
+
+/** The browser's file pickers only work when ScryPad is the whole page. Inside another
+ *  site's frame (like itch.io) they throw, so ScryPad uses the plain upload / download way. */
+function canUseFilePicker(name: string): boolean {
+  let topLevel = true;
+  try { topLevel = window.self === window.top; } catch { topLevel = false; }
+  return name in window && topLevel;
+}
+
 export interface FileState {
   handle: FileSystemFileHandle | null;
   name: string;
@@ -177,7 +186,7 @@ export class FileManager {
    * Open directory / folder
    */
   public async openDirectory(): Promise<ProjectFolder | null> {
-    if ('showDirectoryPicker' in window) {
+    if (canUseFilePicker('showDirectoryPicker')) {
       try {
         const dirHandle = await (window as any).showDirectoryPicker({
           mode: 'readwrite'
@@ -259,7 +268,7 @@ export class FileManager {
         return null;
       }
     }
-    if ('showOpenFilePicker' in window) {
+    if (canUseFilePicker('showOpenFilePicker')) {
       try {
         const [handle] = await (window as any).showOpenFilePicker({
           types: [
@@ -367,7 +376,7 @@ export class FileManager {
       }
     }
 
-    if ('showSaveFilePicker' in window) {
+    if (canUseFilePicker('showSaveFilePicker')) {
       try {
         let handle = this.state.handle;
         if (!handle || forceSaveAs) {

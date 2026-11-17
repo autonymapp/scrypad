@@ -106,7 +106,7 @@ export function showTour(): Promise<void> {
         const tile = document.createElement('div');
         tile.className = 'tour-tile';
         const img = document.createElement('img');
-        img.src = '/logo.svg';
+        img.src = 'logo.svg';
         img.alt = 'ScryPad';
         img.style.width = '46px';
         img.style.height = 'auto';

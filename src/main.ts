@@ -105,9 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // PWA Service Worker Registration
-  if ('serviceWorker' in navigator) {
+  // Not on itch.io: it serves many games from one address, and its own player handles loading
+  const onItch = /(^|\.)itch\.(io|zone)$/.test(location.hostname);
+  if ('serviceWorker' in navigator && !onItch) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
         console.warn('PWA service worker registration failed:', err);
       });
     });
@@ -191,8 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
       checkDocumentIntegrity(code);
-      updateBlankPage(code);
-    }
+    },
+    // The Blank Page shows whenever the editor is empty, however the text changed
+    onAnyChange: (code) => updateBlankPage(code)
   });
 
   let updateTagHint: (tagName: string) => void = () => {};
@@ -823,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
       previewPane.render(resolved);
       coordinator.updateStats();
       checkDocumentIntegrity(content);
+      updateBlankPage(content);
       showToast(`✦ Opened ${fileManager.getFilename()}`);
     }
   };
@@ -2151,11 +2155,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showDialog({
       title: 'About ScryPad',
       wide: true,
-      bodyHtml: '<img src="/icon.svg" alt="" class="sp-wisp">'
+      bodyHtml: '<img src="icon.svg" alt="" class="sp-wisp">'
         + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
         + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
         + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
-        + '<p>Made by Graves Ghostly at <a href="https://lab.interstatus.app" target="_blank" rel="noopener" style="color:var(--forge-hi)">Interstatus Lab</a>. Open source under the MIT License.</p>',
+        + '<p>Made by Graves Ghostly at Interstatus Lab. Open source under the MIT License.</p>',
     });
   });
 
