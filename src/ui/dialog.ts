@@ -23,6 +23,8 @@ export interface DialogField {
   value: string;
   placeholder?: string;
   hint?: string;
+  /** Hide what's typed (for tokens) */
+  secret?: boolean;
   /** A tick box instead of a text box: value is 'yes' or 'no' */
   check?: boolean;
   /** Adds a button beside the box; returns what to put in it (shown as `display`) */
@@ -84,8 +86,9 @@ export function showDialog(opts: DialogOptions): Promise<string> {
       const row = document.createElement('div');
       row.className = 'sp-field-row';
       const input = document.createElement('input');
-      input.type = 'text';
+      input.type = field.secret ? 'password' : 'text';
       input.id = `sp-field-${n}`;
+      if (field.secret) input.autocomplete = 'off';
       input.value = field.value;
       input.spellcheck = false;
       if (field.placeholder) input.placeholder = field.placeholder;

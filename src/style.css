@@ -703,3 +703,5 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
 .hidden {
   display: none !important;
 }
+.sp-dialog .sp-body a { color: var(--forge-hi); }
+.sp-dialog .sp-body code { font-family: var(--f-mono); font-size: 12px; background: var(--deep); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; color: var(--ink); }

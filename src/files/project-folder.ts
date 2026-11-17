@@ -189,7 +189,7 @@ export class ProjectFolder {
       if (cssContent !== null) {
         matchesToReplace.push({
           original: fullTag,
-          inlinedStyle: `<style data-source="${normalizedPath}">\n/* --- Resolved from ${normalizedPath} --- */\n${cssContent}\n</style>`
+          inlinedStyle: `<style data-source="${normalizedPath}" data-scrypad-href="${relHref.replace(/"/g, '&quot;')}">\n/* --- Resolved from ${normalizedPath} --- */\n${cssContent}\n</style>`
         });
       }
     }
@@ -212,7 +212,8 @@ export class ProjectFolder {
           this.blobUrlMap.set(normalizedPath, blobUrl);
         }
         const escaped = originalSrc.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        resolved = resolved.replace(new RegExp(`(src=["'])${escaped}(["'])`, 'g'), `$1${blobUrl}$2`);
+        // data-scrypad-src remembers the real path, so edits made in the preview keep it
+        resolved = resolved.replace(new RegExp(`(src=["'])${escaped}(["'])`, 'g'), `$1${blobUrl}$2 data-scrypad-src="${originalSrc.replace(/"/g, '&quot;')}"`);
       }
     }
 
@@ -235,6 +236,21 @@ export class ProjectFolder {
       }
     }
     return parts.join('/');
+  }
+
+  /** The raw bytes of a project file (for exports). */
+  public async readBytes(relativePath: string): Promise<Uint8Array | null> {
+    const entry = this.files.get(relativePath);
+    if (!entry) return null;
+    if (entry.inMemoryContent !== undefined) return new TextEncoder().encode(entry.inMemoryContent);
+    const f = entry.handle ? await entry.handle.getFile() : entry.file;
+    return f ? new Uint8Array(await f.arrayBuffer()) : null;
+  }
+
+  /** Turns a path written in a page (like ../img/cat.png) into a project path. */
+  public resolvePath(fromHtmlPath: string, ref: string): string {
+    const baseDir = fromHtmlPath.includes('/') ? fromHtmlPath.substring(0, fromHtmlPath.lastIndexOf('/')) : '';
+    return this.normalizePath(baseDir, ref.split(/[?#]/)[0]);
   }
 
   public dispose() {

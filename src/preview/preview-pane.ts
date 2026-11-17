@@ -237,6 +237,17 @@ export class PreviewPane {
     const root = doc.documentElement.cloneNode(true) as HTMLElement;
     root.querySelectorAll('[contenteditable]').forEach((el) => el.removeAttribute('contenteditable'));
     root.querySelectorAll('[style=""]').forEach((el) => el.removeAttribute('style'));
+    // Put back the real stylesheet links and picture paths the preview swapped in for display
+    root.querySelectorAll('style[data-scrypad-href]').forEach((st) => {
+      const link = doc.createElement('link');
+      link.setAttribute('rel', 'stylesheet');
+      link.setAttribute('href', st.getAttribute('data-scrypad-href') || '');
+      st.replaceWith(link);
+    });
+    root.querySelectorAll('img[data-scrypad-src]').forEach((img) => {
+      img.setAttribute('src', img.getAttribute('data-scrypad-src') || '');
+      img.removeAttribute('data-scrypad-src');
+    });
     if (root.getAttribute('style') === '') root.removeAttribute('style');
     const serialized = docType + root.outerHTML;
     this.scheduleMirror(serialized);

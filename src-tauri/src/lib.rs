@@ -78,6 +78,29 @@ async fn save_file_as(app: tauri::AppHandle, suggested_name: String, content: St
     }
 }
 
+/// File > Export: save a Site Zip or One HTML File through the Save dialog.
+#[tauri::command]
+async fn save_bytes_as(app: tauri::AppHandle, suggested_name: String, bytes: Vec<u8>, kind: String) -> Result<Option<SavedFile>, String> {
+    let (label, exts): (&str, &[&str]) = if kind == "zip" { ("Zip File", &["zip"]) } else { ("Web Page", &["html", "htm"]) };
+    let picked = app
+        .dialog()
+        .file()
+        .set_file_name(&suggested_name)
+        .add_filter(label, exts)
+        .blocking_save_file();
+    match picked {
+        Some(fp) => {
+            let p = fp.into_path().map_err(|e| e.to_string())?;
+            std::fs::write(&p, bytes).map_err(|e| format!("Couldn't save {}: {e}", p.display()))?;
+            Ok(Some(SavedFile {
+                name: file_name(&p),
+                path: p.to_string_lossy().into_owned(),
+            }))
+        }
+        None => Ok(None),
+    }
+}
+
 /// File > Recent: reopen a file ScryPad opened or saved before.
 #[tauri::command]
 async fn read_path(path: String) -> Result<DiskFile, String> {
@@ -99,7 +122,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file, read_path])
+        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file, read_path, save_bytes_as])
         .run(tauri::generate_context!())
         .expect("error while running ScryPad application");
 }

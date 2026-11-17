@@ -472,7 +472,7 @@ export class FileManager {
       if (cachedCss) {
         toReplace.push({
           original: fullTag,
-          inlined: `<style data-source="${relHref}">\n/* --- Cached Stylesheet (${relHref}) --- */\n${cachedCss}\n</style>`
+          inlined: `<style data-source="${relHref}" data-scrypad-href="${relHref.replace(/"/g, '&quot;')}">\n/* --- Cached Stylesheet (${relHref}) --- */\n${cachedCss}\n</style>`
         });
       }
     }
