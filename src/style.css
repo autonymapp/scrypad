@@ -726,3 +726,52 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
   .tb-tools .tb-btn, .tb-toggle { padding: 0 7px; }
   .tb-select { max-width: 112px; }
 }
+
+/* Export & Publish pop-up */
+.sp-export { width: min(560px, 100%); padding: 18px 20px 20px; }
+.ex-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ex-head h2 { margin: 0; }
+.ex-close { color: var(--dim); padding: 4px; border-radius: 4px; }
+.ex-close:hover { color: var(--ink); background: var(--panel-hi); }
+.ex-close svg { width: 16px; height: 16px; }
+.ex-tabs { display: flex; border-bottom: 1px solid var(--line); margin: 0 -20px 16px; padding: 0 12px; }
+.ex-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 6px; border-bottom: 2px solid transparent; color: var(--dim); font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.ex-tabs button svg { width: 14px; height: 14px; }
+.ex-tabs button:hover { color: var(--ink); }
+.ex-tabs button.is-on { color: var(--forge-hi); border-bottom-color: var(--forge); }
+.ex-panel { display: flex; flex-direction: column; gap: 12px; color: var(--dim); font-size: 14px; line-height: 1.55; }
+.ex-panel .sp-field { margin: 0; }
+.ex-panel .sp-field small a, .ex-done a, .ex-note a { color: var(--forge-hi); }
+.ex-lead { margin: 0; color: var(--ink); }
+.ex-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: -4px; }
+.ex-check { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.ex-check input { accent-color: var(--forge); width: 15px; height: 15px; }
+.ex-eye { padding: 0 10px; }
+.ex-eye svg { width: 15px; height: 15px; }
+.ex-go { align-self: flex-start; }
+.ex-go svg { width: 15px; height: 15px; }
+.ex-go:disabled { opacity: .5; cursor: progress; }
+.ex-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ex-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ex-stats div { background: var(--deep); border: 1px solid var(--line); border-radius: 5px; padding: 8px; text-align: center; display: flex; flex-direction: column; }
+.ex-stats b { color: var(--forge-hi); font-family: var(--f-mono); font-size: 15px; }
+.ex-stats span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.ex-note, .ex-warn { margin: 0; font-size: 13px; }
+.ex-warn { color: var(--gold); }
+.ex-note b { color: var(--ink); }
+.ex-panel code { font-family: var(--f-mono); font-size: 12px; background: var(--deep); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; color: var(--ink); }
+.ex-log { background: var(--deep); border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px; max-height: 170px; overflow-y: auto; font-family: var(--f-mono); font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
+.ex-step { display: flex; align-items: center; gap: 8px; }
+.ex-step svg { width: 13px; height: 13px; flex-shrink: 0; }
+.ex-step.ok svg { color: var(--forge-hi); }
+.ex-step.run svg { color: var(--forge); animation: ex-spin 1s linear infinite; }
+.ex-step.err { color: var(--red); }
+@keyframes ex-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ex-step.run svg { animation: none; } }
+.ex-done { border: 1px solid var(--forge); background: color-mix(in srgb, var(--forge) 8%, transparent); border-radius: 5px; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.ex-done b { color: var(--ink); }
+.ex-live { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--f-mono); font-weight: 600; word-break: break-all; }
+.ex-live svg { width: 14px; height: 14px; flex-shrink: 0; }
+.ex-single-note { border-color: var(--gold); background: transparent; }
+@media (max-width: 520px) { .ex-tabs button span { font-size: 10px; } .ex-tabs button svg { display: none; } }
+.ex-panel .sp-field > input { width: 100%; box-sizing: border-box; }

@@ -64,8 +64,7 @@ import { desktopLaunchFile } from './files/desktop.ts';
 import { showTour, hasSeenTour, isTourOpen } from './ui/tour.ts';
 import { listRecent, rememberFile, forgetFile, clearRecent, RecentFile } from './files/recent-files.ts';
 import { createElement as lucideIcon, History } from 'lucide';
-import { collectSite, makeZip, bundleOneFile, saveBytes } from './tools/site-export.ts';
-import { publishToPages, savedToken, rememberToken, lastRepo, cleanRepoName, GitHubError } from './tools/github-publish.ts';
+import { openExportModal } from './ui/export-modal.ts';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -1173,68 +1172,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Feature: Copy Clean Body
-  // --- Exports for the indie web ---
-  const listMissing = (missing: string[]) => missing.length
-    ? `<p>ScryPad couldn't find ${missing.length === 1 ? 'this file' : 'these files'}, so ${missing.length === 1 ? 'it was' : 'they were'} left as links:</p><p>${missing.slice(0, 8).map((m) => `<code>${escapeHtml(m)}</code>`).join(' ')}</p>`
-    : '';
-
-  document.getElementById('menu-export-zip')?.addEventListener('click', async () => {
-    closeAllMenus();
-    const site = await collectSite(fileManager, codePane.getValue());
-    const saved = await saveBytes(`${site.name}.zip`, makeZip(site.entries), 'zip');
-    if (!saved) return;
-    const noIndex = site.hasIndex ? '' : '<p><b>Heads up:</b> there\'s no <code>index.html</code> in this folder. Hosts show <code>index.html</code> as your front page, so rename your main page to that.</p>';
-    showDialog({
-      title: 'Your Site Zip Is Ready',
-      bodyHtml: `<p>${site.entries.length} ${site.entries.length === 1 ? 'file' : 'files'} packed into <b>${escapeHtml(site.name)}.zip</b>.</p>${noIndex}<p><b>Neocities:</b> unzip it, open your Dashboard, and drag the files and folders in.</p><p><b>Nekoweb:</b> unzip it, open the File Manager, and drag them in. (Nekoweb can also take the zip and unpack it for you.)</p>`,
-    });
-  });
-
-  document.getElementById('menu-export-onefile')?.addEventListener('click', async () => {
-    closeAllMenus();
-    const { html, missing } = await bundleOneFile(fileManager, codePane.getValue());
-    const name = (fileManager.getFilename() || 'index.html').replace(/\.html?$/i, '') + '-one-file.html';
-    const saved = await saveBytes(name, new TextEncoder().encode(html), 'html');
-    if (!saved) return;
-    if (missing.length) showDialog({ title: 'Saved, With a Few Gaps', bodyHtml: `<p><b>${escapeHtml(name)}</b> is saved.</p>${listMissing(missing)}<p>Tip: open the whole folder (File › Open Folder) so ScryPad can find them.</p>` });
-    else showToast(`✦ Saved ${name}: everything's tucked inside`);
-  });
-
-  document.getElementById('menu-export-github')?.addEventListener('click', async () => {
-    closeAllMenus();
-    const site = await collectSite(fileManager, codePane.getValue());
-    const token = { label: 'GitHub Token', value: savedToken(), secret: true, placeholder: 'ghp_… or github_pat_…' };
-    const remember = { label: 'Remember the token on this device', check: true, value: savedToken() ? 'yes' : 'no' };
-    const repo = { label: 'Repository Name', value: lastRepo() || site.name, hint: 'Your site will live at yourname.github.io/this-name' };
-    const choice = await showDialog({
-      title: 'Publish to GitHub Pages',
-      bodyHtml: `<p>ScryPad makes a public repository, uploads your ${site.entries.length === 1 ? 'page' : `${site.entries.length} files`}, and turns on GitHub Pages.</p><p>You'll need a token: <a href="https://github.com/settings/tokens/new?scopes=repo&description=ScryPad" target="_blank" rel="noopener">make one on GitHub</a> (the <b>repo</b> box is already ticked), then paste it here. It's only ever sent to GitHub.</p>`,
-      fields: [token, remember, repo],
-      actions: [
-        { label: 'Cancel', value: 'cancel' },
-        { label: 'Publish', value: 'ok', primary: true },
-      ],
-    });
-    if (choice !== 'ok') return;
-    const tok = token.value.trim();
-    if (!tok) { showDialog({ title: 'A Token Is Needed', bodyHtml: '<p>Paste your GitHub token, then press Publish again.</p>' }); return; }
-    rememberToken(remember.value === 'yes' ? tok : null);
-    try {
-      const res = await publishToPages(tok, cleanRepoName(repo.value), site.entries,
-        (msg) => showToast(`✦ ${msg}`, 8000),
-        (full) => confirmDialog('Update This Repository?', `<p><b>${escapeHtml(full)}</b> already exists. Publishing adds your files to it and replaces ones with the same name.</p>`, 'Update It', 'Cancel'));
-      if (!res) return;
-      showToast('✦ Published!');
-      showDialog({
-        title: res.created ? 'Your Site Is Published!' : 'Your Site Is Updated!',
-        bodyHtml: `<p>GitHub takes about a minute to put it online the first time.</p><p><a href="${res.siteUrl}" target="_blank" rel="noopener"><b>${escapeHtml(res.siteUrl)}</b></a></p><p><a href="${res.repoUrl}" target="_blank" rel="noopener">See the repository</a></p>`,
-      });
-    } catch (e) {
-      const msg = e instanceof GitHubError ? e.message : 'Something went wrong while publishing.';
-      const hint = e instanceof GitHubError && (e.status === 401 || e.status === 403) ? '<p>Make sure the token has the <b>repo</b> permission and hasn\'t expired.</p>' : '';
-      showDialog({ title: 'Publishing Didn\'t Finish', bodyHtml: `<p>${escapeHtml(msg)}</p>${hint}` });
-    }
-  });
+  // --- Export & Publish (GitHub Pages, Site Zip, One HTML File) ---
+  const exportDeps = { fileManager, getCode: () => codePane.getValue(), showToast: (m: string) => showToast(m) };
+  document.getElementById('menu-export-github')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'github'); });
+  document.getElementById('menu-export-zip')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'zip'); });
+  document.getElementById('menu-export-onefile')?.addEventListener('click', () => { closeAllMenus(); openExportModal(exportDeps, 'single'); });
 
   document.getElementById('btn-copy-body')?.addEventListener('click', async () => {
     const rawHtml = codePane.getValue();
