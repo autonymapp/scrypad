@@ -13,189 +13,169 @@
 <body class="bg-[#0f0b16] text-[#efe8fb] select-none h-screen flex flex-col overflow-hidden">
 
   <!-- Tier 1: Traditional Desktop Application Menu Bar -->
-  <header class="h-8 bg-[#0f0b16] border-b border-[#36294a] px-3 flex items-center justify-between shrink-0 z-40 select-none text-xs font-['Fira_Code']">
-    <div class="flex items-center gap-1">
-      <!-- App Brand Logo -->
+  <!-- Menu Bar: logo, five menus, file name and Save -->
+  <header id="app-header" class="app-header">
+    <div class="flex items-center gap-1 min-w-0">
+      <button id="btn-phone-menu" class="phone-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="menubar">
+        <i data-lucide="menu" class="w-4 h-4"></i>
+      </button>
       <div class="flex items-center gap-1.5 mr-3 shrink-0">
-        <img src="/logo.svg" alt="< 👁️ >" class="h-4.5 w-auto drop-shadow-[0_0_6px_rgba(197,107,255,0.5)]">
+        <img src="/logo.svg" alt="ScryPad" class="h-4.5 w-auto drop-shadow-[0_0_6px_rgba(197,107,255,0.5)]">
         <span class="font-bold tracking-wider text-white text-sm font-['Chakra_Petch']">Scry<span class="text-[#c56bff]">Pad</span></span>
       </div>
 
-      <!-- Desktop Menus -->
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#211a2c] text-[#efe8fb] hover:text-[#c56bff] transition flex items-center gap-1">
-          File <span class="text-[10px] text-[#a597c2]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-56 bg-[#18121f] border border-[#36294a] rounded shadow-2xl py-1 z-50">
-          <button id="menu-file-new" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="file-plus" class="w-3.5 h-3.5 text-[#c56bff]"></i> New Document</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+N</span>
-          </button>
-          <button id="menu-file-open" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="folder-open" class="w-3.5 h-3.5 text-[#c56bff]"></i> Open File...</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+O</span>
-          </button>
-          <button id="menu-file-folder" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#d896ff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="folder-tree" class="w-3.5 h-3.5 text-[#d896ff]"></i> Open Folder...</span>
-          </button>
-          <div class="h-px bg-[#36294a] my-1"></div>
-          <button id="menu-file-save" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="save" class="w-3.5 h-3.5 text-[#c56bff]"></i> Save HTML</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+S</span>
-          </button>
+      <nav id="menubar" class="menubar" aria-label="Main menu">
+        <!-- File -->
+        <div class="menu-group">
+          <button class="menu-btn" aria-haspopup="true">File</button>
+          <div class="menu-dropdown hidden" role="menu">
+            <button id="menu-file-new" class="menu-item" role="menuitem"><span><i data-lucide="file-plus"></i>New Page</span><kbd class="kbd-new">Ctrl+Alt+N</kbd></button>
+            <button id="menu-file-open" class="menu-item" role="menuitem"><span><i data-lucide="folder-open"></i>Open File</span><kbd>Ctrl+O</kbd></button>
+            <button id="btn-open-folder" class="menu-item" role="menuitem"><span><i data-lucide="folder-tree"></i>Open Folder</span></button>
+            <div id="recent-files" class="menu-sub"></div>
+            <div class="menu-sep"></div>
+            <button id="menu-file-save" class="menu-item" role="menuitem"><span><i data-lucide="save"></i>Save</span><kbd>Ctrl+S</kbd></button>
+            <button id="menu-file-save-as" class="menu-item" role="menuitem"><span><i data-lucide="save-all"></i>Save As</span><kbd>Ctrl+Shift+S</kbd></button>
+            <div class="menu-sep"></div>
+            <div class="menu-label">Export</div>
+            <button id="btn-copy-body" class="menu-item" role="menuitem"><span><i data-lucide="clipboard-copy"></i>Copy Clean Body</span></button>
+            <button id="btn-godot-bbcode" class="menu-item" role="menuitem"><span><i data-lucide="gamepad-2"></i>Copy as Godot BBCode</span></button>
+          </div>
         </div>
-      </div>
 
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#211a2c] text-[#efe8fb] hover:text-[#c56bff] transition flex items-center gap-1">
-          Edit <span class="text-[10px] text-[#a597c2]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-56 bg-[#18121f] border border-[#36294a] rounded shadow-2xl py-1 z-50">
-          <button id="menu-edit-undo" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="undo-2" class="w-3.5 h-3.5 text-[#a597c2]"></i> Undo</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+Z</span>
-          </button>
-          <button id="menu-edit-redo" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="redo-2" class="w-3.5 h-3.5 text-[#a597c2]"></i> Redo</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+Y</span>
-          </button>
-          <div class="h-px bg-[#36294a] my-1"></div>
-          <button id="menu-edit-find" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="search" class="w-3.5 h-3.5 text-[#c56bff]"></i> Find & Replace</span>
-            <span class="text-[10px] text-[#a597c2]">Ctrl+F</span>
-          </button>
-          <button id="menu-edit-clean" class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-[#d896ff] text-[#efe8fb]">
-            <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#d896ff]"></i> Format / Clean Code</span>
-          </button>
+        <!-- Edit -->
+        <div class="menu-group">
+          <button class="menu-btn" aria-haspopup="true">Edit</button>
+          <div class="menu-dropdown hidden" role="menu">
+            <button id="menu-edit-undo" class="menu-item" role="menuitem"><span><i data-lucide="undo-2"></i>Undo</span><kbd>Ctrl+Z</kbd></button>
+            <button id="menu-edit-redo" class="menu-item" role="menuitem"><span><i data-lucide="redo-2"></i>Redo</span><kbd>Ctrl+Y</kbd></button>
+            <div class="menu-sep"></div>
+            <button id="btn-find-toggle" class="menu-item" role="menuitem"><span><i data-lucide="search"></i>Find &amp; Replace</span><kbd>Ctrl+F</kbd></button>
+            <button id="btn-palette-toggle" class="menu-item" role="menuitem"><span><i data-lucide="palette"></i>Replace a Color</span></button>
+            <div class="menu-sep"></div>
+            <button id="menu-edit-clean" class="menu-item" role="menuitem"><span><i data-lucide="sparkles"></i>Tidy Code</span><kbd>Ctrl+Shift+F</kbd></button>
+          </div>
         </div>
-      </div>
 
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#211a2c] text-[#efe8fb] hover:text-[#c56bff] transition flex items-center gap-1">
-          Insert <span class="text-[10px] text-[#a597c2]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-64 bg-[#18121f] border border-[#36294a] rounded shadow-2xl py-1 z-50">
-          <button id="menu-insert-btn-slant" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <span class="w-2.5 h-2.5 bg-[#c56bff] rotate-12 shrink-0"></span> Slanted Cyber Button
-          </button>
-          <button id="menu-insert-btn-notch" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#d896ff] text-[#efe8fb]">
-            <span class="w-2.5 h-2.5 bg-[#d896ff] rounded-xs shrink-0"></span> Notched Sci-Fi Button
-          </button>
-          <button id="menu-insert-btn-pill" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#f2d27a] text-[#efe8fb]">
-            <span class="w-3 h-2 bg-[#f2d27a] rounded-full shrink-0"></span> Rounded Pill Button
-          </button>
-          <div class="h-px bg-[#36294a] my-1"></div>
-          <button id="menu-insert-tag-guide" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <i data-lucide="book-open" class="w-3.5 h-3.5 text-[#f2d27a]"></i> Browse 50+ HTML Tags...
-          </button>
+        <!-- Insert -->
+        <div class="menu-group">
+          <button class="menu-btn" aria-haspopup="true">Insert</button>
+          <div class="menu-dropdown menu-wide hidden" role="menu">
+            <div class="menu-label">Starter Layouts</div>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="pricing-card"><span><i data-lucide="credit-card"></i>Pricing Card</span></button>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="profile-card"><span><i data-lucide="user"></i>Profile Card</span></button>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="newsletter-hero"><span><i data-lucide="mail"></i>Newsletter Hero</span></button>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="blog-article"><span><i data-lucide="newspaper"></i>Article Page</span></button>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="stats-dashboard"><span><i data-lucide="bar-chart-3"></i>Stats Grid</span></button>
+            <button class="menu-item btn-preset-direct" role="menuitem" data-id="feedback-modal"><span><i data-lucide="message-square"></i>Feedback Dialog</span></button>
+            <button id="btn-templates-toggle" class="menu-item" role="menuitem"><span><i data-lucide="layout-template"></i>Browse All Layouts</span></button>
+            <div class="menu-sep"></div>
+            <div class="menu-label">Buttons</div>
+            <button id="menu-insert-btn-slant" class="menu-item" role="menuitem"><span><span class="swatch swatch-slant"></span>Slanted Button</span></button>
+            <button id="menu-insert-btn-notch" class="menu-item" role="menuitem"><span><span class="swatch swatch-notch"></span>Notched Button</span></button>
+            <button id="menu-insert-btn-pill" class="menu-item" role="menuitem"><span><span class="swatch swatch-pill"></span>Pill Button</span></button>
+            <div class="menu-sep"></div>
+            <button id="btn-tag-guide-toggle" class="menu-item" role="menuitem"><span><i data-lucide="book-open"></i>Tag Guide</span></button>
+            <button id="menu-tools-libraries" class="menu-item" role="menuitem"><span><i data-lucide="book-copy"></i>Add a Library</span></button>
+          </div>
         </div>
-      </div>
 
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#211a2c] text-[#efe8fb] hover:text-[#c56bff] transition flex items-center gap-1">
-          Tools <span class="text-[10px] text-[#a597c2]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-64 bg-[#18121f] border border-[#36294a] rounded shadow-2xl py-1 z-50">
-          <button id="menu-tools-palette" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <i data-lucide="palette" class="w-3.5 h-3.5 text-[#c56bff]"></i> Color Palette & Swatches
-          </button>
-          <button id="menu-tools-godot" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#c56bff] text-[#efe8fb]">
-            <i data-lucide="gamepad-2" class="w-3.5 h-3.5 text-[#c56bff]"></i> Export Godot 4 RichText BBCode
-          </button>
-          <button id="menu-tools-copy-body" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#d896ff] text-[#efe8fb]">
-            <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-[#d896ff]"></i> Copy Clean &lt;body&gt; HTML
-          </button>
-          <button id="menu-tools-libraries" class="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-[#211a2c] hover:text-[#f2d27a] text-[#efe8fb]">
-            <i data-lucide="book-copy" class="w-3.5 h-3.5 text-[#f2d27a]"></i> Inject CDN Libraries (Tailwind, Fonts)
-          </button>
+        <!-- View -->
+        <div class="menu-group">
+          <button class="menu-btn" aria-haspopup="true">View</button>
+          <div class="menu-dropdown hidden" role="menu">
+            <div class="menu-label">Layout</div>
+            <button id="menu-view-split" class="menu-item" role="menuitem"><span><i data-lucide="columns-2"></i>Split</span></button>
+            <button id="menu-view-code" class="menu-item" role="menuitem"><span><i data-lucide="code"></i>Code Only</span></button>
+            <button id="menu-view-preview" class="menu-item" role="menuitem"><span><i data-lucide="eye"></i>Preview Only</span></button>
+            <div class="menu-sep"></div>
+            <div class="menu-label">Preview Size</div>
+            <button class="menu-item menu-vp" role="menuitem" data-width="100%"><span><i data-lucide="monitor"></i>Desktop</span></button>
+            <button class="menu-item menu-vp" role="menuitem" data-width="768px"><span><i data-lucide="tablet"></i>Tablet</span><kbd>768px</kbd></button>
+            <button class="menu-item menu-vp" role="menuitem" data-width="390px"><span><i data-lucide="smartphone"></i>Phone</span><kbd>390px</kbd></button>
+            <div class="menu-sep"></div>
+            <button id="btn-toggle-guides" class="menu-item" role="menuitemcheckbox"><span><i data-lucide="sparkle"></i>Learning Tips</span><kbd id="label-guides">On</kbd></button>
+            <button id="menu-view-wrap" class="menu-item" role="menuitemcheckbox"><span><i data-lucide="wrap-text"></i>Word Wrap</span><kbd id="label-wrap">Off</kbd></button>
+          </div>
         </div>
-      </div>
 
-      <div class="relative inline-block menu-group">
-        <button class="menu-btn px-2.5 py-0.5 rounded hover:bg-[#211a2c] text-[#efe8fb] hover:text-[#8fb6ff] transition flex items-center gap-1">
-          Presets <span class="text-[10px] text-[#a597c2]">▾</span>
-        </button>
-        <div class="menu-dropdown hidden absolute top-full left-0 mt-0.5 w-60 bg-[#18121f] border border-[#36294a] rounded shadow-2xl py-1 z-50">
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="pricing-card">
-            <span>💳 Pricing Tier Card</span>
-            <span class="text-[9px] text-[#c56bff]">Component</span>
-          </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="profile-card">
-            <span>👤 Profile &amp; Bio Card</span>
-            <span class="text-[9px] text-[#d896ff]">Card</span>
-          </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="newsletter-hero">
-            <span>📬 Newsletter Hero</span>
-            <span class="text-[9px] text-[#f2d27a]">Layout</span>
-          </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="blog-article">
-            <span>📰 Editorial Article</span>
-            <span class="text-[9px] text-[#8fb6ff]">Typography</span>
-          </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="stats-dashboard">
-            <span>📊 Stats Metric Grid</span>
-            <span class="text-[9px] text-[#c56bff]">Dashboard</span>
-          </button>
-          <button class="w-full px-3 py-1.5 text-left flex items-center justify-between hover:bg-[#211a2c] hover:text-white text-[#efe8fb] btn-preset-direct" data-id="feedback-modal">
-            <span>💬 Feedback Dialog</span>
-            <span class="text-[9px] text-[#d896ff]">Modal</span>
-          </button>
+        <!-- Help -->
+        <div class="menu-group">
+          <button class="menu-btn" aria-haspopup="true">Help</button>
+          <div class="menu-dropdown hidden" role="menu">
+            <button id="menu-help-tour" class="menu-item" role="menuitem"><span><i data-lucide="compass"></i>Show the ScryPad Tour</span></button>
+            <button id="menu-help-keys" class="menu-item" role="menuitem"><span><i data-lucide="keyboard"></i>Keyboard Shortcuts</span></button>
+            <button id="menu-help-read" class="menu-item" role="menuitem"><span><i data-lucide="file-search"></i>What ScryPad Can Read</span></button>
+            <div class="menu-sep"></div>
+            <a class="menu-item" role="menuitem" href="https://interstatus.app/feedback?app=scrypad" target="_blank" rel="noopener"><span><i data-lucide="message-circle"></i>Send Feedback</span></a>
+            <button id="menu-help-about" class="menu-item" role="menuitem"><span><i data-lucide="info"></i>About ScryPad</span></button>
+          </div>
         </div>
-      </div>
-
-    <!-- Right Side of Tier 1: Active Document Badge -->
-    <div class="flex items-center gap-3">
-      <div id="file-badge" class="flex items-center gap-1.5 px-2.5 py-0.5 bg-[#211a2c] border border-[#36294a] rounded text-xs font-['Fira_Code'] text-[#a597c2]">
-        <i data-lucide="file-code" class="w-3 h-3 text-[#c56bff]"></i>
-        <span id="active-filename" class="text-[#efe8fb]">untitled.html</span>
-        <span id="dirty-indicator" class="text-[#f2d27a] hidden">✦</span>
-      </div>
+      </nav>
     </div>
-  </header>
 
-  <!-- Tier 2: Streamlined Quick Action Toolbar (Plain English Labeled Buttons!) -->
-  <div class="h-10 bg-[#18121f] border-b border-[#36294a] px-3 flex items-center justify-between shrink-0 z-30 gap-2 overflow-x-auto text-xs">
-    <div class="flex items-center gap-1.5">
-      <button id="btn-save" class="btn-hud btn-hud-primary flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Save HTML (Ctrl+S)">
+    <!-- Right: file name, unsaved dot, Save -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div id="file-badge" class="file-badge" title="Current file">
+        <i data-lucide="file-code" class="w-3 h-3 text-[#c56bff]"></i>
+        <span id="active-filename">untitled.html</span>
+        <span id="dirty-indicator" class="dirty-dot hidden" aria-label="Unsaved changes" title="Unsaved changes"></span>
+      </div>
+      <button id="btn-save" class="btn-hud btn-hud-primary save-btn" title="Save (Ctrl+S)">
         <i data-lucide="save" class="w-3.5 h-3.5"></i>
         <span id="save-label">Save</span>
       </button>
-
-      <button id="btn-open-folder" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Open Local Project Folder (Wisp / Web)">
-        <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-[#d896ff]"></i>
-        <span>Folder</span>
-      </button>
-
-      <div class="h-4 w-px bg-[#36294a] shrink-0 mx-1"></div>
-
-      <button id="btn-find-toggle" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Find & Replace (Ctrl+F)">
-        <i data-lucide="search" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-        <span>Find &amp; Replace</span>
-      </button>
-
-      <button id="btn-tag-guide-toggle" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="HTML Tag Reference Guide">
-        <i data-lucide="book-open" class="w-3.5 h-3.5 text-[#f2d27a]"></i>
-        <span>Tag Guide</span>
-      </button>
-
-      <button id="btn-godot-bbcode" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Export Godot 4 RichTextLabel BBCode">
-        <i data-lucide="gamepad-2" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-        <span>Godot BBCode</span>
-      </button>
-
-      <button id="btn-palette-toggle" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Document Palette & Color Replace">
-        <i data-lucide="palette" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-        <span>Palette</span>
-      </button>
-
-      <button id="btn-copy-body" class="btn-hud btn-hud-ghost flex items-center gap-1.5 px-3 py-1 text-xs whitespace-nowrap" title="Copy clean inner <body> markup">
-        <i data-lucide="clipboard-copy" class="w-3.5 h-3.5 text-[#d896ff]"></i>
-        <span>Copy Body</span>
-      </button>
       <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden" />
     </div>
-  </div>
+  </header>
 
+  <!-- Toolbar: three zones (Layout, Tweak, Preview) -->
+  <div id="toolbar" class="toolbar">
+    <div class="tb-zone tb-layout" role="group" aria-label="Layout">
+      <span class="tb-label">Layout</span>
+      <div class="tb-seg">
+        <button id="mode-split" class="tb-btn is-on" title="Code and preview side by side"><i data-lucide="columns-2"></i><span>Split</span></button>
+        <button id="mode-code" class="tb-btn" title="Code only"><i data-lucide="code"></i><span>Code</span></button>
+        <button id="mode-preview" class="tb-btn" title="Preview only"><i data-lucide="eye"></i><span>Preview</span></button>
+      </div>
+    </div>
+
+    <div id="tweak-zone" class="tb-zone tb-tweak" role="group" aria-label="Tweak">
+      <span class="tb-label">Tweak</span>
+      <label class="tb-btn tb-toggle" title="Click text in the preview to edit it">
+        <input type="checkbox" id="toggle-visual-edit" checked />
+        <i data-lucide="mouse-pointer-click"></i><span>Click to Edit</span>
+      </label>
+      <div class="tb-tools">
+        <button id="btn-bold" class="tb-btn tb-icon font-bold" title="Bold (Ctrl+B)" aria-label="Bold">B</button>
+        <button id="btn-italic" class="tb-btn tb-icon italic font-serif" title="Italic (Ctrl+I)" aria-label="Italic">I</button>
+        <label class="tb-btn" title="Text color">
+          <i data-lucide="palette"></i><span>Color</span>
+          <input type="color" id="quick-color" value="#c56bff" class="tb-color" aria-label="Text color">
+        </label>
+        <button id="btn-toggle-styles" class="tb-btn" title="Size, spacing and color sliders for the selected element"><i data-lucide="sliders-horizontal"></i><span>Styles</span></button>
+        <div id="inspector-tag-hint" class="hidden tag-hint" title="Open this tag in the Tag Guide" role="button" tabindex="0">
+          <span class="text-[#d896ff] font-bold" id="hint-tag-name">&lt;div&gt;</span>
+          <span class="text-[#a597c2] max-lg:hidden inline truncate max-w-[16rem]" id="hint-tag-desc">Invisible Sorting Box</span>
+          <i data-lucide="help-circle" class="w-3 h-3 text-[#c56bff]"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="tb-zone tb-preview" role="group" aria-label="Preview">
+      <span class="tb-label">Preview</span>
+      <div class="tb-seg">
+        <button class="viewport-btn tb-btn tb-icon is-on" data-width="100%" title="Desktop width" aria-label="Desktop width"><i data-lucide="monitor"></i></button>
+        <button class="viewport-btn tb-btn tb-icon" data-width="768px" title="Tablet width (768px)" aria-label="Tablet width"><i data-lucide="tablet"></i></button>
+        <button class="viewport-btn tb-btn tb-icon" data-width="390px" title="Phone width (390px)" aria-label="Phone width"><i data-lucide="smartphone"></i></button>
+      </div>
+      <button id="btn-theme-sim" class="tb-btn" title="Preview your page in light or dark (Auto follows your system)">
+        <i data-lucide="moon" id="theme-sim-icon"></i>
+        <span id="theme-sim-label">Auto</span>
+      </button>
+      <button id="btn-bake-theme" class="hidden tb-link" title="Write this theme into your page's code">Keep This Theme</button>
+    </div>
+  </div>
   <!-- Find & Replace HUD Bar (Drop-down bar) -->
   <div id="find-replace-bar" class="hidden min-h-11 py-1.5 bg-[#0b0812] border-b border-[#36294a] px-3 sm:px-4 flex items-center justify-between text-xs font-['Fira_Code'] shrink-0 z-20 gap-2 overflow-x-auto">
     <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -223,80 +203,6 @@
     <button id="btn-close-find" class="px-2.5 py-1 rounded bg-[#211a2c]/50 hover:bg-[#211a2c] text-[#a597c2] hover:text-white border border-[#36294a] text-xs font-['Chakra_Petch'] font-bold shrink-0 ml-2" title="Close Search (Escape)">✕ Close</button>
   </div>
 
-  <!-- Sub-Toolbar (Visual Tweaker Controls, Sliders Drawer, Guides, Theme Simulator & View Modes) -->
-  <div class="h-10 bg-[#18121f]/90 border-b border-[#36294a] px-3 sm:px-4 flex items-center justify-between text-xs shrink-0 z-20 gap-2 overflow-x-auto md:overflow-visible">
-    <div class="flex items-center gap-2.5">
-      <!-- Visual Edit Toggle -->
-      <label class="flex items-center gap-2 cursor-pointer bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] px-2.5 py-1 rounded transition text-xs font-medium whitespace-nowrap shrink-0">
-        <input type="checkbox" id="toggle-visual-edit" class="accent-[#d896ff] rounded cursor-pointer" checked />
-        <span class="text-[#efe8fb] flex items-center gap-1.5">
-          <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-[#d896ff]"></i>
-          <span>Click & Tweak</span>
-        </span>
-      </label>
-
-      <!-- Quick Tweak Actions (Matched to Click & Tweak button styling) -->
-      <div class="flex items-center gap-1.5 pl-2 border-l border-[#36294a]">
-        <button id="btn-bold" class="px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-[#efe8fb] font-bold text-xs transition min-w-[28px] text-center" title="Toggle Bold (Ctrl+B)">B</button>
-        <button id="btn-italic" class="px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-[#efe8fb] italic font-serif text-xs transition min-w-[28px] text-center" title="Toggle Italic (Ctrl+I)">I</button>
-        
-        <label class="flex items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded cursor-pointer transition text-xs font-medium" title="Selection Color">
-          <i data-lucide="palette" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-          <span class="text-[#efe8fb]">Color</span>
-          <input type="color" id="quick-color" value="#c56bff" class="w-3.5 h-3.5 rounded cursor-pointer bg-transparent border-0 p-0">
-        </label>
-
-        <button id="btn-toggle-styles" class="flex items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-[#efe8fb] transition text-xs font-medium" title="Open CSS Quick-Sliders for the selected element">
-          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-          <span class="max-sm:hidden inline">Style Drawer</span>
-        </button>
-      </div>
-
-      <!-- Live Tag Inspector Hint Pill (Learner Guide) -->
-      <div id="inspector-tag-hint" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] border border-[#c56bff]/40 hover:border-[#c56bff] rounded text-[11px] font-['Fira_Code'] cursor-pointer transition" title="Click to view full entry in Grimoire of Tags">
-        <span class="text-[#d896ff] font-bold" id="hint-tag-name">&lt;div&gt;</span>
-        <span class="text-[#a597c2] max-md:hidden inline truncate max-w-xs" id="hint-tag-desc">Invisible Sorting Box</span>
-        <i data-lucide="help-circle" class="w-3 h-3 text-[#c56bff]"></i>
-      </div>
-    </div>
-
-    <!-- Right: View Mode Switcher, Guides Toggle, Theme Simulator & Viewports -->
-    <div class="flex items-center gap-2.5">
-      <!-- View Mode Switcher (Split | Code | Preview) - moved to same line as Guides & Theme -->
-      <div class="max-md:hidden flex items-center bg-[#0f0b16] border border-[#36294a] p-0.5 rounded shrink-0">
-        <button id="mode-split" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]">Split</button>
-        <button id="mode-code" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]">Code</button>
-        <button id="mode-preview" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]">Preview</button>
-      </div>
-
-      <div class="h-4 w-px bg-[#36294a] max-sm:hidden block"></div>
-
-      <!-- Guides Toggle -->
-      <button id="btn-toggle-guides" class="px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-xs flex items-center gap-1.5 transition" title="Toggle Educational Tag Guides & Learning Tips">
-        <i data-lucide="sparkle" class="w-3.5 h-3.5 text-[#f2d27a]"></i>
-        <span id="label-guides" class="font-['Fira_Code'] text-[11px] text-[#efe8fb]">Guides: ON</span>
-      </button>
-
-      <!-- Theme Simulator -->
-      <div class="flex items-center gap-1.5">
-        <button id="btn-theme-sim" class="px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-xs flex items-center gap-1.5 transition" title="Cycle Theme: Auto -> Dark -> Light">
-          <i data-lucide="moon" class="w-3.5 h-3.5 text-[#8fb6ff]" id="theme-sim-icon"></i>
-          <span id="theme-sim-label" class="font-['Fira_Code'] text-[11px] text-[#efe8fb]">Theme: Auto</span>
-        </button>
-        <button id="btn-bake-theme" class="hidden text-[11px] text-[#d896ff] hover:underline font-['Fira_Code'] px-1" title="Bake this theme class permanently into HTML source">Bake in</button>
-      </div>
-
-      <div class="h-4 w-px bg-[#36294a] max-md:hidden block"></div>
-
-      <!-- Responsive Viewport Presets -->
-      <div class="max-md:hidden flex items-center gap-1 text-xs font-['Fira_Code']">
-        <button class="viewport-btn px-2 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]" data-width="100%">100%</button>
-        <button class="viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]" data-width="768px">768px</button>
-        <button class="viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]" data-width="390px">390px</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Smart Helper Banner (Auto-detects unresolved CSS, images, and unlinked Google Fonts) -->
   <div id="smart-helper-banner" class="hidden h-9 bg-[#211a2c] border-b border-[#f2d27a]/40 px-4 flex items-center justify-between text-xs font-['Fira_Code'] text-[#f2d27a] shrink-0 z-10">
     <div class="flex items-center gap-2 truncate">
@@ -311,7 +217,7 @@
         <span>Embed Local Image</span>
       </button>
       <button id="btn-helper-action-font" class="hidden btn-hud btn-hud-primary text-[11px] py-0.5 px-2.5">
-        <span>Inject Google Font</span>
+        <span>Add Google Font</span>
       </button>
       <button id="btn-dismiss-helper" class="text-[#a597c2] hover:text-white p-0.5" title="Dismiss">✕</button>
     </div>
@@ -325,6 +231,7 @@
   <div class="phone-tabs md:hidden" role="tablist" aria-label="Code or Preview">
     <button id="phone-tab-code" class="phone-tab" role="tab" aria-selected="false">Code</button>
     <button id="phone-tab-preview" class="phone-tab is-active" role="tab" aria-selected="true">Preview</button>
+    <button id="phone-tab-tweak" class="phone-tab" aria-pressed="false" aria-controls="tweak-zone">Tweak</button>
   </div>
 
   <!-- Main Work Area -->
@@ -375,7 +282,7 @@
       <div class="h-6 bg-[#18121f] border-b border-[#36294a] px-3 flex items-center justify-between text-[11px] font-['Fira_Code'] text-[#a597c2] shrink-0">
         <span class="flex items-center gap-1.5 text-[#c56bff]">
           <i data-lucide="code" class="w-3 h-3"></i>
-          <span>HTML Source</span>
+          <span>Code</span>
         </span>
         <span id="status-lines" class="text-[#a597c2]">Lines: 1</span>
       </div>
@@ -392,9 +299,9 @@
       <div class="w-full h-6 bg-[#18121f] border-b border-[#36294a] px-3 flex items-center justify-between text-[11px] font-['Fira_Code'] text-[#a597c2] shrink-0">
         <span class="flex items-center gap-1.5 text-[#d896ff]">
           <i data-lucide="eye" class="w-3 h-3"></i>
-          <span>Live HUD Preview</span>
+          <span>Preview</span>
         </span>
-        <span id="preview-mode-tag" class="text-[#c56bff]">Direct Tweak Active</span>
+        <span id="preview-mode-tag" class="text-[#c56bff]">Click to Edit On</span>
       </div>
 
       <!-- Blank Page screen: Wisp (Dusk flame) floats by while the page is empty -->
@@ -540,11 +447,11 @@
   <!-- Bottom HUD Status Deck -->
   <footer class="h-6 bg-[#0f0b16] border-t border-[#36294a] px-4 flex items-center justify-between text-[11px] font-['Fira_Code'] text-[#a597c2] shrink-0">
     <div class="flex items-center gap-4">
-      <span id="status-tagpath" class="text-[#c56bff] truncate max-w-md">DOM ✦ body</span>
+      <span id="status-tagpath" class="text-[#c56bff] truncate max-w-md">body</span>
     </div>
     <div class="flex items-center gap-5">
       <span id="status-sync" class="text-[#d896ff] flex items-center">
-        <span class="inline-block w-2 h-2 rounded-full bg-[#d896ff] mr-1.5"></span>HUD Synced
+        <span class="inline-block w-2 h-2 rounded-full bg-[#d896ff] mr-1.5"></span>Live Preview On
       </span>
       <span id="status-filesize">0 B</span>
       <span class="text-[#a597c2]/70 max-md:hidden inline">Sci-Fantasy Tools for Everyday Adventurers</span>
@@ -557,7 +464,7 @@
       <div class="px-5 py-3 border-b border-[#36294a] flex items-center justify-between bg-[#211a2c]">
         <div class="flex items-center gap-2">
           <i data-lucide="book-copy" class="w-4 h-4 text-[#d896ff]"></i>
-          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Quick Inject Code Libraries</h2>
+          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Add a Library</h2>
         </div>
         <button id="btn-close-modal" class="text-[#a597c2] hover:text-white p-1">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -579,7 +486,7 @@
       <div class="px-5 py-3 border-b border-[#36294a] flex items-center justify-between bg-[#211a2c]">
         <div class="flex items-center gap-2">
           <i data-lucide="palette" class="w-4 h-4 text-[#c56bff]"></i>
-          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Document Color Palette</h2>
+          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Replace a Color</h2>
         </div>
         <button id="btn-close-palette" class="text-[#a597c2] hover:text-white p-1">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -626,7 +533,7 @@
       <div class="px-5 py-3 border-b border-[#36294a] flex items-center justify-between bg-[#211a2c]">
         <div class="flex items-center gap-2">
           <i data-lucide="book-open" class="w-4 h-4 text-[#f2d27a]"></i>
-          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">HTML Tag Reference &amp; Library</h2>
+          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Tag Guide</h2>
         </div>
         <button id="btn-close-tag-guide" class="text-[#a597c2] hover:text-white p-1">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -658,7 +565,7 @@
 
       <div class="px-5 py-3 bg-[#0f0b16] border-t border-[#36294a] flex justify-between items-center text-xs text-[#a597c2]">
         <span id="tag-guide-count">Showing tags</span>
-        <button id="btn-tag-guide-done" class="btn-hud btn-hud-ghost">Close Guide</button>
+        <button id="btn-tag-guide-done" class="btn-hud btn-hud-ghost">Close</button>
       </div>
     </div>
   </div>
@@ -669,7 +576,7 @@
       <div class="px-5 py-3 border-b border-[#36294a] flex items-center justify-between bg-[#211a2c]">
         <div class="flex items-center gap-2">
           <i data-lucide="layout-template" class="w-4 h-4 text-[#8fb6ff]"></i>
-          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Web Starter Templates &amp; Snippets</h2>
+          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Starter Layouts</h2>
         </div>
         <button id="btn-close-templates" class="text-[#a597c2] hover:text-white p-1">
           <i data-lucide="x" class="w-4 h-4"></i>

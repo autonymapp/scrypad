@@ -1,5 +1,5 @@
 import { EditorView, basicSetup } from "codemirror";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Compartment } from "@codemirror/state";
 import { html, autoCloseTags } from "@codemirror/lang-html";
 import { oneDarkTheme } from "@codemirror/theme-one-dark";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -37,6 +37,9 @@ export interface CodeEditorOptions {
 }
 
 export class CodePane {
+  private wrapCompartment = new Compartment();
+  private wrapOn = false;
+
   private view: EditorView;
   private isExternalUpdate: boolean = false;
 
@@ -75,6 +78,7 @@ export class CodePane {
         autoCloseTags,
         search({ top: false }),
         oneDarkTheme,
+        this.wrapCompartment.of([]),
         syntaxHighlighting(forgeHighlight),
         customTheme,
         keymap.of([indentWithTab]),
@@ -86,6 +90,15 @@ export class CodePane {
       state,
       parent: options.container
     });
+  }
+
+  public setWordWrap(on: boolean) {
+    this.wrapOn = on;
+    this.view.dispatch({ effects: this.wrapCompartment.reconfigure(on ? EditorView.lineWrapping : []) });
+  }
+
+  public isWordWrap(): boolean {
+    return this.wrapOn;
   }
 
   public getValue(): string {

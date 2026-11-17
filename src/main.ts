@@ -28,7 +28,25 @@ import {
   ChevronUp,
   ChevronDown,
   Gamepad2,
-  LayoutTemplate
+  LayoutTemplate,
+  Menu,
+  SaveAll,
+  CreditCard,
+  User,
+  Mail,
+  Newspaper,
+  BarChart3,
+  MessageSquare,
+  Columns2,
+  Monitor,
+  Tablet,
+  Smartphone,
+  WrapText,
+  Compass,
+  Keyboard,
+  FileSearch,
+  MessageCircle,
+  Info
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -42,6 +60,7 @@ import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
 import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
 import { WEB_TEMPLATES, WebTemplate } from './templates/web-templates.ts';
+import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
 
 // Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
@@ -201,7 +220,25 @@ document.addEventListener('DOMContentLoaded', () => {
       ChevronUp,
       ChevronDown,
       Gamepad2,
-      LayoutTemplate
+      LayoutTemplate,
+      Menu,
+      SaveAll,
+      CreditCard,
+      User,
+      Mail,
+      Newspaper,
+      BarChart3,
+      MessageSquare,
+      Columns2,
+      Monitor,
+      Tablet,
+      Smartphone,
+      WrapText,
+      Compass,
+      Keyboard,
+      FileSearch,
+      MessageCircle,
+      Info
     }
   });
 
@@ -268,6 +305,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let coordinator: SyncCoordinator;
+
+  function escapeHtml(t: string): string {
+    return t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  }
+  function clearDraft() {
+    try { localStorage.removeItem('scrypad_draft'); } catch { /* ignore */ }
+  }
 
   // Blank Page screen (Dusk Wisp): shown over the preview while the page is empty
   const blankPage = document.getElementById('blank-page');
@@ -894,17 +938,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Save File Button
-  document.getElementById('btn-save')?.addEventListener('click', async () => {
-    const success = await fileManager.saveFile(codePane.getValue());
+  const saveAction = async (saveAs = false) => {
+    const success = await fileManager.saveFile(codePane.getValue(), saveAs);
     if (success) {
       const saveLabel = document.getElementById('save-label');
       if (saveLabel) {
         saveLabel.textContent = 'Saved!';
-        setTimeout(() => { saveLabel.textContent = 'Save HTML'; }, 1500);
+        setTimeout(() => { saveLabel.textContent = 'Save'; }, 1500);
       }
-      showToast('✦ File saved to disk');
+      showToast('✦ Saved');
+      clearDraft();
     }
-  });
+  };
+  document.getElementById('btn-save')?.addEventListener('click', () => { saveAction(false); });
 
   // Open File (File menu, Ctrl+O and the Blank Page screen all use this)
   const openFileAction = async () => {
@@ -915,17 +961,16 @@ document.addEventListener('DOMContentLoaded', () => {
       previewPane.render(resolved);
       coordinator.updateStats();
       checkDocumentIntegrity(content);
-      showToast('✦ File loaded into ScryPad');
+      showToast(`✦ Opened ${fileManager.getFilename()}`);
     }
   };
   document.getElementById('btn-open')?.addEventListener('click', openFileAction);
 
   // New File: a truly blank page. The Blank Page screen (with Wisp) shows while it's empty
-  const newFileAction = () => {
+  const newFileAction = async () => {
     if (fileManager.isDirty()) {
-      if (!confirm('You have unsaved changes. Start a new page anyway?')) {
-        return;
-      }
+      const ok = await confirmDialog('Start a New Page?', '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>', 'Start New Page', 'Keep Editing');
+      if (!ok) return;
     }
     fileManager.setUntitled();
     codePane.setValue('');
@@ -947,27 +992,42 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBlankPage(starter);
     if (phoneQuery.matches) setViewMode('code');
   });
-  document.getElementById('blank-tour')?.addEventListener('click', () => {
+  const showTour = () => {
     codePane.setValue(STARTER_HTML);
     previewPane.render(STARTER_HTML);
     coordinator.updateStats();
     checkDocumentIntegrity(STARTER_HTML);
     updateBlankPage(STARTER_HTML);
-  });
+  };
+  document.getElementById('blank-tour')?.addEventListener('click', showTour);
 
   // Keyboard shortcut Ctrl+S / Cmd+S
+  // Keyboard shortcuts (the Help menu lists them)
+  const isDesktopApp = !!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__;
+  if (isDesktopApp) document.querySelectorAll('.kbd-new').forEach((k) => { k.textContent = 'Ctrl+N'; });
   window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    if (isDialogOpen()) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    const k = e.key.toLowerCase();
+    const inCode = !!(document.activeElement && (document.activeElement as HTMLElement).closest?.('#code-mount'));
+    if (k === 's' && e.shiftKey) { e.preventDefault(); saveAction(true); }
+    else if (k === 's') { e.preventDefault(); saveAction(false); }
+    else if (k === 'o' && !e.shiftKey) { e.preventDefault(); openFileAction(); }
+    else if (k === 'n' && (e.altKey || isDesktopApp)) { e.preventDefault(); newFileAction(); }
+    else if (k === 'f' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); tidyCode(); }
+    else if ((k === 'b' || k === 'i') && !inCode && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      document.getElementById('btn-save')?.click();
+      document.getElementById(k === 'b' ? 'btn-bold' : 'btn-italic')?.click();
     }
-  });
+  }, true);
 
   // Visual Edit Toggle
   toggleVisualEdit.addEventListener('change', () => {
     const active = toggleVisualEdit.checked;
     previewPane.setVisualEditMode(active);
-    previewModeTag.textContent = active ? 'Direct Tweak Active' : 'Read-only Preview';
+    previewModeTag.textContent = active ? 'Click to Edit On' : 'Click to Edit Off';
+    document.getElementById('tweak-zone')?.classList.toggle('is-off', !active);
     previewModeTag.className = active ? 'text-[#c56bff]' : 'text-[#a597c2]';
   });
 
@@ -984,24 +1044,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Clean Code / Beautify
-  document.getElementById('btn-beautify')?.addEventListener('click', () => {
+  const tidyCode = () => {
     codePane.formatHtml();
     previewPane.render(codePane.getValue());
     coordinator.updateStats();
-    showToast('✦ HTML formatted and aligned');
-  });
+    showToast('✦ Code tidied');
+  };
 
   // Feature: Copy Clean Body
   document.getElementById('btn-copy-body')?.addEventListener('click', async () => {
     const rawHtml = codePane.getValue();
     const cleanBody = extractCleanBody(rawHtml);
-    try {
-      await navigator.clipboard.writeText(cleanBody);
-      showToast('✦ Body HTML copied to clipboard (ready for CMS/React)!');
-    } catch {
-      // Fallback prompt
-      window.prompt('Copy clean body HTML:', cleanBody);
-    }
+    closeAllMenus();
+    await copyOrShow(cleanBody, 'Clean Body', () => showToast('✦ Copied the clean <body> HTML'));
   });
 
   // Feature: Theme Simulator (Auto -> Dark -> Light -> Auto)
@@ -1013,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else next = 'auto';
 
     previewPane.setThemeSimulation(next);
-    themeSimLabel.textContent = `Theme: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
+    themeSimLabel.textContent = next.charAt(0).toUpperCase() + next.slice(1);
     if (next === 'auto') {
       btnBakeTheme.classList.add('hidden');
     } else {
@@ -1024,9 +1079,9 @@ document.addEventListener('DOMContentLoaded', () => {
   btnBakeTheme.addEventListener('click', () => {
     previewPane.bakeThemeSimulation();
     previewPane.setThemeSimulation('auto');
-    themeSimLabel.textContent = 'Theme: Auto';
+    themeSimLabel.textContent = 'Auto';
     btnBakeTheme.classList.add('hidden');
-    showToast('✦ Theme class baked into HTML source');
+    showToast('✦ Theme written into your page');
   });
 
   // Feature: Visual Style Drawer (CSS Quick-Sliders)
@@ -1285,12 +1340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       snippet += `padding: 10px 22px;\nbackground: #c56bff;\ncolor: #0f0b16;\nfont-weight: 700;\ncursor: pointer;\n`;
     }
-    try {
-      await navigator.clipboard.writeText(snippet);
-      showToast('✦ Copied shape CSS (clip-path & border-radius) to clipboard!');
-    } catch {
-      window.prompt('Copy Button CSS:', snippet);
-    }
+    await copyOrShow(snippet, 'Shape CSS', () => showToast('✦ Copied the shape CSS'));
   });
 
   // Feature: Global Palette Swatches & Replace Modal
@@ -1387,7 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnReplaceColorAll.addEventListener('click', () => {
     if (!activeTargetColor) {
-      alert('Please click a color swatch first to select it.');
+      showToast('✦ Pick a color swatch first');
       return;
     }
     const newColor = replaceNewColorText.value.trim();
@@ -1409,12 +1459,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewportBtns = document.querySelectorAll('.viewport-btn');
   viewportBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      viewportBtns.forEach((b) => {
-        b.className = 'viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]';
-      });
-      btn.className = 'viewport-btn px-2 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]';
       const width = btn.getAttribute('data-width') || '100%';
+      viewportBtns.forEach((b) => b.classList.toggle('is-on', b === btn));
+      document.querySelectorAll('.menu-vp').forEach((m) => m.classList.toggle('is-on', m.getAttribute('data-width') === width));
       previewPane.setViewportWidth(width);
+    });
+  });
+
+  document.querySelectorAll('.menu-vp').forEach((m) => {
+    m.addEventListener('click', () => {
+      closeAllMenus();
+      const w = m.getAttribute('data-width');
+      (document.querySelector(`.viewport-btn[data-width="${w}"]`) as HTMLElement | null)?.click();
     });
   });
 
@@ -1486,12 +1542,9 @@ document.addEventListener('DOMContentLoaded', () => {
       tab.setAttribute('aria-selected', String(m === mode));
     });
     Object.entries(modeButtons).forEach(([m, btn]) => {
-      if (m === mode) {
-        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
-      } else {
-        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]";
-      }
+      btn.classList.toggle('is-on', m === mode);
     });
+    ['split', 'code', 'preview'].forEach((m) => document.getElementById(`menu-view-${m}`)?.classList.toggle('is-on', m === mode));
 
     if (mode === 'split') {
       codePaneContainer.style.display = 'flex';
@@ -1542,7 +1595,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p class="text-xs text-[#a597c2] mt-0.5">${lib.description}</p>
       </div>
       <button class="btn-hud btn-hud-ghost btn-inject text-xs whitespace-nowrap" data-lib-id="${lib.id}">
-        <span>+ Inject</span>
+        <span>+ Add</span>
       </button>
     </div>
   `).join('');
@@ -1560,16 +1613,16 @@ document.addEventListener('DOMContentLoaded', () => {
         previewPane.render(updatedCode);
         coordinator.updateStats();
 
-        target.innerHTML = '<span>✦ Injected!</span>';
+        target.innerHTML = '<span>✦ Added!</span>';
         target.classList.remove('btn-hud-ghost');
         target.classList.add('btn-hud-primary');
         setTimeout(() => {
-          target.innerHTML = '<span>+ Inject</span>';
+          target.innerHTML = '<span>+ Add</span>';
           target.classList.remove('btn-hud-primary');
           target.classList.add('btn-hud-ghost');
         }, 1500);
 
-        showToast(`✦ Injected library: ${lib.name}`);
+        showToast(`✦ Added ${lib.name}`);
       }
     });
   });
@@ -1591,10 +1644,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuGroups = document.querySelectorAll('.menu-group');
   let activeOpenMenu: HTMLElement | null = null;
 
+  const appHeader = document.getElementById('app-header');
+  const btnPhoneMenu = document.getElementById('btn-phone-menu');
   function closeAllMenus() {
     document.querySelectorAll('.menu-dropdown').forEach((d) => d.classList.add('hidden'));
+    document.querySelectorAll('.menu-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
     activeOpenMenu = null;
+    appHeader?.classList.remove('menus-open');
+    btnPhoneMenu?.setAttribute('aria-expanded', 'false');
   }
+  btnPhoneMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const opening = !appHeader?.classList.contains('menus-open');
+    closeAllMenus();
+    if (opening) {
+      appHeader?.classList.add('menus-open');
+      btnPhoneMenu.setAttribute('aria-expanded', 'true');
+    }
+  });
+  // Any menu item closes the menus (the item's own handler still runs)
+  document.querySelectorAll('.menu-item').forEach((item) => {
+    item.addEventListener('click', () => setTimeout(closeAllMenus, 0));
+  });
+  document.getElementById('menubar')?.addEventListener('click', (e) => {
+    // keep clicks inside an open phone menu from closing it before the item runs
+    if (appHeader?.classList.contains('menus-open')) e.stopPropagation();
+  });
+  // Keyboard: arrow keys move through an open menu, Escape closes it
+  document.addEventListener('keydown', (e) => {
+    const openDrop = document.querySelector('.menu-dropdown:not(.hidden)') as HTMLElement | null;
+    if (!openDrop || window.matchMedia('(max-width: 767px)').matches) return;
+    const items = Array.from(openDrop.querySelectorAll<HTMLElement>('.menu-item'));
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Escape') {
+      const btn = openDrop.parentElement?.querySelector('.menu-btn') as HTMLElement | null;
+      closeAllMenus();
+      btn?.focus();
+    }
+  });
 
   menuGroups.forEach((group) => {
     const btn = group.querySelector('.menu-btn') as HTMLElement;
@@ -1607,6 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeAllMenus();
       if (isHidden) {
         dropdown.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
         activeOpenMenu = group as HTMLElement;
       }
     });
@@ -1615,6 +1705,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (activeOpenMenu && activeOpenMenu !== group) {
         closeAllMenus();
         dropdown.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
         activeOpenMenu = group as HTMLElement;
       }
     });
@@ -1633,13 +1724,13 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
     openFileAction();
   });
-  document.getElementById('menu-file-folder')?.addEventListener('click', () => {
-    closeAllMenus();
-    btnOpenFolder?.click();
-  });
   document.getElementById('menu-file-save')?.addEventListener('click', () => {
     closeAllMenus();
     document.getElementById('btn-save')?.click();
+  });
+  document.getElementById('menu-file-save-as')?.addEventListener('click', () => {
+    closeAllMenus();
+    saveAction(true);
   });
 
   // Edit Menu
@@ -1659,7 +1750,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('menu-edit-clean')?.addEventListener('click', () => {
     closeAllMenus();
-    document.getElementById('btn-beautify')?.click();
+    tidyCode();
   });
 
   // Insert Menu
@@ -1686,20 +1777,6 @@ document.addEventListener('DOMContentLoaded', () => {
     openTagGuide('');
   });
 
-  // Tools Menu
-  document.getElementById('menu-tools-palette')?.addEventListener('click', () => {
-    closeAllMenus();
-    renderPalette();
-    modalPalette.classList.remove('hidden');
-  });
-  document.getElementById('menu-tools-godot')?.addEventListener('click', () => {
-    closeAllMenus();
-    btnGodotBbcode?.click();
-  });
-  document.getElementById('menu-tools-copy-body')?.addEventListener('click', () => {
-    closeAllMenus();
-    document.getElementById('btn-copy-body')?.click();
-  });
   document.getElementById('menu-tools-libraries')?.addEventListener('click', () => {
     closeAllMenus();
     modalLibrary.classList.remove('hidden');
@@ -1707,12 +1784,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Presets Menu (Direct Template Loading)
   document.querySelectorAll('.btn-preset-direct').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       closeAllMenus();
       const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
       const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
       if (tpl) {
-        if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
+        if (fileManager.isDirty() && !(await confirmDialog('Replace Your Page?', '<p>This layout replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Replace', 'Keep Editing'))) {
           return;
         }
         codePane.setValue(tpl.html);
@@ -1721,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileManager.setFilename(`${tpl.id}.html`);
         fileManager.markDirty(false);
         checkDocumentIntegrity(tpl.html);
-        showToast(`✦ Loaded ${tpl.name} template!`);
+        showToast(`✦ Loaded ${tpl.name}`);
       }
     });
   });
@@ -1928,11 +2005,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateGuidesState() {
     if (guidesEnabled) {
-      labelGuides.textContent = 'Guides: ON';
-      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#d896ff]/50 text-[#d896ff] rounded text-xs flex items-center gap-1.5 transition";
+      labelGuides.textContent = 'On';
+      btnToggleGuides.classList.add('is-on');
     } else {
-      labelGuides.textContent = 'Guides: OFF';
-      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#36294a] text-[#a597c2] rounded text-xs flex items-center gap-1.5 transition";
+      labelGuides.textContent = 'Off';
+      btnToggleGuides.classList.remove('is-on');
       inspectorTagHint.classList.add('hidden');
       inspectorTagHint.style.display = 'none';
     }
@@ -1941,7 +2018,9 @@ document.addEventListener('DOMContentLoaded', () => {
   updateGuidesState();
 
   btnToggleGuides.addEventListener('click', () => {
+    closeAllMenus();
     guidesEnabled = !guidesEnabled;
+    showToast(guidesEnabled ? '✦ Learning Tips on' : '✦ Learning Tips off');
     updateGuidesState();
     showToast(`✦ Beginner Guides ${guidesEnabled ? 'enabled' : 'disabled'}`);
   });
@@ -2076,6 +2155,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTag = hintTagName.textContent?.replace(/[<>]/g, '') || '';
     openTagGuide(currentTag);
   });
+  inspectorTagHint.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inspectorTagHint.click(); }
+  });
 
   // --- Godot BBCode Exporter ---
   const btnGodotBbcode = document.getElementById('btn-godot-bbcode');
@@ -2083,12 +2165,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGodotBbcode.addEventListener('click', async () => {
       const currentHtml = codePane.getValue();
       const bbcode = htmlToGodotBBCode(currentHtml);
-      try {
-        await navigator.clipboard.writeText(bbcode);
-        showToast('✦ Copied Godot RichTextLabel BBCode!');
-      } catch {
-        window.prompt('Copy Godot BBCode:', bbcode);
-      }
+      closeAllMenus();
+      await copyOrShow(bbcode, 'Godot BBCode', () => showToast('✦ Copied as Godot BBCode'));
     });
   }
 
@@ -2119,18 +2197,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="text-xs text-[#a597c2] m-0 leading-relaxed">${tpl.description}</p>
           </div>
           <button class="btn-hud btn-hud-primary btn-load-template text-xs py-1 px-3 whitespace-nowrap" data-tpl-id="${tpl.id}">
-            <span>Load Preset</span>
+            <span>Use Layout</span>
           </button>
         </div>
       `;
     }).join('');
 
     templatesList.querySelectorAll('.btn-load-template').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const id = (e.currentTarget as HTMLElement).getAttribute('data-tpl-id');
         const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
         if (tpl) {
-          if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
+          if (fileManager.isDirty() && !(await confirmDialog('Replace Your Page?', '<p>This layout replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Replace', 'Keep Editing'))) {
             return;
           }
           codePane.setValue(tpl.html);
@@ -2140,7 +2218,7 @@ document.addEventListener('DOMContentLoaded', () => {
           fileManager.markDirty(false);
           checkDocumentIntegrity(tpl.html);
           modalTemplates?.classList.add('hidden');
-          showToast(`✦ Loaded ${tpl.name} template!`);
+          showToast(`✦ Loaded ${tpl.name}`);
         }
       });
     });
@@ -2157,6 +2235,138 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === modalTemplates) modalTemplates.classList.add('hidden');
     });
   }
+
+  // --- Unsaved work: leave-page warning + a draft kept in this browser ---
+  window.addEventListener('beforeunload', (e) => {
+    if (fileManager.isDirty()) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  const DRAFT_KEY = 'scrypad_draft';
+  let draftTimer: ReturnType<typeof setTimeout> | null = null;
+  codeMount.addEventListener('keyup', () => queueDraft());
+  fileManager.subscribe(() => queueDraft());
+  function queueDraft() {
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+      if (!fileManager.isDirty()) return;
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ name: fileManager.getFilename(), code: codePane.getValue(), at: Date.now() }));
+      } catch { /* storage full or blocked: nothing to do */ }
+    }, 800);
+  }
+  (async () => {
+    let draft: { name: string; code: string; at: number } | null = null;
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { draft = null; }
+    if (!draft || !draft.code || draft.code === STARTER_HTML) return;
+    const when = new Date(draft.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    const ok = await confirmDialog('Pick Up Where You Left Off?', `<p>ScryPad kept an unsaved draft of <b>${escapeHtml(draft.name)}</b> from ${escapeHtml(when)}.</p>`, 'Restore Draft', 'Discard');
+    if (ok) {
+      codePane.setValue(draft.code);
+      previewPane.render(draft.code);
+      coordinator.updateStats();
+      checkDocumentIntegrity(draft.code);
+      updateBlankPage(draft.code);
+      fileManager.setFilename(draft.name);
+      fileManager.markDirty(true);
+      showToast('✦ Draft restored. Save it to keep it');
+    } else {
+      clearDraft();
+    }
+  })();
+
+  // --- Drop a file onto ScryPad to open it ---
+  window.addEventListener('dragover', (e) => {
+    if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+  });
+  window.addEventListener('drop', async (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    e.preventDefault();
+    if (!/\.(html?|svg|txt|md|css|js)$/i.test(file.name)) {
+      await showDialog({ title: 'ScryPad Can\'t Read This Yet', bodyHtml: '<p>ScryPad opens web pages (.html) and text-based files. See Help › What ScryPad Can Read.</p>' });
+      return;
+    }
+    if (fileManager.isDirty() && !(await confirmDialog('Open This File?', '<p>Your current changes aren\'t saved yet.</p>', 'Open File', 'Keep Editing'))) return;
+    const text = await file.text();
+    fileManager.setUntitled();
+    fileManager.setFilename(file.name);
+    codePane.setValue(text);
+    previewPane.render(text);
+    coordinator.updateStats();
+    checkDocumentIntegrity(text);
+    updateBlankPage(text);
+    fileManager.markDirty(false);
+    showToast(`✦ Opened ${file.name}. Use Save As to save it`);
+  });
+
+  // --- Phone: Tweak tab shows the tweak tools ---
+  const phoneTabTweak = document.getElementById('phone-tab-tweak');
+  phoneTabTweak?.addEventListener('click', () => {
+    const open = !document.body.classList.contains('tweak-open');
+    document.body.classList.toggle('tweak-open', open);
+    phoneTabTweak.classList.toggle('is-active', open);
+    phoneTabTweak.setAttribute('aria-pressed', String(open));
+    if (open) setViewMode('preview');
+  });
+
+  // --- View › Word Wrap ---
+  const labelWrap = document.getElementById('label-wrap');
+  const applyWrap = (on: boolean) => {
+    codePane.setWordWrap(on);
+    if (labelWrap) labelWrap.textContent = on ? 'On' : 'Off';
+    document.getElementById('menu-view-wrap')?.classList.toggle('is-on', on);
+    try { localStorage.setItem('scrypad_wrap', on ? 'on' : 'off'); } catch { /* ignore */ }
+  };
+  let wrapPref = false;
+  try { wrapPref = localStorage.getItem('scrypad_wrap') === 'on'; } catch { /* ignore */ }
+  applyWrap(wrapPref);
+  document.getElementById('menu-view-wrap')?.addEventListener('click', () => applyWrap(!codePane.isWordWrap()));
+
+  // --- Help menu ---
+  document.getElementById('menu-help-tour')?.addEventListener('click', async () => {
+    if (fileManager.isDirty() && !(await confirmDialog('Show the Tour?', '<p>The tour replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Show Tour', 'Keep Editing'))) return;
+    showTour();
+  });
+  document.getElementById('menu-help-keys')?.addEventListener('click', () => {
+    const nk = isDesktopApp ? 'Ctrl+N' : 'Ctrl+Alt+N';
+    const rows: [string, string][] = [
+      ['New Page', nk], ['Open File', 'Ctrl+O'], ['Save', 'Ctrl+S'], ['Save As', 'Ctrl+Shift+S'],
+      ['Undo', 'Ctrl+Z'], ['Redo', 'Ctrl+Y'], ['Find', 'Ctrl+F'], ['Find &amp; Replace', 'Ctrl+H'],
+      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'],
+      ['Indent', 'Tab'], ['Close a window or menu', 'Esc'],
+    ];
+    showDialog({
+      title: 'Keyboard Shortcuts',
+      bodyHtml: '<table><thead><tr><th>Action</th><th>Keys</th></tr></thead><tbody>' + rows.map(([a, k]) => `<tr><td>${a}</td><td><kbd>${k}</kbd></td></tr>`).join('') + '</tbody></table>' + (isDesktopApp ? '' : '<p style="margin-top:10px">In a browser, Ctrl+N opens a new window, so New Page uses Ctrl+Alt+N.</p>'),
+    });
+  });
+  document.getElementById('menu-help-read')?.addEventListener('click', () => {
+    showDialog({
+      title: 'What ScryPad Can Read',
+      wide: true,
+      bodyHtml: '<p>ScryPad is made for web pages. Open a whole .html file with its styles, or use Open Folder so its images and stylesheets load too.</p>'
+        + '<table><thead><tr><th>File</th><th>Colored Code</th><th>Live Preview</th><th>Click to Edit</th></tr></thead><tbody>'
+        + '<tr><td>HTML (.html)</td><td>Yes</td><td>The page itself</td><td>Text and color</td></tr>'
+        + '<tr><td>CSS, JavaScript</td><td>Inside your page</td><td>Through the page that uses them</td><td>No</td></tr>'
+        + '<tr><td>Images in a folder</td><td>No</td><td>Shown in your page</td><td>No</td></tr>'
+        + '</tbody></table>'
+        + '<p style="margin-top:10px">Markdown (.md), diagrams (.mmd) and SVG with their own previews are on the way.</p>',
+    });
+  });
+  document.getElementById('menu-help-about')?.addEventListener('click', () => {
+    showDialog({
+      title: 'About ScryPad',
+      wide: true,
+      bodyHtml: '<img src="/assets/wisp-dusk.svg" alt="" class="sp-wisp">'
+        + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
+        + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
+        + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
+        + '<p>Made by Graves Ghostly at <a href="https://lab.interstatus.app" target="_blank" rel="noopener" style="color:var(--forge-hi)">Interstatus Lab</a>. Open source under the MIT License.</p>',
+    });
+  });
 
   // Run initial integrity check
   checkDocumentIntegrity(STARTER_HTML);
