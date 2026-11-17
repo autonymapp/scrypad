@@ -2192,7 +2192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showDialog({
       title: 'About ScryPad',
       wide: true,
-      bodyHtml: '<img src="/assets/wisp-dusk.svg" alt="" class="sp-wisp">'
+      bodyHtml: '<img src="/icon.svg" alt="" class="sp-wisp">'
         + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
         + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
         + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'

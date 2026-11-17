@@ -16,7 +16,7 @@ const STEPS: TourStep[] = [
   {
     wisp: true,
     title: 'Welcome to ScryPad',
-    body: '<p>Write HTML on one side and watch your page come to life on the other. Wisp will keep you company while you build.</p><p>This quick tour takes about a minute.</p>',
+    body: '<p>Write HTML on one side and watch your page come to life on the other.</p><p>This quick tour takes about a minute.</p>',
   },
   {
     icon: Columns2,
@@ -103,8 +103,8 @@ export function showTour(): Promise<void> {
       art.innerHTML = '';
       if (s.wisp) {
         const img = document.createElement('img');
-        img.src = '/assets/wisp-dusk.svg';
-        img.alt = 'Wisp, the studio mascot';
+        img.src = '/icon.svg';
+        img.alt = 'ScryPad';
         img.className = 'tour-wisp';
         art.appendChild(img);
       } else if (s.icon) {
