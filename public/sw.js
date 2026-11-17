@@ -1,15 +1,17 @@
-const CACHE_NAME = 'scrypad-v1';
+const CACHE_NAME = 'scrypad-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon.svg',
-  '/assets/fonts/rajdhani-latin-600-normal.woff2',
-  '/assets/fonts/rajdhani-latin-700-normal.woff2',
-  '/assets/fonts/ibm-plex-sans-latin-400-normal.woff2',
-  '/assets/fonts/ibm-plex-sans-latin-500-normal.woff2',
-  '/assets/fonts/ibm-plex-mono-latin-400-normal.woff2',
-  '/assets/fonts/jetbrains-mono-latin-500-normal.woff2',
+  '/assets/fonts/chakra-petch-latin-500-normal.woff2',
+  '/assets/fonts/chakra-petch-latin-600-normal.woff2',
+  '/assets/fonts/chakra-petch-latin-700-normal.woff2',
+  '/assets/fonts/figtree-latin-400-normal.woff2',
+  '/assets/fonts/figtree-latin-500-normal.woff2',
+  '/assets/fonts/figtree-latin-600-normal.woff2',
+  '/assets/fonts/fira-code-latin-400-normal.woff2',
+  '/assets/fonts/fira-code-latin-500-normal.woff2',
   '/assets/lab-mark.svg',
   '/assets/wisp.svg'
 ];

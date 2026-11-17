@@ -4,8 +4,8 @@
   "description": "Sci-Fantasy WYSIWYG & HTML Code Editor by Interstatus Lab",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#070a10",
-  "theme_color": "#070a10",
+  "background_color": "#0f0b16",
+  "theme_color": "#0f0b16",
   "icons": [
     {
       "src": "/icon.svg",

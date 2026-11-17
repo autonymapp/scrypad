@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="62 53 900 900" role="img" aria-label="Wisp, the studio mascot, in the Dusk flame">
+  <!-- Wisp in the Dusk flame: ScryPad's own Wisp. Same shape and face as the Wisp app mascot. -->
+  <defs>
+    <linearGradient id="df" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#4b2496"/><stop offset=".55" stop-color="#9d68ee"/><stop offset="1" stop-color="#e8edf9"/>
+    </linearGradient>
+    <radialGradient id="dg" cx=".5" cy=".6" r=".5">
+      <stop offset="0" stop-color="#c56bff" stop-opacity=".45"/><stop offset="1" stop-color="#c56bff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="512" cy="600" r="320" fill="url(#dg)"/>
+  <path d="M350 720c-70-30-104-120-74-214 22 54 56 84 100 92z" fill="url(#df)"/>
+  <path d="M512 800c-118 0-200-82-200-190 0-92 58-150 112-214 40-48 70-104 66-190 92 70 140 156 128 252 34-22 54-58 58-100 70 70 36 168 36 168 0 156-82 274-200 274z" fill="url(#df)"/>
+  <path d="M512 760c-56 0-96-40-96-94 0-50 36-80 66-118 12 40 36 62 66 70-4-36 8-70 34-96 32 50 26 108 26 128 0 64-40 110-96 110z" fill="#141826" fill-opacity=".55"/>
+  <circle cx="478" cy="660" r="18" fill="#e8edf9"/><circle cx="548" cy="660" r="18" fill="#e8edf9"/>
+</svg>
