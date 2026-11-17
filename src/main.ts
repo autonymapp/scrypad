@@ -2496,9 +2496,9 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'About ScryPad',
       wide: true,
       bodyHtml: '<img src="icon.svg" alt="" class="sp-wisp">'
-        + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
+        + '<p><b>Build, See, and Learn the Web.</b> A distraction-free live HTML editor with tools to help you build your page and learn while you do!</p>'
         + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
-        + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
+        + '<p>Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
         + '<p>Built by Interstatus Lab. Open source under the MIT License.</p>',
     });
   });

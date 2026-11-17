@@ -3,7 +3,7 @@
 > **Sci-Fantasy Tools for Everyday Adventurers**  
 > An indie web tool by [Interstatus Lab](https://lab.interstatus.app).
 
-ScryPad is a distraction-free, ultra-snappy live WYSIWYG & HTML code editor built for indie hackers, creative writers, and developers who are tired of wrestling with bloated, confusing IDEs just to tweak a few lines of copy or change a color.
+**Build, See, and Learn the Web.** ScryPad is a distraction-free, ultra-snappy live WYSIWYG & HTML code editor built for indie hackers, creative writers, and developers who are tired of wrestling with bloated, confusing IDEs just to tweak a few lines of copy or change a color.
 
 Modern IDEs are great for complex software architectures, but when all you want to do is change text or preview a page layout, they're overwhelming. ScryPad brings back the simplicity of a plain Notepad, with the page right next to your code.
 
@@ -35,7 +35,7 @@ Modern IDEs are great for complex software architectures, but when all you want 
 * **Icons**: Lucide only, no emoji in the UI.
 * **Wisp**: ScryPad's Wisp burns in the Dusk flame and only appears on the Blank Page screen and in About.
 
-## ✦ Scry Your Own Code
+## ✦ Your Pages, Your Code
 
 Use ScryPad on your own pages and pages you have the rights to, and respect other people's work.
 
