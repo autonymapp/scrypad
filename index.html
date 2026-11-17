@@ -211,7 +211,7 @@
         <button id="btn-find-case" class="px-2 py-1 bg-[#211a2c] border border-[#36294a] rounded text-[11px] font-bold text-[#a597c2] hover:text-[#efe8fb] transition whitespace-nowrap" title="Toggle Case Sensitivity">Aa Match Case</button>
       </div>
 
-      <div class="h-4 w-px bg-[#36294a] shrink-0 hidden sm:block"></div>
+      <div class="h-4 w-px bg-[#36294a] shrink-0 max-sm:hidden block"></div>
 
       <div class="flex items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] border border-[#36294a] rounded shrink-0">
         <i data-lucide="replace" class="w-3.5 h-3.5 text-[#d896ff] shrink-0"></i>
@@ -248,14 +248,14 @@
 
         <button id="btn-toggle-styles" class="flex items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-[#efe8fb] transition text-xs font-medium" title="Open CSS Quick-Sliders for the selected element">
           <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-[#c56bff]"></i>
-          <span class="hidden sm:inline">Style Drawer</span>
+          <span class="max-sm:hidden inline">Style Drawer</span>
         </button>
       </div>
 
       <!-- Live Tag Inspector Hint Pill (Learner Guide) -->
       <div id="inspector-tag-hint" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#211a2c] border border-[#c56bff]/40 hover:border-[#c56bff] rounded text-[11px] font-['Fira_Code'] cursor-pointer transition" title="Click to view full entry in Grimoire of Tags">
         <span class="text-[#d896ff] font-bold" id="hint-tag-name">&lt;div&gt;</span>
-        <span class="text-[#a597c2] hidden md:inline truncate max-w-xs" id="hint-tag-desc">Invisible Sorting Box</span>
+        <span class="text-[#a597c2] max-md:hidden inline truncate max-w-xs" id="hint-tag-desc">Invisible Sorting Box</span>
         <i data-lucide="help-circle" class="w-3 h-3 text-[#c56bff]"></i>
       </div>
     </div>
@@ -263,13 +263,13 @@
     <!-- Right: View Mode Switcher, Guides Toggle, Theme Simulator & Viewports -->
     <div class="flex items-center gap-2.5">
       <!-- View Mode Switcher (Split | Code | Preview) - moved to same line as Guides & Theme -->
-      <div class="hidden md:flex items-center bg-[#0f0b16] border border-[#36294a] p-0.5 rounded shrink-0">
+      <div class="max-md:hidden flex items-center bg-[#0f0b16] border border-[#36294a] p-0.5 rounded shrink-0">
         <button id="mode-split" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]">Split</button>
         <button id="mode-code" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]">Code</button>
         <button id="mode-preview" class="px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]">Preview</button>
       </div>
 
-      <div class="h-4 w-px bg-[#36294a] hidden sm:block"></div>
+      <div class="h-4 w-px bg-[#36294a] max-sm:hidden block"></div>
 
       <!-- Guides Toggle -->
       <button id="btn-toggle-guides" class="px-2.5 py-1 bg-[#211a2c] hover:bg-[#261d33] border border-[#36294a] rounded text-xs flex items-center gap-1.5 transition" title="Toggle Educational Tag Guides & Learning Tips">
@@ -286,10 +286,10 @@
         <button id="btn-bake-theme" class="hidden text-[11px] text-[#d896ff] hover:underline font-['Fira_Code'] px-1" title="Bake this theme class permanently into HTML source">Bake in</button>
       </div>
 
-      <div class="h-4 w-px bg-[#36294a] hidden md:block"></div>
+      <div class="h-4 w-px bg-[#36294a] max-md:hidden block"></div>
 
       <!-- Responsive Viewport Presets -->
-      <div class="hidden md:flex items-center gap-1 text-xs font-['Fira_Code']">
+      <div class="max-md:hidden flex items-center gap-1 text-xs font-['Fira_Code']">
         <button class="viewport-btn px-2 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]" data-width="100%">100%</button>
         <button class="viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]" data-width="768px">768px</button>
         <button class="viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]" data-width="390px">390px</button>
@@ -547,7 +547,7 @@
         <span class="inline-block w-2 h-2 rounded-full bg-[#d896ff] mr-1.5"></span>HUD Synced
       </span>
       <span id="status-filesize">0 B</span>
-      <span class="text-[#a597c2]/70 hidden md:inline">Sci-Fantasy Tools for Everyday Adventurers</span>
+      <span class="text-[#a597c2]/70 max-md:hidden inline">Sci-Fantasy Tools for Everyday Adventurers</span>
     </div>
   </footer>
 
