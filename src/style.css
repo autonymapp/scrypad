@@ -168,75 +168,68 @@ body {
   border-color: var(--line-hot);
 }
 
-/* Button Shape Modes (Configurable via data-btn-shape attribute on root) */
-:root {
-  --btn-clip: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-  --btn-radius: 0px;
-}
-
-[data-btn-shape="slanted"] {
-  --btn-clip: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-  --btn-radius: 0px;
-}
-
-[data-btn-shape="notched"] {
-  --btn-clip: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
-  --btn-radius: 0px;
-}
-
-[data-btn-shape="rounded"] {
-  --btn-clip: none;
-  --btn-radius: 6px;
-}
-
-[data-btn-shape="sharp"] {
-  --btn-clip: none;
-  --btn-radius: 0px;
-}
-
-/* Slanted HUD Action Buttons */
+/* HUD Action Buttons: a slanted shape with soft rounded corners (like Wisp).
+   The shape is drawn by ::before, so the label stays upright and crisp. */
 .btn-hud {
+  --b-bg: var(--ghost-bg);
+  --b-bd: var(--line);
+  --b-sh: none;
   font-family: var(--f-display);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: 13px;
-  padding: 5px 12px;
+  padding: 5px 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   position: relative;
+  isolation: isolate;
+  background: none;
+  border: 0;
+  transition: color 0.15s ease, filter 0.15s ease;
+}
+.btn-hud::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 5px;
+  transform: skewX(-10deg);
+  background: var(--b-bg);
+  border: 1px solid var(--b-bd);
+  box-shadow: var(--b-sh);
   transition: all 0.15s ease;
-  clip-path: var(--btn-clip);
-  border-radius: var(--btn-radius);
 }
 
 .btn-hud-primary {
-  background: linear-gradient(135deg, var(--forge-hi), var(--forge));
+  --b-bg: linear-gradient(135deg, var(--forge-hi), var(--forge));
+  --b-bd: transparent;
+  --b-sh: inset 0 1px 0 rgba(255,255,255,0.18);
   color: var(--on-forge);
   text-shadow: 0 1px 0 rgba(255,255,255,0.2);
 }
 .btn-hud-primary:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 14px var(--scry-glow);
+  --b-sh: 0 0 14px var(--scry-glow);
 }
 
 .btn-hud-ghost {
-  background: var(--ghost-bg);
-  border: 1px solid var(--line);
+  --b-bg: var(--ghost-bg);
+  --b-bd: var(--line);
   color: var(--ink);
 }
 .btn-hud-ghost:hover {
-  background: var(--panel-hi);
-  border-color: var(--forge);
+  --b-bg: var(--panel-hi);
+  --b-bd: var(--forge);
   color: var(--forge);
 }
 
 .btn-hud-active {
-  background: var(--panel-hi);
-  border-color: var(--forge);
+  --b-bg: var(--panel-hi);
+  --b-bd: var(--forge);
+  --b-sh: 0 0 10px var(--scry-glow);
   color: var(--forge);
-  box-shadow: 0 0 10px var(--scry-glow);
 }
 
 /* ATB Style Status Gauge */
