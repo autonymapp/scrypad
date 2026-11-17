@@ -32,7 +32,7 @@
     "active": true,
     "targets": "all",
     "category": "DeveloperTool",
-    "shortDescription": "Sci-Fantasy WYSIWYG & HTML Editor",
+    "shortDescription": "Build, See, and Learn the Web",
     "copyright": "Interstatus Lab",
     "icon": [
       "icons/32x32.png",
@@ -43,7 +43,10 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["html", "htm"],
+        "ext": [
+          "html",
+          "htm"
+        ],
         "name": "Web Page",
         "description": "Web page",
         "role": "Editor",
@@ -51,8 +54,19 @@
       }
     ],
     "windows": {
-      "webviewInstallMode": { "type": "skip" },
-      "nsis": { "installMode": "currentUser" }
+      "webviewInstallMode": {
+        "type": "skip"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "headerImage": "installer/nsis-header.bmp",
+        "sidebarImage": "installer/nsis-sidebar.bmp",
+        "installerIcon": "icons/icon.ico"
+      },
+      "wix": {
+        "bannerPath": "installer/wix-banner.bmp",
+        "dialogImagePath": "installer/wix-dialog.bmp"
+      }
     }
   }
 }
