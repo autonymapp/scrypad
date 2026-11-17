@@ -84,8 +84,21 @@ export class PreviewPane {
   private lastHtml = '';
   private mirrorTimer: number | undefined;
 
+  // Windows app: the pop-out is its own app window, fed through Tauri events
+  private desktopPopOut = false;
+
   /** Opens (or focuses) the pop-out window. Returns false when the browser blocked it. */
   public openPopOut(): boolean {
+    const tauri = (window as any).__TAURI__;
+    if (tauri?.core?.invoke && tauri?.event) {
+      if (!this.desktopPopOut) {
+        this.desktopPopOut = true;
+        // The new window asks for the page once it's ready
+        tauri.event.listen('scrypad-preview-ready', () => tauri.event.emit('scrypad-preview', this.lastHtml));
+      }
+      tauri.core.invoke('open_preview_window').catch(() => {});
+      return true;
+    }
     if (this.mirror && !this.mirror.closed) { this.mirror.focus(); return true; }
     const w = window.open('', 'scrypad-preview', 'popup,width=960,height=720');
     if (!w) return false;
@@ -100,6 +113,11 @@ export class PreviewPane {
 
   private scheduleMirror(html: string) {
     this.lastHtml = html;
+    if (this.desktopPopOut) {
+      window.clearTimeout(this.mirrorTimer);
+      this.mirrorTimer = window.setTimeout(() => (window as any).__TAURI__?.event?.emit('scrypad-preview', this.lastHtml), 200);
+      return;
+    }
     if (!this.mirror) return;
     window.clearTimeout(this.mirrorTimer);
     this.mirrorTimer = window.setTimeout(() => this.writeMirror(this.lastHtml), 200);
