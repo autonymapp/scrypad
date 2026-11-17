@@ -61,15 +61,6 @@
         <div class="menu-group">
           <button class="menu-btn" aria-haspopup="true">Insert</button>
           <div class="menu-dropdown menu-wide hidden" role="menu">
-            <div class="menu-label">Starter Layouts</div>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="pricing-card"><span><i data-lucide="credit-card"></i>Pricing Card</span></button>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="profile-card"><span><i data-lucide="user"></i>Profile Card</span></button>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="newsletter-hero"><span><i data-lucide="mail"></i>Newsletter Hero</span></button>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="blog-article"><span><i data-lucide="newspaper"></i>Article Page</span></button>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="stats-dashboard"><span><i data-lucide="bar-chart-3"></i>Stats Grid</span></button>
-            <button class="menu-item btn-preset-direct" role="menuitem" data-id="feedback-modal"><span><i data-lucide="message-square"></i>Feedback Dialog</span></button>
-            <button id="btn-templates-toggle" class="menu-item" role="menuitem"><span><i data-lucide="layout-template"></i>Browse All Layouts</span></button>
-            <div class="menu-sep"></div>
             <div class="menu-label">Buttons</div>
             <button id="menu-insert-btn-slant" class="menu-item" role="menuitem"><span><span class="swatch swatch-slant"></span>Slanted Button</span></button>
             <button id="menu-insert-btn-notch" class="menu-item" role="menuitem"><span><span class="swatch swatch-notch"></span>Notched Button</span></button>
@@ -154,11 +145,6 @@
           <input type="color" id="quick-color" value="#c56bff" class="tb-color" aria-label="Text color">
         </label>
         <button id="btn-toggle-styles" class="tb-btn" title="Size, spacing and color sliders for the selected element"><i data-lucide="sliders-horizontal"></i><span>Styles</span></button>
-        <div id="inspector-tag-hint" class="hidden tag-hint" title="Open this tag in the Tag Guide" role="button" tabindex="0">
-          <span class="text-[#d896ff] font-bold" id="hint-tag-name">&lt;div&gt;</span>
-          <span class="text-[#a597c2] max-lg:hidden inline truncate max-w-[16rem]" id="hint-tag-desc">Invisible Sorting Box</span>
-          <i data-lucide="help-circle" class="w-3 h-3 text-[#c56bff]"></i>
-        </div>
       </div>
     </div>
 
@@ -308,16 +294,33 @@
       <div id="blank-page" class="blank-page hidden">
         <img src="/assets/wisp-dusk.svg" alt="Wisp, the studio mascot, in the Dusk flame" class="blank-wisp" width="112" height="112">
         <h2 class="blank-title">A Blank Page</h2>
-        <p class="blank-sub">Open a file or start typing.</p>
+        <p class="blank-sub">Wisp is ready when you are. Open a file or start fresh.</p>
         <div class="blank-acts">
           <button id="blank-open" class="btn-hud btn-hud-primary"><i data-lucide="folder-open" class="w-3.5 h-3.5"></i><span>Open File</span></button>
           <button id="blank-start" class="btn-hud btn-hud-ghost"><i data-lucide="file-plus" class="w-3.5 h-3.5"></i><span>Start Blank</span></button>
         </div>
-        <button id="blank-tour" class="blank-link">Show the ScryPad Tour</button>
+        <button id="blank-tour" class="blank-link">New Here? Take the Tour</button>
       </div>
 
       <div id="preview-mount" class="w-full flex-1 flex justify-center items-stretch p-3 overflow-auto relative">
         <!-- Preview iframe is mounted here -->
+      </div>
+
+      <!-- Tag Bar: what the clicked tag is and what it's for (Learning Tips) -->
+      <div id="inspector-tag-hint" class="tag-bar hidden" aria-live="polite">
+        <div class="tag-bar-row">
+          <span class="tag-bar-tag" id="hint-tag-name">&lt;div&gt;</span>
+          <div class="tag-bar-text">
+            <b id="hint-tag-title">Invisible Sorting Box</b>
+            <span id="hint-tag-desc">Groups things together</span>
+          </div>
+          <button id="hint-tag-more" class="tag-bar-btn" aria-expanded="false" title="Show more about this tag"><i data-lucide="chevron-up"></i><span>More</span></button>
+          <button id="hint-tag-guide" class="tag-bar-btn" title="Open this tag in the Tag Guide"><i data-lucide="book-open"></i><span>Tag Guide</span></button>
+        </div>
+        <div id="hint-tag-detail" class="tag-bar-detail hidden">
+          <p id="hint-tag-long"></p>
+          <div id="hint-tag-attrs" class="tag-bar-attrs"></div>
+        </div>
       </div>
 
       <!-- Visual Style Drawer (Sliders for Selected Element) -->
@@ -566,34 +569,6 @@
       <div class="px-5 py-3 bg-[#0f0b16] border-t border-[#36294a] flex justify-between items-center text-xs text-[#a597c2]">
         <span id="tag-guide-count">Showing tags</span>
         <button id="btn-tag-guide-done" class="btn-hud btn-hud-ghost">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Web Starter Templates Modal -->
-  <div id="modal-templates" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-[#18121f] border border-[#36294a] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-      <div class="px-5 py-3 border-b border-[#36294a] flex items-center justify-between bg-[#211a2c]">
-        <div class="flex items-center gap-2">
-          <i data-lucide="layout-template" class="w-4 h-4 text-[#8fb6ff]"></i>
-          <h2 class="font-['Chakra_Petch'] font-bold text-base text-white uppercase tracking-wider">Starter Layouts</h2>
-        </div>
-        <button id="btn-close-templates" class="text-[#a597c2] hover:text-white p-1">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <div class="p-3.5 border-b border-[#36294a] bg-[#0d0a14] text-xs text-[#a597c2]">
-        Instantly load a clean, modern HTML/CSS component or layout to practice with, learn from, and customize.
-      </div>
-
-      <div id="templates-list" class="p-4 space-y-3 overflow-y-auto flex-1 font-['Fira_Code']">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="px-5 py-3 bg-[#0f0b16] border-t border-[#36294a] flex justify-between items-center text-xs text-[#a597c2]">
-        <span>Loading a preset replaces current editor content</span>
-        <button id="btn-templates-done" class="btn-hud btn-hud-ghost">Close</button>
       </div>
     </div>
   </div>

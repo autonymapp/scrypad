@@ -28,15 +28,8 @@ import {
   ChevronUp,
   ChevronDown,
   Gamepad2,
-  LayoutTemplate,
   Menu,
   SaveAll,
-  CreditCard,
-  User,
-  Mail,
-  Newspaper,
-  BarChart3,
-  MessageSquare,
   Columns2,
   Monitor,
   Tablet,
@@ -59,134 +52,9 @@ import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage
 import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
 import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
-import { WEB_TEMPLATES, WebTemplate } from './templates/web-templates.ts';
 import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
 import { desktopLaunchFile } from './files/desktop.ts';
-
-// Initial Starter HTML (ScryPad's Own Interactive Explainer)
-const STARTER_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScryPad ✦ Live HTML Editor</title>
-  <style>
-    :root {
-      --void: #0f0b16;
-      --panel: #18121f;
-      --line: #36294a;
-      --ink: #efe8fb;
-      --dim: #a597c2;
-      --forge-hi: #d896ff;
-      --forge: #c56bff;
-    }
-    body {
-      margin: 0;
-      padding: 44px 20px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at 50% 20%, #211a2c 0%, #0f0b16 70%);
-      color: var(--ink);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-sizing: border-box;
-    }
-    .hud-card {
-      max-width: 540px;
-      width: 100%;
-      background: linear-gradient(180deg, rgba(33, 26, 44, 0.85) 0%, rgba(24, 18, 31, 0.95) 100%);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 34px 30px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 20px rgba(197, 107, 255, 0.1);
-      text-align: center;
-      position: relative;
-    }
-    .hud-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: rgba(216, 150, 255, 0.12);
-      color: var(--forge-hi);
-      border: 1px solid rgba(216, 150, 255, 0.35);
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 18px;
-    }
-    h1 {
-      font-size: 2.1rem;
-      margin: 0 0 12px 0;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-    p {
-      color: var(--dim);
-      font-size: 1.02rem;
-      line-height: 1.6;
-      margin: 0 0 22px 0;
-    }
-    .features-list {
-      text-align: left;
-      background: rgba(15, 11, 22, 0.6);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      font-size: 0.9rem;
-      color: var(--dim);
-    }
-    .features-list li {
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-    .features-list li:last-child {
-      margin-bottom: 0;
-    }
-    .features-list strong {
-      color: var(--forge);
-    }
-    .cta-btn {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--forge-hi), var(--forge));
-      color: #0f0b16;
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 12px 30px;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 0 16px rgba(216, 150, 255, 0.3);
-    }
-    .cta-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 24px rgba(216, 150, 255, 0.5);
-    }
-  </style>
-</head>
-<body>
-  <div class="hud-card">
-    <div class="hud-badge">✦ Welcome to ScryPad</div>
-    <h1>Web Editing, Simplified</h1>
-    <p>You're viewing this live document inside ScryPad right now. Click on any text to edit it, or write raw code on the left without IDE clutter.</p>
-    
-    <div class="features-list">
-      <ul style="margin: 0; padding-left: 18px;">
-        <li><strong>Click &amp; Tweak Text:</strong> Click anywhere on this page and start typing to update the copy.</li>
-        <li><strong>Style Drawer:</strong> Click any element and use CSS sliders for padding, radius, and colors.</li>
-        <li><strong>Dual-Sync Code:</strong> Changes update the raw HTML on the left instantly, and vice versa.</li>
-        <li><strong>Save Locally:</strong> Press <code>Ctrl + S</code> to save changes straight to your local file.</li>
-      </ul>
-    </div>
-
-    <a href="#" class="cta-btn">Click &amp; Edit This Button Text</a>
-  </div>
-</body>
-</html>`;
+import { showTour, hasSeenTour, isTourOpen } from './ui/tour.ts';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -221,15 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ChevronUp,
       ChevronDown,
       Gamepad2,
-      LayoutTemplate,
       Menu,
       SaveAll,
-      CreditCard,
-      User,
-      Mail,
-      Newspaper,
-      BarChart3,
-      MessageSquare,
       Columns2,
       Monitor,
       Tablet,
@@ -327,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Code Editor
   const codePane = new CodePane({
     container: codeMount,
-    initialValue: STARTER_HTML,
+    initialValue: '',
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
       checkDocumentIntegrity(code);
@@ -364,8 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Coordinator
   coordinator = new SyncCoordinator(codePane, previewPane, fileManager);
 
-  // Initial preview render
-  previewPane.render(STARTER_HTML);
+  // Start on the Blank Page (Wisp) instead of a sample page
+  previewPane.render('');
+  updateBlankPage('');
 
   // Smart Helper Action Bar & Inputs
   const smartHelperBanner = document.getElementById('smart-helper-banner')!;
@@ -993,21 +855,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBlankPage(starter);
     if (phoneQuery.matches) setViewMode('code');
   });
-  const showTour = () => {
-    codePane.setValue(STARTER_HTML);
-    previewPane.render(STARTER_HTML);
-    coordinator.updateStats();
-    checkDocumentIntegrity(STARTER_HTML);
-    updateBlankPage(STARTER_HTML);
-  };
-  document.getElementById('blank-tour')?.addEventListener('click', showTour);
+  document.getElementById('blank-tour')?.addEventListener('click', () => { showTour(); });
 
   // Keyboard shortcut Ctrl+S / Cmd+S
   // Keyboard shortcuts (the Help menu lists them)
   const isDesktopApp = !!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__;
   if (isDesktopApp) document.querySelectorAll('.kbd-new').forEach((k) => { k.textContent = 'Ctrl+N'; });
   window.addEventListener('keydown', (e) => {
-    if (isDialogOpen()) return;
+    if (isDialogOpen() || isTourOpen()) return;
     const mod = e.ctrlKey || e.metaKey;
     if (!mod) return;
     const k = e.key.toLowerCase();
@@ -1783,27 +1638,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modalLibrary.classList.remove('hidden');
   });
 
-  // Presets Menu (Direct Template Loading)
-  document.querySelectorAll('.btn-preset-direct').forEach((btn) => {
-    btn.addEventListener('click', async (e) => {
-      closeAllMenus();
-      const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
-      const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
-      if (tpl) {
-        if (fileManager.isDirty() && !(await confirmDialog('Replace Your Page?', '<p>This layout replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Replace', 'Keep Editing'))) {
-          return;
-        }
-        codePane.setValue(tpl.html);
-        previewPane.render(tpl.html);
-        coordinator.updateStats();
-        fileManager.setFilename(`${tpl.id}.html`);
-        fileManager.markDirty(false);
-        checkDocumentIntegrity(tpl.html);
-        showToast(`✦ Loaded ${tpl.name}`);
-      }
-    });
-  });
-
   // View Menu
   document.getElementById('menu-view-split')?.addEventListener('click', () => {
     closeAllMenus();
@@ -2001,6 +1835,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const inspectorTagHint = document.getElementById('inspector-tag-hint')!;
   const hintTagName = document.getElementById('hint-tag-name')!;
   const hintTagDesc = document.getElementById('hint-tag-desc')!;
+  const hintTagTitle = document.getElementById('hint-tag-title')!;
+  const hintTagMore = document.getElementById('hint-tag-more')!;
+  const hintTagDetail = document.getElementById('hint-tag-detail')!;
+  const hintTagLong = document.getElementById('hint-tag-long')!;
+  const hintTagAttrs = document.getElementById('hint-tag-attrs')!;
+  let tagBarOpen = false;
+  try { tagBarOpen = localStorage.getItem('scrypad_tagbar') === 'open'; } catch { /* ignore */ }
+  const setTagBarOpen = (open: boolean) => {
+    tagBarOpen = open;
+    hintTagDetail.classList.toggle('hidden', !open);
+    hintTagMore.setAttribute('aria-expanded', String(open));
+    hintTagMore.classList.toggle('is-on', open);
+    const label = hintTagMore.querySelector('span');
+    if (label) label.textContent = open ? 'Less' : 'More';
+    try { localStorage.setItem('scrypad_tagbar', open ? 'open' : 'closed'); } catch { /* ignore */ }
+  };
+  setTagBarOpen(tagBarOpen);
+  hintTagMore.addEventListener('click', () => setTagBarOpen(!tagBarOpen));
 
   let guidesEnabled = localStorage.getItem('scrypad_guides') !== 'off';
 
@@ -2021,9 +1873,8 @@ document.addEventListener('DOMContentLoaded', () => {
   btnToggleGuides.addEventListener('click', () => {
     closeAllMenus();
     guidesEnabled = !guidesEnabled;
-    showToast(guidesEnabled ? '✦ Learning Tips on' : '✦ Learning Tips off');
     updateGuidesState();
-    showToast(`✦ Beginner Guides ${guidesEnabled ? 'enabled' : 'disabled'}`);
+    showToast(guidesEnabled ? '✦ Learning Tips on' : '✦ Learning Tips off');
   });
 
   // Define updateTagHint for active preview element
@@ -2036,9 +1887,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagInfo = findTagInfo(tagName);
     if (tagInfo) {
       hintTagName.textContent = `<${tagInfo.tag}>`;
-      hintTagDesc.textContent = tagInfo.purpose || tagInfo.name;
+      hintTagTitle.textContent = tagInfo.name;
+      hintTagDesc.textContent = tagInfo.purpose || '';
+      hintTagLong.textContent = tagInfo.description || '';
+      hintTagAttrs.innerHTML = '';
+      if (tagInfo.commonAttributes?.length) {
+        const lbl = document.createElement('span');
+        lbl.className = 'tag-bar-attrs-label';
+        lbl.textContent = 'Common Attributes';
+        hintTagAttrs.appendChild(lbl);
+        tagInfo.commonAttributes.forEach((a) => {
+          const c = document.createElement('code');
+          c.textContent = a;
+          hintTagAttrs.appendChild(c);
+        });
+      }
       inspectorTagHint.classList.remove('hidden');
-      inspectorTagHint.style.display = 'flex';
+      inspectorTagHint.style.display = 'block';
     } else {
       inspectorTagHint.classList.add('hidden');
       inspectorTagHint.style.display = 'none';
@@ -2152,12 +2017,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  inspectorTagHint.addEventListener('click', () => {
+  document.getElementById('hint-tag-guide')!.addEventListener('click', () => {
     const currentTag = hintTagName.textContent?.replace(/[<>]/g, '') || '';
     openTagGuide(currentTag);
-  });
-  inspectorTagHint.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inspectorTagHint.click(); }
   });
 
   // --- Godot BBCode Exporter ---
@@ -2168,72 +2030,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const bbcode = htmlToGodotBBCode(currentHtml);
       closeAllMenus();
       await copyOrShow(bbcode, 'Godot BBCode', () => showToast('✦ Copied as Godot BBCode'));
-    });
-  }
-
-  // --- Web Starter Templates & Snippets Modal ---
-  const modalTemplates = document.getElementById('modal-templates');
-  const btnTemplatesToggle = document.getElementById('btn-templates-toggle');
-  const btnCloseTemplates = document.getElementById('btn-close-templates');
-  const btnTemplatesDone = document.getElementById('btn-templates-done');
-  const templatesList = document.getElementById('templates-list');
-
-  function renderTemplatesList() {
-    if (!templatesList) return;
-    templatesList.innerHTML = WEB_TEMPLATES.map((tpl: WebTemplate) => {
-      const badgeColor = tpl.category === 'Components' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-        : tpl.category === 'Cards' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
-        : tpl.category === 'Layouts' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
-        : tpl.category === 'Dashboards' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-        : tpl.category === 'Forms' ? 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30'
-        : 'text-[#efe8fb] bg-[#211a2c] border-[#36294a]';
-
-      return `
-        <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex items-center justify-between gap-3">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-white text-sm">${tpl.name}</span>
-              <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${badgeColor}">${tpl.badge}</span>
-            </div>
-            <p class="text-xs text-[#a597c2] m-0 leading-relaxed">${tpl.description}</p>
-          </div>
-          <button class="btn-hud btn-hud-primary btn-load-template text-xs py-1 px-3 whitespace-nowrap" data-tpl-id="${tpl.id}">
-            <span>Use Layout</span>
-          </button>
-        </div>
-      `;
-    }).join('');
-
-    templatesList.querySelectorAll('.btn-load-template').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const id = (e.currentTarget as HTMLElement).getAttribute('data-tpl-id');
-        const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
-        if (tpl) {
-          if (fileManager.isDirty() && !(await confirmDialog('Replace Your Page?', '<p>This layout replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Replace', 'Keep Editing'))) {
-            return;
-          }
-          codePane.setValue(tpl.html);
-          previewPane.render(tpl.html);
-          coordinator.updateStats();
-          fileManager.setFilename(`${tpl.id}.html`);
-          fileManager.markDirty(false);
-          checkDocumentIntegrity(tpl.html);
-          modalTemplates?.classList.add('hidden');
-          showToast(`✦ Loaded ${tpl.name}`);
-        }
-      });
-    });
-  }
-
-  if (btnTemplatesToggle && modalTemplates) {
-    btnTemplatesToggle.addEventListener('click', () => {
-      renderTemplatesList();
-      modalTemplates.classList.remove('hidden');
-    });
-    btnCloseTemplates?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
-    btnTemplatesDone?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
-    modalTemplates.addEventListener('click', (e) => {
-      if (e.target === modalTemplates) modalTemplates.classList.add('hidden');
     });
   }
 
@@ -2299,7 +2095,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (async () => {
     let draft: { name: string; code: string; at: number } | null = null;
     try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { draft = null; }
-    if (!draft || !draft.code || draft.code === STARTER_HTML) return;
+    if (!draft || !draft.code) return;
     const when = new Date(draft.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
     const ok = await confirmDialog('Pick Up Where You Left Off?', `<p>ScryPad kept an unsaved draft of <b>${escapeHtml(draft.name)}</b> from ${escapeHtml(when)}.</p>`, 'Restore Draft', 'Discard');
     if (ok) {
@@ -2365,10 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('menu-view-wrap')?.addEventListener('click', () => applyWrap(!codePane.isWordWrap()));
 
   // --- Help menu ---
-  document.getElementById('menu-help-tour')?.addEventListener('click', async () => {
-    if (fileManager.isDirty() && !(await confirmDialog('Show the Tour?', '<p>The tour replaces what\'s in the editor, and your changes aren\'t saved yet.</p>', 'Show Tour', 'Keep Editing'))) return;
-    showTour();
-  });
+  document.getElementById('menu-help-tour')?.addEventListener('click', () => { closeAllMenus(); showTour(); });
   document.getElementById('menu-help-keys')?.addEventListener('click', () => {
     const nk = isDesktopApp ? 'Ctrl+N' : 'Ctrl+Alt+N';
     const rows: [string, string][] = [
@@ -2408,5 +2201,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Run initial integrity check
-  checkDocumentIntegrity(STARTER_HTML);
+  checkDocumentIntegrity('');
+
+  // First visit: show the tour (not when ScryPad opened a file or has a draft to restore)
+  let hasDraft = false;
+  try { hasDraft = !!localStorage.getItem('scrypad_draft'); } catch { /* ignore */ }
+  if (!hasSeenTour() && !hasDraft) {
+    setTimeout(() => { if (!isDialogOpen() && !codePane.getValue().trim()) showTour(); }, 600);
+  }
 });

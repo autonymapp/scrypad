@@ -399,17 +399,75 @@ body {
 .tb-toggle input { accent-color: var(--forge-hi); width: 13px; height: 13px; margin: 0; cursor: pointer; }
 .tb-color { width: 14px; height: 14px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .tb-link { color: var(--forge-hi); font-family: var(--f-mono); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
-.tag-hint {
-  display: flex; align-items: center; gap: 6px;
-  height: 26px; padding: 0 9px;
-  background: var(--panel-hi);
-  border: 1px solid rgba(197,107,255,.4);
-  border-radius: 4px;
-  font-family: var(--f-mono); font-size: 11px;
-  cursor: pointer;
-  min-width: 0;
+/* Tag Bar: sits under the preview, shows the clicked tag in full */
+.tag-bar {
+  width: 100%;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--dim);
 }
-.tag-hint:hover { border-color: var(--forge); }
+.tag-bar-row { display: flex; align-items: flex-start; gap: 10px; }
+.tag-bar-tag {
+  flex-shrink: 0;
+  font-family: var(--f-mono); font-size: 12px; font-weight: 600;
+  color: var(--forge-hi);
+  background: var(--panel-hi);
+  border: 1px solid var(--line-hot);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+.tag-bar-text { flex: 1; min-width: 0; line-height: 1.45; padding-top: 1px; }
+.tag-bar-text b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+.tag-bar-btn {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 24px; padding: 0 8px;
+  font-family: var(--f-mono); font-size: 11px;
+  color: var(--dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tag-bar-btn svg { width: 13px; height: 13px; transition: transform .15s; }
+.tag-bar-btn:hover { color: var(--ink); border-color: var(--line-hot); }
+.tag-bar-btn:hover svg { color: var(--forge); }
+.tag-bar-btn.is-on svg { transform: rotate(180deg); }
+.tag-bar-detail { margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--line); line-height: 1.55; }
+.tag-bar-detail p { margin: 0 0 6px; }
+.tag-bar-attrs { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.tag-bar-attrs-label { font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-right: 3px; }
+.tag-bar-attrs code { font-family: var(--f-mono); font-size: 11px; color: var(--moonsilver); background: var(--panel-hi); border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; }
+@media (max-width: 767px) {
+  .tag-bar-btn span { display: none; }
+  .tag-bar-btn { width: 28px; padding: 0; justify-content: center; }
+}
+
+/* Tour pop-up */
+.sp-tour { text-align: center; width: min(440px, 100%); }
+.sp-tour .sp-body { min-height: 120px; }
+.tour-art { display: flex; justify-content: center; margin: 4px 0 10px; }
+.tour-wisp { width: 88px; height: 88px; animation: wisp-float 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tour-wisp { animation: none; } }
+.tour-tile {
+  width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(197,107,255,.22), var(--panel-hi) 70%);
+  border: 1px solid var(--line-hot);
+  border-radius: 14px;
+  box-shadow: 0 0 18px var(--scry-glow);
+  color: var(--forge-hi);
+}
+.tour-tile svg { width: 30px; height: 30px; }
+.tour-count { font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.tour-dots { display: flex; justify-content: center; gap: 6px; margin-top: 6px; }
+.tour-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line-hot); transition: background .15s, transform .15s; }
+.tour-dots span.on { background: var(--forge-hi); transform: scale(1.3); }
+.tour-actions { align-items: center; }
+.tour-skip { margin: 0 auto 0 0; }
 button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focus-within { outline: 2px solid var(--forge); outline-offset: 1px; }
 
 /* ===== Phone ===== */
