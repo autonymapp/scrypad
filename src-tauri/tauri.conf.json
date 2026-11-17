@@ -14,7 +14,8 @@
     "windows": [
       {
         "label": "main",
-        "title": "ScryPad ✦ Interstatus Lab",
+        "title": "ScryPad",
+        "dragDropEnabled": false,
         "width": 1280,
         "height": 800,
         "minWidth": 640,
@@ -39,6 +40,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["html", "htm"],
+        "name": "Web Page",
+        "description": "Web page",
+        "role": "Editor",
+        "mimeType": "text/html"
+      }
     ],
     "windows": {
       "webviewInstallMode": { "type": "skip" },

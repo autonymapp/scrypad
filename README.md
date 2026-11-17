@@ -5,7 +5,7 @@
 
 ScryPad is a distraction-free, ultra-snappy live WYSIWYG & HTML code editor built for indie hackers, creative writers, and developers who are tired of wrestling with bloated, confusing IDEs just to tweak a few lines of copy or change a color.
 
-Modern IDEs are great for complex software architectures, but when all you want to do is change text or preview a page layout, they're overwhelming. ScryPad brings back the simplicity of tools like CoffeeCup HTML Editor, redesigned with a cyberpunk laboratory HUD aesthetic inspired by the FF7R interface.
+Modern IDEs are great for complex software architectures, but when all you want to do is change text or preview a page layout, they're overwhelming. ScryPad brings back the simplicity of a plain Notepad, with the page right next to your code.
 
 ---
 
@@ -27,12 +27,17 @@ Modern IDEs are great for complex software architectures, but when all you want 
 
 ---
 
-## ✦ Interstatus Lab Design DNA
+## ✦ Design
 
-* **Look**: Cyberpunk laboratory, sleek first, futuristic second.
-* **Palette**: Void (`#070a10`), Panel Hi (`#122036`), Bio Green (`#5cff9d`), HUD Teal (`#48e0d2`), and Ink (`#e8eef8`).
-* **Typography**: Self-hosted Rajdhani (Headings), IBM Plex Sans (Body), and IBM Plex Mono / JetBrains Mono (Code).
-* **Icons**: Lucide icons exclusively (no emoji in the UI).
+* **Look**: Artificer's Forge. Slanted buttons, cut corners, a soft forge glow only on active things, and a calm code pane you can stare at for hours.
+* **Colors**: Arcane Violet (`#c56bff`), lilac (`#d896ff`), Moonsilver (`#d9e2f2`) and gold strings (`#f2d27a`) on `#0f0b16`.
+* **Type**: Chakra Petch (headings), Figtree (body), Fira Code (code and labels), all self-hosted.
+* **Icons**: Lucide only, no emoji in the UI.
+* **Wisp**: ScryPad's Wisp burns in the Dusk flame and only appears on the Blank Page screen and in About.
+
+## ✦ Scry Your Own Code
+
+Use ScryPad on your own pages and pages you have the rights to, and respect other people's work.
 
 ---
 

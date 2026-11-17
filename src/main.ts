@@ -28,7 +28,18 @@ import {
   ChevronUp,
   ChevronDown,
   Gamepad2,
-  LayoutTemplate
+  Menu,
+  SaveAll,
+  Columns2,
+  Monitor,
+  Tablet,
+  Smartphone,
+  WrapText,
+  Compass,
+  Keyboard,
+  FileSearch,
+  MessageCircle,
+  Info
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -41,132 +52,9 @@ import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage
 import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
 import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
-import { WEB_TEMPLATES, WebTemplate } from './templates/web-templates.ts';
-
-// Initial Starter HTML (ScryPad's Own Interactive Explainer)
-const STARTER_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScryPad ✦ Live HTML Editor</title>
-  <style>
-    :root {
-      --void: #0f0b16;
-      --panel: #18121f;
-      --line: #36294a;
-      --ink: #efe8fb;
-      --dim: #a597c2;
-      --forge-hi: #d896ff;
-      --forge: #c56bff;
-    }
-    body {
-      margin: 0;
-      padding: 44px 20px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at 50% 20%, #211a2c 0%, #0f0b16 70%);
-      color: var(--ink);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-sizing: border-box;
-    }
-    .hud-card {
-      max-width: 540px;
-      width: 100%;
-      background: linear-gradient(180deg, rgba(33, 26, 44, 0.85) 0%, rgba(24, 18, 31, 0.95) 100%);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 34px 30px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 20px rgba(197, 107, 255, 0.1);
-      text-align: center;
-      position: relative;
-    }
-    .hud-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: rgba(216, 150, 255, 0.12);
-      color: var(--forge-hi);
-      border: 1px solid rgba(216, 150, 255, 0.35);
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 18px;
-    }
-    h1 {
-      font-size: 2.1rem;
-      margin: 0 0 12px 0;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-    p {
-      color: var(--dim);
-      font-size: 1.02rem;
-      line-height: 1.6;
-      margin: 0 0 22px 0;
-    }
-    .features-list {
-      text-align: left;
-      background: rgba(15, 11, 22, 0.6);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      font-size: 0.9rem;
-      color: var(--dim);
-    }
-    .features-list li {
-      margin-bottom: 8px;
-      line-height: 1.5;
-    }
-    .features-list li:last-child {
-      margin-bottom: 0;
-    }
-    .features-list strong {
-      color: var(--forge);
-    }
-    .cta-btn {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--forge-hi), var(--forge));
-      color: #0f0b16;
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 12px 30px;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 0 16px rgba(216, 150, 255, 0.3);
-    }
-    .cta-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 24px rgba(216, 150, 255, 0.5);
-    }
-  </style>
-</head>
-<body>
-  <div class="hud-card">
-    <div class="hud-badge">✦ Welcome to ScryPad</div>
-    <h1>Web Editing, Simplified</h1>
-    <p>You're viewing this live document inside ScryPad right now. Click on any text to edit it, or write raw code on the left without IDE clutter.</p>
-    
-    <div class="features-list">
-      <ul style="margin: 0; padding-left: 18px;">
-        <li><strong>Click &amp; Tweak Text:</strong> Click anywhere on this page and start typing to update the copy.</li>
-        <li><strong>Style Drawer:</strong> Click any element and use CSS sliders for padding, radius, and colors.</li>
-        <li><strong>Dual-Sync Code:</strong> Changes update the raw HTML on the left instantly, and vice versa.</li>
-        <li><strong>Save Locally:</strong> Press <code>Ctrl + S</code> to save changes straight to your local file.</li>
-      </ul>
-    </div>
-
-    <a href="#" class="cta-btn">Click &amp; Edit This Button Text</a>
-  </div>
-</body>
-</html>`;
+import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
+import { desktopLaunchFile } from './files/desktop.ts';
+import { showTour, hasSeenTour, isTourOpen } from './ui/tour.ts';
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -201,7 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
       ChevronUp,
       ChevronDown,
       Gamepad2,
-      LayoutTemplate
+      Menu,
+      SaveAll,
+      Columns2,
+      Monitor,
+      Tablet,
+      Smartphone,
+      WrapText,
+      Compass,
+      Keyboard,
+      FileSearch,
+      MessageCircle,
+      Info
     }
   });
 
@@ -251,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Theme Simulator Elements
   const btnThemeSim = document.getElementById('btn-theme-sim')!;
   const themeSimLabel = document.getElementById('theme-sim-label')!;
-  const btnBakeTheme = document.getElementById('btn-bake-theme')!;
 
   // Toast Helper
   const hudToast = document.getElementById('hud-toast')!;
@@ -269,6 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let coordinator: SyncCoordinator;
 
+  function escapeHtml(t: string): string {
+    return t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  }
+  function clearDraft() {
+    try { localStorage.removeItem('scrypad_draft'); } catch { /* ignore */ }
+  }
+
   // Blank Page screen (Dusk Wisp): shown over the preview while the page is empty
   const blankPage = document.getElementById('blank-page');
   function updateBlankPage(code: string) {
@@ -282,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Code Editor
   const codePane = new CodePane({
     container: codeMount,
-    initialValue: STARTER_HTML,
+    initialValue: '',
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
       checkDocumentIntegrity(code);
@@ -319,8 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Coordinator
   coordinator = new SyncCoordinator(codePane, previewPane, fileManager);
 
-  // Initial preview render
-  previewPane.render(STARTER_HTML);
+  // Start on the Blank Page (Wisp) instead of a sample page
+  previewPane.render('');
+  updateBlankPage('');
 
   // Smart Helper Action Bar & Inputs
   const smartHelperBanner = document.getElementById('smart-helper-banner')!;
@@ -352,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cssMatch) {
       const href = cssMatch[1];
       if (!fileManager.hasCss(href)) {
-        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-[var(--ink)] bg-[var(--void)] px-1.5 py-0.5 rounded border border-[var(--line)]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
         btnHelperActionCss.classList.remove('hidden');
         btnHelperActionCss.style.display = 'inline-flex';
         smartHelperBanner.classList.remove('hidden');
@@ -365,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unembeddedImages: UnembeddedImage[] = findUnembeddedImages(code);
     if (unembeddedImages.length > 0) {
       currentPendingTargetImgSrc = unembeddedImages[0].src;
-      smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
+      smartHelperMsg.innerHTML = `Local image detected: <code class="text-[var(--ink)] bg-[var(--void)] px-1.5 py-0.5 rounded border border-[var(--line)]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
       btnHelperActionImg.classList.remove('hidden');
       btnHelperActionImg.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
@@ -377,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unlinkedFonts: UnlinkedFont[] = detectUnlinkedFonts(code);
     if (unlinkedFonts.length > 0) {
       currentPendingFont = unlinkedFonts[0];
-      smartHelperMsg.innerHTML = `Google Font <strong class="text-white">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
+      smartHelperMsg.innerHTML = `Google Font <strong class="text-[var(--ink)]">${currentPendingFont.fontName}</strong> used in CSS without a linked Google stylesheet.`;
       btnHelperActionFont.classList.remove('hidden');
       btnHelperActionFont.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
@@ -602,12 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const TYPE_GROUPS = [
-    { id: 'html', label: 'HTML Documents', color: '#c56bff', badge: 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
-    { id: 'css', label: 'Stylesheets', color: '#f2d27a', badge: 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30', icon: `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
-    { id: 'js', label: 'Scripts', color: '#d896ff', badge: 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
-    { id: 'image', label: 'Images & Media', color: '#8fb6ff', badge: 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
-    { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[#ff7be5] bg-[#ff7be5]/10 border-[#ff7be5]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ff7be5] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
-    { id: 'other', label: 'Other Assets', color: '#a597c2', badge: 'text-[#a597c2] bg-[#a597c2]/10 border-[#a597c2]/30', icon: `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
+    { id: 'html', label: 'HTML Documents', color: '#c56bff', badge: 'text-[var(--forge)] bg-[color-mix(in_srgb,var(--forge)_10%,transparent)] border-[color-mix(in_srgb,var(--forge)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--forge)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
+    { id: 'css', label: 'Stylesheets', color: '#f2d27a', badge: 'text-[var(--gold)] bg-[color-mix(in_srgb,var(--gold)_10%,transparent)] border-[color-mix(in_srgb,var(--gold)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--gold)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
+    { id: 'js', label: 'Scripts', color: '#d896ff', badge: 'text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--forge-hi)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
+    { id: 'image', label: 'Images & Media', color: '#8fb6ff', badge: 'text-[var(--blue)] bg-[color-mix(in_srgb,var(--blue)_10%,transparent)] border-[color-mix(in_srgb,var(--blue)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--blue)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
+    { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[var(--pink)] bg-[color-mix(in_srgb,var(--pink)_10%,transparent)] border-[color-mix(in_srgb,var(--pink)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--pink)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
+    { id: 'other', label: 'Other Assets', color: '#a597c2', badge: 'text-[var(--dim)] bg-[color-mix(in_srgb,var(--dim)_10%,transparent)] border-[color-mix(in_srgb,var(--dim)_30%,transparent)]', icon: `<svg class="w-3.5 h-3.5 text-[var(--dim)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
   ];
 
   function renderTreeHtml(nodes: TreeNode[], depth: number, activePath: string | null): string {
@@ -618,21 +524,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(node.path);
         const count = countFilesInTree(node);
         const caretSvg = isCollapsed
-          ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-          : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+          ? `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+          : `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
         const folderSvg = isCollapsed
-          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[var(--gold)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
 
         out += `
           <div class="tree-folder-group">
-            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
+            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition text-[var(--dim)] hover:text-[var(--ink)]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
               <span class="flex items-center gap-1.5 truncate">
                 <span class="shrink-0">${caretSvg}</span>
                 <span class="shrink-0">${folderSvg}</span>
-                <span class="font-bold text-xs truncate text-[#d9e2f2]">${node.name}</span>
+                <span class="font-bold text-xs truncate text-[var(--moonsilver)]">${node.name}</span>
               </span>
-              <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${count}</span>
+              <span class="text-[9px] text-[var(--faint)] bg-[var(--panel)] px-1 rounded ml-1 border border-[var(--line)] shrink-0">${count}</span>
             </button>
             <div class="tree-folder-children ${isCollapsed ? 'hidden' : ''}">
               ${renderTreeHtml(node.children, depth + 1, activePath)}
@@ -642,23 +548,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const f = node.fileEntry;
         const isAct = (activePath && (activePath === f.path || activePath === f.name));
-        const badgeColor = f.kind === 'html' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-          : f.kind === 'css' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
-          : f.kind === 'js' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
-          : 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30';
+        const badgeColor = f.kind === 'html' ? 'text-[var(--forge)] bg-[color-mix(in_srgb,var(--forge)_10%,transparent)] border-[color-mix(in_srgb,var(--forge)_30%,transparent)]'
+          : f.kind === 'css' ? 'text-[var(--gold)] bg-[color-mix(in_srgb,var(--gold)_10%,transparent)] border-[color-mix(in_srgb,var(--gold)_30%,transparent)]'
+          : f.kind === 'js' ? 'text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)]'
+          : 'text-[var(--blue)] bg-[color-mix(in_srgb,var(--blue)_10%,transparent)] border-[color-mix(in_srgb,var(--blue)_30%,transparent)]';
 
         const fileIcon = f.kind === 'html'
-          ? `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--forge)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
           : f.kind === 'css'
-          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--gold)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
           : f.kind === 'js'
-          ? `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[var(--forge-hi)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
           : f.kind === 'image'
-          ? `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[var(--blue)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[var(--dim)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
 
         out += `
-          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
+          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition ${isAct ? 'bg-[var(--panel-hi)] border border-[color-mix(in_srgb,var(--forge)_60%,transparent)] text-[var(--ink)] font-bold' : 'text-[var(--dim)]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
             <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
               ${fileIcon}
               <span class="truncate text-xs">${node.name}</span>
@@ -685,28 +591,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupKey = `group_${group.id}`;
       const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(groupKey);
       const caretSvg = isCollapsed
-        ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-        : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+        ? `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+        : `<svg class="w-3 h-3 text-[var(--faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
 
       out += `
         <div class="type-folder-group">
-          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-group-key="${groupKey}">
+          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition text-[var(--dim)] hover:text-[var(--ink)]" data-group-key="${groupKey}">
             <span class="flex items-center gap-1.5 truncate">
               <span class="shrink-0">${caretSvg}</span>
               <span class="shrink-0">${group.icon}</span>
-              <span class="font-bold text-xs truncate text-[#d9e2f2]">${group.label}</span>
+              <span class="font-bold text-xs truncate text-[var(--moonsilver)]">${group.label}</span>
             </span>
-            <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${groupFiles.length}</span>
+            <span class="text-[9px] text-[var(--faint)] bg-[var(--panel)] px-1 rounded ml-1 border border-[var(--line)] shrink-0">${groupFiles.length}</span>
           </button>
           <div class="type-group-children ${isCollapsed ? 'hidden' : ''} space-y-0.5">
             ${groupFiles.map((f: any) => {
               const isAct = (activePath && (activePath === f.path || activePath === f.name));
               const dirPart = f.path.includes('/') ? f.path.substring(0, f.path.lastIndexOf('/')) : '';
               return `
-                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" title="${f.path}">
+                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[var(--panel-hi)] transition ${isAct ? 'bg-[var(--panel-hi)] border border-[color-mix(in_srgb,var(--forge)_60%,transparent)] text-[var(--ink)] font-bold' : 'text-[var(--dim)]'}" data-path="${f.path}" title="${f.path}">
                   <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
                     <span class="truncate text-xs">${f.name}</span>
-                    ${dirPart ? `<span class="text-[10px] text-[#675c7d] truncate">(${dirPart})</span>` : ''}
+                    ${dirPart ? `<span class="text-[10px] text-[var(--faint)] truncate">(${dirPart})</span>` : ''}
                   </span>
                   <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1 shrink-0 ${group.badge}">${f.kind}</span>
                 </button>
@@ -723,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!project) return;
     const allFiles = project.getFilesList();
     if (allFiles.length === 0) {
-      projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No supported files found.</div>`;
+      projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No supported files found.</div>`;
       if (projectFileCount) projectFileCount.textContent = '0 files';
       return;
     }
@@ -743,14 +649,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (projectTreeMode === 'tree') {
       const filteredTree = filterTree(tree, projectSearchQuery);
       if (filteredTree.length === 0) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = renderTreeHtml(filteredTree, 0, activePath);
       }
     } else {
       const groupedHtml = renderGroupedHtml(allFiles, activePath);
       if (!groupedHtml) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[var(--dim)] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = groupedHtml;
       }
@@ -827,18 +733,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnViewTree?.addEventListener('click', () => {
     projectTreeMode = 'tree';
-    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
-    btnViewType?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
-    btnViewType?.classList.add('text-[#a597c2]');
+    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[var(--panel-mid)] text-[var(--forge)]';
+    btnViewType?.classList.remove('bg-[var(--panel-mid)]', 'text-[var(--forge)]', 'font-bold');
+    btnViewType?.classList.add('text-[var(--dim)]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
 
   btnViewType?.addEventListener('click', () => {
     projectTreeMode = 'type';
-    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
-    btnViewTree?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
-    btnViewTree?.classList.add('text-[#a597c2]');
+    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[var(--panel-mid)] text-[var(--forge)]';
+    btnViewTree?.classList.remove('bg-[var(--panel-mid)]', 'text-[var(--forge)]', 'font-bold');
+    btnViewTree?.classList.add('text-[var(--dim)]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
@@ -894,17 +800,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Save File Button
-  document.getElementById('btn-save')?.addEventListener('click', async () => {
-    const success = await fileManager.saveFile(codePane.getValue());
+  const saveAction = async (saveAs = false) => {
+    const success = await fileManager.saveFile(codePane.getValue(), saveAs);
     if (success) {
       const saveLabel = document.getElementById('save-label');
       if (saveLabel) {
         saveLabel.textContent = 'Saved!';
-        setTimeout(() => { saveLabel.textContent = 'Save HTML'; }, 1500);
+        setTimeout(() => { saveLabel.textContent = 'Save'; }, 1500);
       }
-      showToast('✦ File saved to disk');
+      showToast('✦ Saved');
+      clearDraft();
     }
-  });
+  };
+  document.getElementById('btn-save')?.addEventListener('click', () => { saveAction(false); });
 
   // Open File (File menu, Ctrl+O and the Blank Page screen all use this)
   const openFileAction = async () => {
@@ -915,17 +823,16 @@ document.addEventListener('DOMContentLoaded', () => {
       previewPane.render(resolved);
       coordinator.updateStats();
       checkDocumentIntegrity(content);
-      showToast('✦ File loaded into ScryPad');
+      showToast(`✦ Opened ${fileManager.getFilename()}`);
     }
   };
   document.getElementById('btn-open')?.addEventListener('click', openFileAction);
 
   // New File: a truly blank page. The Blank Page screen (with Wisp) shows while it's empty
-  const newFileAction = () => {
+  const newFileAction = async () => {
     if (fileManager.isDirty()) {
-      if (!confirm('You have unsaved changes. Start a new page anyway?')) {
-        return;
-      }
+      const ok = await confirmDialog('Start a New Page?', '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>', 'Start New Page', 'Keep Editing');
+      if (!ok) return;
     }
     fileManager.setUntitled();
     codePane.setValue('');
@@ -947,28 +854,36 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBlankPage(starter);
     if (phoneQuery.matches) setViewMode('code');
   });
-  document.getElementById('blank-tour')?.addEventListener('click', () => {
-    codePane.setValue(STARTER_HTML);
-    previewPane.render(STARTER_HTML);
-    coordinator.updateStats();
-    checkDocumentIntegrity(STARTER_HTML);
-    updateBlankPage(STARTER_HTML);
-  });
+  document.getElementById('blank-tour')?.addEventListener('click', () => { showTour(); });
 
   // Keyboard shortcut Ctrl+S / Cmd+S
+  // Keyboard shortcuts (the Help menu lists them)
+  const isDesktopApp = !!(window as any).__TAURI__ || !!(window as any).__TAURI_INTERNALS__;
+  if (isDesktopApp) document.querySelectorAll('.kbd-new').forEach((k) => { k.textContent = 'Ctrl+N'; });
   window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    if (isDialogOpen() || isTourOpen()) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    const k = e.key.toLowerCase();
+    const inCode = !!(document.activeElement && (document.activeElement as HTMLElement).closest?.('#code-mount'));
+    if (k === 's' && e.shiftKey) { e.preventDefault(); saveAction(true); }
+    else if (k === 's') { e.preventDefault(); saveAction(false); }
+    else if (k === 'o' && !e.shiftKey) { e.preventDefault(); openFileAction(); }
+    else if (k === 'n' && (e.altKey || isDesktopApp)) { e.preventDefault(); newFileAction(); }
+    else if (k === 'f' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); tidyCode(); }
+    else if ((k === 'b' || k === 'i') && !inCode && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      document.getElementById('btn-save')?.click();
+      document.getElementById(k === 'b' ? 'btn-bold' : 'btn-italic')?.click();
     }
-  });
+  }, true);
 
   // Visual Edit Toggle
   toggleVisualEdit.addEventListener('change', () => {
     const active = toggleVisualEdit.checked;
     previewPane.setVisualEditMode(active);
-    previewModeTag.textContent = active ? 'Direct Tweak Active' : 'Read-only Preview';
-    previewModeTag.className = active ? 'text-[#c56bff]' : 'text-[#a597c2]';
+    previewModeTag.textContent = active ? 'Click to Edit On' : 'Click to Edit Off';
+    document.getElementById('tweak-zone')?.classList.toggle('is-off', !active);
+    previewModeTag.className = active ? 'text-[var(--forge)]' : 'text-[var(--dim)]';
   });
 
   // Quick Format Bar
@@ -984,24 +899,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Clean Code / Beautify
-  document.getElementById('btn-beautify')?.addEventListener('click', () => {
+  const tidyCode = () => {
     codePane.formatHtml();
     previewPane.render(codePane.getValue());
     coordinator.updateStats();
-    showToast('✦ HTML formatted and aligned');
-  });
+    showToast('✦ Code tidied');
+  };
 
   // Feature: Copy Clean Body
   document.getElementById('btn-copy-body')?.addEventListener('click', async () => {
     const rawHtml = codePane.getValue();
     const cleanBody = extractCleanBody(rawHtml);
-    try {
-      await navigator.clipboard.writeText(cleanBody);
-      showToast('✦ Body HTML copied to clipboard (ready for CMS/React)!');
-    } catch {
-      // Fallback prompt
-      window.prompt('Copy clean body HTML:', cleanBody);
-    }
+    closeAllMenus();
+    await copyOrShow(cleanBody, 'Clean Body', () => showToast('✦ Copied the clean <body> HTML'));
   });
 
   // Feature: Theme Simulator (Auto -> Dark -> Light -> Auto)
@@ -1013,21 +923,10 @@ document.addEventListener('DOMContentLoaded', () => {
     else next = 'auto';
 
     previewPane.setThemeSimulation(next);
-    themeSimLabel.textContent = `Theme: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
-    if (next === 'auto') {
-      btnBakeTheme.classList.add('hidden');
-    } else {
-      btnBakeTheme.classList.remove('hidden');
-    }
+    themeSimLabel.textContent = next.charAt(0).toUpperCase() + next.slice(1);
+    showToast(next === 'auto' ? '✦ Preview follows your system theme' : `✦ Previewing your page in ${next} mode`);
   });
 
-  btnBakeTheme.addEventListener('click', () => {
-    previewPane.bakeThemeSimulation();
-    previewPane.setThemeSimulation('auto');
-    themeSimLabel.textContent = 'Theme: Auto';
-    btnBakeTheme.classList.add('hidden');
-    showToast('✦ Theme class baked into HTML source');
-  });
 
   // Feature: Visual Style Drawer (CSS Quick-Sliders)
   btnToggleStyles.addEventListener('click', () => {
@@ -1285,12 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       snippet += `padding: 10px 22px;\nbackground: #c56bff;\ncolor: #0f0b16;\nfont-weight: 700;\ncursor: pointer;\n`;
     }
-    try {
-      await navigator.clipboard.writeText(snippet);
-      showToast('✦ Copied shape CSS (clip-path & border-radius) to clipboard!');
-    } catch {
-      window.prompt('Copy Button CSS:', snippet);
-    }
+    await copyOrShow(snippet, 'Shape CSS', () => showToast('✦ Copied the shape CSS'));
   });
 
   // Feature: Global Palette Swatches & Replace Modal
@@ -1314,16 +1208,16 @@ document.addEventListener('DOMContentLoaded', () => {
     paletteSummaryCount.textContent = `${swatches.length} unique colors detected`;
 
     if (swatches.length === 0) {
-      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#a597c2]">No colors detected in document styles.</div>`;
+      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[var(--dim)]">No colors detected in document styles.</div>`;
       return;
     }
 
     paletteSwatches.innerHTML = swatches.map((s) => `
-      <button class="swatch-card p-2 bg-[#211a2c] hover:bg-[#2c2140] border ${activeTargetColor === s.color ? 'border-[#d896ff]' : 'border-[#36294a]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
+      <button class="swatch-card p-2 bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border ${activeTargetColor === s.color ? 'border-[var(--forge-hi)]' : 'border-[var(--line)]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
         <span class="w-6 h-6 rounded shadow border border-white/20 shrink-0" style="background-color: ${s.color};"></span>
         <div class="flex-1 min-w-0">
-          <div class="text-[11px] font-['Fira_Code'] text-white font-bold truncate">${s.color}</div>
-          <div class="text-[10px] text-[#a597c2]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
+          <div class="text-[11px] font-['Fira_Code'] text-[var(--ink)] font-bold truncate">${s.color}</div>
+          <div class="text-[10px] text-[var(--dim)]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
         </div>
       </button>
     `).join('');
@@ -1387,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnReplaceColorAll.addEventListener('click', () => {
     if (!activeTargetColor) {
-      alert('Please click a color swatch first to select it.');
+      showToast('✦ Pick a color swatch first');
       return;
     }
     const newColor = replaceNewColorText.value.trim();
@@ -1409,12 +1303,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewportBtns = document.querySelectorAll('.viewport-btn');
   viewportBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      viewportBtns.forEach((b) => {
-        b.className = 'viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]';
-      });
-      btn.className = 'viewport-btn px-2 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]';
       const width = btn.getAttribute('data-width') || '100%';
+      viewportBtns.forEach((b) => b.classList.toggle('is-on', b === btn));
+      document.querySelectorAll('.menu-vp').forEach((m) => m.classList.toggle('is-on', m.getAttribute('data-width') === width));
       previewPane.setViewportWidth(width);
+    });
+  });
+
+  document.querySelectorAll('.menu-vp').forEach((m) => {
+    m.addEventListener('click', () => {
+      closeAllMenus();
+      const w = m.getAttribute('data-width');
+      (document.querySelector(`.viewport-btn[data-width="${w}"]`) as HTMLElement | null)?.click();
     });
   });
 
@@ -1486,12 +1386,9 @@ document.addEventListener('DOMContentLoaded', () => {
       tab.setAttribute('aria-selected', String(m === mode));
     });
     Object.entries(modeButtons).forEach(([m, btn]) => {
-      if (m === mode) {
-        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
-      } else {
-        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]";
-      }
+      btn.classList.toggle('is-on', m === mode);
     });
+    ['split', 'code', 'preview'].forEach((m) => document.getElementById(`menu-view-${m}`)?.classList.toggle('is-on', m === mode));
 
     if (mode === 'split') {
       codePaneContainer.style.display = 'flex';
@@ -1533,16 +1430,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render library list
   libraryList.innerHTML = CDN_LIBRARIES.map((lib) => `
-    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[#c56bff] transition">
+    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[var(--forge)] transition">
       <div class="flex-1">
         <div class="flex items-center gap-2">
-          <span class="font-['Chakra_Petch'] font-bold text-white text-sm tracking-wide">${lib.name}</span>
-          <span class="text-[10px] font-['Fira_Code'] uppercase px-1.5 py-0.2 bg-[#211a2c] text-[#c56bff] border border-[#36294a] rounded">${lib.badge}</span>
+          <span class="font-['Chakra_Petch'] font-bold text-[var(--ink)] text-sm tracking-wide">${lib.name}</span>
+          <span class="text-[10px] font-['Fira_Code'] uppercase px-1.5 py-0.2 bg-[var(--panel-hi)] text-[var(--forge)] border border-[var(--line)] rounded">${lib.badge}</span>
         </div>
-        <p class="text-xs text-[#a597c2] mt-0.5">${lib.description}</p>
+        <p class="text-xs text-[var(--dim)] mt-0.5">${lib.description}</p>
       </div>
       <button class="btn-hud btn-hud-ghost btn-inject text-xs whitespace-nowrap" data-lib-id="${lib.id}">
-        <span>+ Inject</span>
+        <span>+ Add</span>
       </button>
     </div>
   `).join('');
@@ -1560,16 +1457,16 @@ document.addEventListener('DOMContentLoaded', () => {
         previewPane.render(updatedCode);
         coordinator.updateStats();
 
-        target.innerHTML = '<span>✦ Injected!</span>';
+        target.innerHTML = '<span>✦ Added!</span>';
         target.classList.remove('btn-hud-ghost');
         target.classList.add('btn-hud-primary');
         setTimeout(() => {
-          target.innerHTML = '<span>+ Inject</span>';
+          target.innerHTML = '<span>+ Add</span>';
           target.classList.remove('btn-hud-primary');
           target.classList.add('btn-hud-ghost');
         }, 1500);
 
-        showToast(`✦ Injected library: ${lib.name}`);
+        showToast(`✦ Added ${lib.name}`);
       }
     });
   });
@@ -1591,10 +1488,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuGroups = document.querySelectorAll('.menu-group');
   let activeOpenMenu: HTMLElement | null = null;
 
+  const appHeader = document.getElementById('app-header');
+  const btnPhoneMenu = document.getElementById('btn-phone-menu');
   function closeAllMenus() {
     document.querySelectorAll('.menu-dropdown').forEach((d) => d.classList.add('hidden'));
+    document.querySelectorAll('.menu-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
     activeOpenMenu = null;
+    appHeader?.classList.remove('menus-open');
+    btnPhoneMenu?.setAttribute('aria-expanded', 'false');
   }
+  btnPhoneMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const opening = !appHeader?.classList.contains('menus-open');
+    closeAllMenus();
+    if (opening) {
+      appHeader?.classList.add('menus-open');
+      btnPhoneMenu.setAttribute('aria-expanded', 'true');
+    }
+  });
+  // Any menu item closes the menus (the item's own handler still runs)
+  document.querySelectorAll('.menu-item').forEach((item) => {
+    item.addEventListener('click', () => setTimeout(closeAllMenus, 0));
+  });
+  document.getElementById('menubar')?.addEventListener('click', (e) => {
+    // keep clicks inside an open phone menu from closing it before the item runs
+    if (appHeader?.classList.contains('menus-open')) e.stopPropagation();
+  });
+  // Keyboard: arrow keys move through an open menu, Escape closes it
+  document.addEventListener('keydown', (e) => {
+    const openDrop = document.querySelector('.menu-dropdown:not(.hidden)') as HTMLElement | null;
+    if (!openDrop || window.matchMedia('(max-width: 767px)').matches) return;
+    const items = Array.from(openDrop.querySelectorAll<HTMLElement>('.menu-item'));
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Escape') {
+      const btn = openDrop.parentElement?.querySelector('.menu-btn') as HTMLElement | null;
+      closeAllMenus();
+      btn?.focus();
+    }
+  });
 
   menuGroups.forEach((group) => {
     const btn = group.querySelector('.menu-btn') as HTMLElement;
@@ -1607,6 +1540,7 @@ document.addEventListener('DOMContentLoaded', () => {
       closeAllMenus();
       if (isHidden) {
         dropdown.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
         activeOpenMenu = group as HTMLElement;
       }
     });
@@ -1615,6 +1549,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (activeOpenMenu && activeOpenMenu !== group) {
         closeAllMenus();
         dropdown.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
         activeOpenMenu = group as HTMLElement;
       }
     });
@@ -1633,13 +1568,13 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllMenus();
     openFileAction();
   });
-  document.getElementById('menu-file-folder')?.addEventListener('click', () => {
-    closeAllMenus();
-    btnOpenFolder?.click();
-  });
   document.getElementById('menu-file-save')?.addEventListener('click', () => {
     closeAllMenus();
     document.getElementById('btn-save')?.click();
+  });
+  document.getElementById('menu-file-save-as')?.addEventListener('click', () => {
+    closeAllMenus();
+    saveAction(true);
   });
 
   // Edit Menu
@@ -1659,71 +1594,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('menu-edit-clean')?.addEventListener('click', () => {
     closeAllMenus();
-    document.getElementById('btn-beautify')?.click();
+    tidyCode();
   });
 
-  // Insert Menu
-  document.getElementById('menu-insert-btn-slant')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); background: #c56bff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Cyber Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Slanted Cyber Button snippet');
-  });
-  document.getElementById('menu-insert-btn-notch')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); background: #d896ff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Notched Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Notched Button snippet');
-  });
-  document.getElementById('menu-insert-btn-pill')?.addEventListener('click', () => {
-    closeAllMenus();
-    const snippet = `<button style="border-radius: 9999px; background: #f2d27a; color: #0f0b16; font-weight: 700; padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;">Pill Button</button>`;
-    codePane.insertSnippet(snippet);
-    showToast('✦ Inserted Pill Button snippet');
-  });
   document.getElementById('menu-insert-tag-guide')?.addEventListener('click', () => {
     closeAllMenus();
     openTagGuide('');
   });
 
-  // Tools Menu
-  document.getElementById('menu-tools-palette')?.addEventListener('click', () => {
-    closeAllMenus();
-    renderPalette();
-    modalPalette.classList.remove('hidden');
-  });
-  document.getElementById('menu-tools-godot')?.addEventListener('click', () => {
-    closeAllMenus();
-    btnGodotBbcode?.click();
-  });
-  document.getElementById('menu-tools-copy-body')?.addEventListener('click', () => {
-    closeAllMenus();
-    document.getElementById('btn-copy-body')?.click();
-  });
   document.getElementById('menu-tools-libraries')?.addEventListener('click', () => {
     closeAllMenus();
     modalLibrary.classList.remove('hidden');
-  });
-
-  // Presets Menu (Direct Template Loading)
-  document.querySelectorAll('.btn-preset-direct').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      closeAllMenus();
-      const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
-      const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
-      if (tpl) {
-        if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
-          return;
-        }
-        codePane.setValue(tpl.html);
-        previewPane.render(tpl.html);
-        coordinator.updateStats();
-        fileManager.setFilename(`${tpl.id}.html`);
-        fileManager.markDirty(false);
-        checkDocumentIntegrity(tpl.html);
-        showToast(`✦ Loaded ${tpl.name} template!`);
-      }
-    });
   });
 
   // View Menu
@@ -1777,13 +1658,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const { total, current } = codePane.setSearch(query, replaceStr, isCaseSensitive);
     if (!query) {
       findCount.textContent = '0/0';
-      findCount.className = 'text-[11px] text-[#a597c2] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--dim)] px-1 shrink-0 min-w-[36px] text-right';
     } else if (total === 0) {
       findCount.textContent = '0';
-      findCount.className = 'text-[11px] text-[#f2d27a] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--gold)] px-1 shrink-0 min-w-[36px] text-right';
     } else {
       findCount.textContent = `${current > 0 ? current : 1}/${total}`;
-      findCount.className = 'text-[11px] text-[#d896ff] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[var(--forge-hi)] px-1 shrink-0 min-w-[36px] text-right';
     }
   }
 
@@ -1839,8 +1720,8 @@ document.addEventListener('DOMContentLoaded', () => {
   btnFindCase.addEventListener('click', () => {
     isCaseSensitive = !isCaseSensitive;
     btnFindCase.className = isCaseSensitive 
-      ? "px-2 py-1 bg-[#211a2c] border border-[#c56bff] text-[#c56bff] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(197,107,255,0.3)] transition"
-      : "px-2 py-1 bg-[#211a2c] border border-[#36294a] rounded text-[11px] font-bold text-[#a597c2] hover:text-[#efe8fb] transition";
+      ? "px-2 py-1 bg-[var(--panel-hi)] border border-[var(--forge)] text-[var(--forge)] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(197,107,255,0.3)] transition"
+      : "px-2 py-1 bg-[var(--panel-hi)] border border-[var(--line)] rounded text-[11px] font-bold text-[var(--dim)] hover:text-[var(--ink)] transition";
     updateSearchMatches();
   });
 
@@ -1892,47 +1773,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Button Shape Switcher ---
-  const btnShapeOpts = document.querySelectorAll('.btn-shape-opt');
-  function applyButtonShape(shape: string) {
-    document.documentElement.setAttribute('data-btn-shape', shape);
-    localStorage.setItem('scrypad_btn_shape', shape);
-    btnShapeOpts.forEach((btn) => {
-      const s = btn.getAttribute('data-shape');
-      if (s === shape) {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
-      } else {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded text-[#a597c2] hover:text-white";
-      }
-    });
-  }
-  const savedShape = localStorage.getItem('scrypad_btn_shape') || 'slanted';
-  applyButtonShape(savedShape);
-
-  btnShapeOpts.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const shape = btn.getAttribute('data-shape') || 'slanted';
-      applyButtonShape(shape);
-      showToast(`✦ Button shape changed to ${shape.toUpperCase()}`);
-    });
-  });
-
   // --- Educational Tag Guides & Grimoire of Tags ---
   const btnToggleGuides = document.getElementById('btn-toggle-guides')!;
   const labelGuides = document.getElementById('label-guides')!;
   const inspectorTagHint = document.getElementById('inspector-tag-hint')!;
   const hintTagName = document.getElementById('hint-tag-name')!;
   const hintTagDesc = document.getElementById('hint-tag-desc')!;
+  const hintTagTitle = document.getElementById('hint-tag-title')!;
+  const hintTagMore = document.getElementById('hint-tag-more')!;
+  const hintTagDetail = document.getElementById('hint-tag-detail')!;
+  const hintTagLong = document.getElementById('hint-tag-long')!;
+  const hintTagAttrs = document.getElementById('hint-tag-attrs')!;
+  let tagBarOpen = false;
+  try { tagBarOpen = localStorage.getItem('scrypad_tagbar') === 'open'; } catch { /* ignore */ }
+  const setTagBarOpen = (open: boolean) => {
+    tagBarOpen = open;
+    hintTagDetail.classList.toggle('hidden', !open);
+    hintTagMore.setAttribute('aria-expanded', String(open));
+    hintTagMore.classList.toggle('is-on', open);
+    const label = hintTagMore.querySelector('span');
+    if (label) label.textContent = open ? 'Less' : 'More';
+    try { localStorage.setItem('scrypad_tagbar', open ? 'open' : 'closed'); } catch { /* ignore */ }
+  };
+  setTagBarOpen(tagBarOpen);
+  hintTagMore.addEventListener('click', () => setTagBarOpen(!tagBarOpen));
 
   let guidesEnabled = localStorage.getItem('scrypad_guides') !== 'off';
 
   function updateGuidesState() {
     if (guidesEnabled) {
-      labelGuides.textContent = 'Guides: ON';
-      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#d896ff]/50 text-[#d896ff] rounded text-xs flex items-center gap-1.5 transition";
+      labelGuides.textContent = 'On';
+      btnToggleGuides.classList.add('is-on');
     } else {
-      labelGuides.textContent = 'Guides: OFF';
-      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#36294a] text-[#a597c2] rounded text-xs flex items-center gap-1.5 transition";
+      labelGuides.textContent = 'Off';
+      btnToggleGuides.classList.remove('is-on');
       inspectorTagHint.classList.add('hidden');
       inspectorTagHint.style.display = 'none';
     }
@@ -1941,9 +1815,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateGuidesState();
 
   btnToggleGuides.addEventListener('click', () => {
+    closeAllMenus();
     guidesEnabled = !guidesEnabled;
     updateGuidesState();
-    showToast(`✦ Beginner Guides ${guidesEnabled ? 'enabled' : 'disabled'}`);
+    showToast(guidesEnabled ? '✦ Learning Tips on' : '✦ Learning Tips off');
   });
 
   // Define updateTagHint for active preview element
@@ -1956,9 +1831,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagInfo = findTagInfo(tagName);
     if (tagInfo) {
       hintTagName.textContent = `<${tagInfo.tag}>`;
-      hintTagDesc.textContent = tagInfo.purpose || tagInfo.name;
+      hintTagTitle.textContent = tagInfo.name;
+      hintTagDesc.textContent = tagInfo.purpose || '';
+      hintTagLong.textContent = tagInfo.description || '';
+      hintTagAttrs.innerHTML = '';
+      if (tagInfo.commonAttributes?.length) {
+        const lbl = document.createElement('span');
+        lbl.className = 'tag-bar-attrs-label';
+        lbl.textContent = 'Common Attributes';
+        hintTagAttrs.appendChild(lbl);
+        tagInfo.commonAttributes.forEach((a) => {
+          const c = document.createElement('code');
+          c.textContent = a;
+          hintTagAttrs.appendChild(c);
+        });
+      }
       inspectorTagHint.classList.remove('hidden');
-      inspectorTagHint.style.display = 'flex';
+      inspectorTagHint.style.display = 'block';
     } else {
       inspectorTagHint.classList.add('hidden');
       inspectorTagHint.style.display = 'none';
@@ -1993,29 +1882,29 @@ document.addEventListener('DOMContentLoaded', () => {
     tagGuideCount.textContent = `Showing ${filtered.length} of ${HTML_TAG_DICTIONARY.length} tags`;
 
     if (filtered.length === 0) {
-      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#a597c2]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
+      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[var(--dim)]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
       return;
     }
 
     tagCardsContainer.innerHTML = filtered.map((t: TagInfo) => `
-      <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex flex-col gap-2">
+      <div class="hud-frame p-3.5 rounded-md border border-[var(--line)] bg-[var(--panel)] hover:border-[var(--forge)] transition flex flex-col gap-2">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <code class="text-sm font-bold text-[#c56bff] bg-[#211a2c] px-2 py-0.5 rounded border border-[#36294a]">&lt;${t.tag}&gt;</code>
-            <span class="text-xs font-semibold text-white">${t.name}</span>
-            <span class="text-[10px] text-[#d896ff] bg-[#d896ff]/10 border border-[#d896ff]/30 px-1.5 py-0.2 rounded">${t.purpose}</span>
+            <code class="text-sm font-bold text-[var(--forge)] bg-[var(--panel-hi)] px-2 py-0.5 rounded border border-[var(--line)]">&lt;${t.tag}&gt;</code>
+            <span class="text-xs font-semibold text-[var(--ink)]">${t.name}</span>
+            <span class="text-[10px] text-[var(--forge-hi)] bg-[color-mix(in_srgb,var(--forge-hi)_10%,transparent)] border border-[color-mix(in_srgb,var(--forge-hi)_30%,transparent)] px-1.5 py-0.2 rounded">${t.purpose}</span>
           </div>
           <button class="btn-hud btn-hud-primary btn-insert-tag text-xs py-0.5 px-2.5" data-tag="${t.tag}">
             <span>+ Insert</span>
           </button>
         </div>
-        <p class="text-xs text-[#a597c2] leading-relaxed">${t.description}</p>
-        <div class="flex items-center justify-between pt-1 border-t border-[#36294a]/60 text-[11px]">
-          <div class="flex items-center gap-1.5 text-[#a597c2] truncate">
-            <span class="text-[10px] uppercase text-[#a597c2]/70">Attributes:</span>
-            ${t.commonAttributes.map(a => `<code class="text-[#8fb6ff] bg-[#0f0b16] px-1 py-0.2 rounded border border-[#36294a]">${a}</code>`).join(' ')}
+        <p class="text-xs text-[var(--dim)] leading-relaxed">${t.description}</p>
+        <div class="flex items-center justify-between pt-1 border-t border-[color-mix(in_srgb,var(--line)_60%,transparent)] text-[11px]">
+          <div class="flex items-center gap-1.5 text-[var(--dim)] truncate">
+            <span class="text-[10px] uppercase text-[color-mix(in_srgb,var(--dim)_70%,transparent)]">Attributes:</span>
+            ${t.commonAttributes.map(a => `<code class="text-[var(--blue)] bg-[var(--void)] px-1 py-0.2 rounded border border-[var(--line)]">${a}</code>`).join(' ')}
           </div>
-          <span class="text-[10px] text-[#c56bff]/70 uppercase tracking-wider shrink-0">${t.category}</span>
+          <span class="text-[10px] text-[color-mix(in_srgb,var(--forge)_70%,transparent)] uppercase tracking-wider shrink-0">${t.category}</span>
         </div>
       </div>
     `).join('');
@@ -2064,15 +1953,15 @@ document.addEventListener('DOMContentLoaded', () => {
   tagCategoryPills.forEach(pill => {
     pill.addEventListener('click', () => {
       tagCategoryPills.forEach(p => {
-        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[#a597c2] hover:bg-[#211a2c]";
+        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[var(--dim)] hover:bg-[var(--panel-hi)]";
       });
-      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
+      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[var(--panel-hi)] text-[var(--forge)] border border-[var(--line-hot)]";
       currentTagCategory = pill.getAttribute('data-category') || 'All';
       renderTagGuideCards(tagGuideSearch.value);
     });
   });
 
-  inspectorTagHint.addEventListener('click', () => {
+  document.getElementById('hint-tag-guide')!.addEventListener('click', () => {
     const currentTag = hintTagName.textContent?.replace(/[<>]/g, '') || '';
     openTagGuide(currentTag);
   });
@@ -2083,81 +1972,200 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGodotBbcode.addEventListener('click', async () => {
       const currentHtml = codePane.getValue();
       const bbcode = htmlToGodotBBCode(currentHtml);
-      try {
-        await navigator.clipboard.writeText(bbcode);
-        showToast('✦ Copied Godot RichTextLabel BBCode!');
-      } catch {
-        window.prompt('Copy Godot BBCode:', bbcode);
+      closeAllMenus();
+      await copyOrShow(bbcode, 'Godot BBCode', () => showToast('✦ Copied as Godot BBCode'));
+    });
+  }
+
+  // --- Desktop app: open the .html file ScryPad was launched with ---
+  desktopLaunchFile().then(async (f) => {
+    if (!f) return;
+    const content = fileManager.adoptDesktopFile(f);
+    codePane.setValue(content);
+    const resolved = await fileManager.resolvePreview(content);
+    previewPane.render(resolved);
+    coordinator.updateStats();
+    checkDocumentIntegrity(content);
+    updateBlankPage(content);
+    showToast(`✦ Opened ${f.name}`);
+  });
+
+  // --- Unsaved work: leave-page warning + a draft kept in this browser ---
+  const tauriWindow = (window as any).__TAURI__?.window?.getCurrentWindow?.();
+  if (tauriWindow) {
+    // Desktop app: ask before closing with unsaved changes
+    tauriWindow.onCloseRequested(async (event: { preventDefault: () => void }) => {
+      if (!fileManager.isDirty()) return;
+      event.preventDefault();
+      const choice = await showDialog({
+        title: 'Save Before You Go?',
+        bodyHtml: '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>',
+        actions: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'Don\'t Save', value: 'discard' },
+          { label: 'Save', value: 'save', primary: true },
+        ],
+      });
+      if (choice === 'cancel') return;
+      if (choice === 'save') {
+        const ok = await fileManager.saveFile(codePane.getValue());
+        if (!ok) return;
+      }
+      clearDraft();
+      await tauriWindow.destroy();
+    });
+  } else {
+    window.addEventListener('beforeunload', (e) => {
+      if (fileManager.isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
       }
     });
   }
 
-  // --- Web Starter Templates & Snippets Modal ---
-  const modalTemplates = document.getElementById('modal-templates');
-  const btnTemplatesToggle = document.getElementById('btn-templates-toggle');
-  const btnCloseTemplates = document.getElementById('btn-close-templates');
-  const btnTemplatesDone = document.getElementById('btn-templates-done');
-  const templatesList = document.getElementById('templates-list');
-
-  function renderTemplatesList() {
-    if (!templatesList) return;
-    templatesList.innerHTML = WEB_TEMPLATES.map((tpl: WebTemplate) => {
-      const badgeColor = tpl.category === 'Components' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-        : tpl.category === 'Cards' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
-        : tpl.category === 'Layouts' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
-        : tpl.category === 'Dashboards' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
-        : tpl.category === 'Forms' ? 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30'
-        : 'text-[#efe8fb] bg-[#211a2c] border-[#36294a]';
-
-      return `
-        <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex items-center justify-between gap-3">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-white text-sm">${tpl.name}</span>
-              <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${badgeColor}">${tpl.badge}</span>
-            </div>
-            <p class="text-xs text-[#a597c2] m-0 leading-relaxed">${tpl.description}</p>
-          </div>
-          <button class="btn-hud btn-hud-primary btn-load-template text-xs py-1 px-3 whitespace-nowrap" data-tpl-id="${tpl.id}">
-            <span>Load Preset</span>
-          </button>
-        </div>
-      `;
-    }).join('');
-
-    templatesList.querySelectorAll('.btn-load-template').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = (e.currentTarget as HTMLElement).getAttribute('data-tpl-id');
-        const tpl = WEB_TEMPLATES.find((t: WebTemplate) => t.id === id);
-        if (tpl) {
-          if (fileManager.isDirty() && !confirm('Replace current editor contents with preset?')) {
-            return;
-          }
-          codePane.setValue(tpl.html);
-          previewPane.render(tpl.html);
-          coordinator.updateStats();
-          fileManager.setFilename(`${tpl.id}.html`);
-          fileManager.markDirty(false);
-          checkDocumentIntegrity(tpl.html);
-          modalTemplates?.classList.add('hidden');
-          showToast(`✦ Loaded ${tpl.name} template!`);
-        }
-      });
-    });
+  const DRAFT_KEY = 'scrypad_draft';
+  let draftTimer: ReturnType<typeof setTimeout> | null = null;
+  codeMount.addEventListener('keyup', () => queueDraft());
+  fileManager.subscribe(() => queueDraft());
+  function queueDraft() {
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => {
+      if (!fileManager.isDirty()) return;
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ name: fileManager.getFilename(), code: codePane.getValue(), at: Date.now() }));
+      } catch { /* storage full or blocked: nothing to do */ }
+    }, 800);
   }
+  (async () => {
+    let draft: { name: string; code: string; at: number } | null = null;
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { draft = null; }
+    if (!draft || !draft.code) return;
+    const when = new Date(draft.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    const ok = await confirmDialog('Pick Up Where You Left Off?', `<p>ScryPad kept an unsaved draft of <b>${escapeHtml(draft.name)}</b> from ${escapeHtml(when)}.</p>`, 'Restore Draft', 'Discard');
+    if (ok) {
+      codePane.setValue(draft.code);
+      previewPane.render(draft.code);
+      coordinator.updateStats();
+      checkDocumentIntegrity(draft.code);
+      updateBlankPage(draft.code);
+      fileManager.setFilename(draft.name);
+      fileManager.markDirty(true);
+      showToast('✦ Draft restored. Save it to keep it');
+    } else {
+      clearDraft();
+    }
+  })();
 
-  if (btnTemplatesToggle && modalTemplates) {
-    btnTemplatesToggle.addEventListener('click', () => {
-      renderTemplatesList();
-      modalTemplates.classList.remove('hidden');
+  // --- Drop a file onto ScryPad to open it ---
+  window.addEventListener('dragover', (e) => {
+    if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+  });
+  window.addEventListener('drop', async (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    e.preventDefault();
+    if (!/\.(html?|svg|txt|md|css|js)$/i.test(file.name)) {
+      await showDialog({ title: 'ScryPad Can\'t Read This Yet', bodyHtml: '<p>ScryPad opens web pages (.html) and text-based files. See Help › What ScryPad Can Read.</p>' });
+      return;
+    }
+    if (fileManager.isDirty() && !(await confirmDialog('Open This File?', '<p>Your current changes aren\'t saved yet.</p>', 'Open File', 'Keep Editing'))) return;
+    const text = await file.text();
+    fileManager.setUntitled();
+    fileManager.setFilename(file.name);
+    codePane.setValue(text);
+    previewPane.render(text);
+    coordinator.updateStats();
+    checkDocumentIntegrity(text);
+    updateBlankPage(text);
+    fileManager.markDirty(false);
+    showToast(`✦ Opened ${file.name}. Use Save As to save it`);
+  });
+
+  // --- Phone: Tweak tab shows the tweak tools ---
+  const phoneTabTweak = document.getElementById('phone-tab-tweak');
+  phoneTabTweak?.addEventListener('click', () => {
+    const open = !document.body.classList.contains('tweak-open');
+    document.body.classList.toggle('tweak-open', open);
+    phoneTabTweak.classList.toggle('is-active', open);
+    phoneTabTweak.setAttribute('aria-pressed', String(open));
+    if (open) setViewMode('preview');
+  });
+
+  // --- View › Word Wrap ---
+  const labelWrap = document.getElementById('label-wrap');
+  const applyWrap = (on: boolean) => {
+    codePane.setWordWrap(on);
+    if (labelWrap) labelWrap.textContent = on ? 'On' : 'Off';
+    document.getElementById('menu-view-wrap')?.classList.toggle('is-on', on);
+    try { localStorage.setItem('scrypad_wrap', on ? 'on' : 'off'); } catch { /* ignore */ }
+  };
+  let wrapPref = false;
+  try { wrapPref = localStorage.getItem('scrypad_wrap') === 'on'; } catch { /* ignore */ }
+  applyWrap(wrapPref);
+  document.getElementById('menu-view-wrap')?.addEventListener('click', () => applyWrap(!codePane.isWordWrap()));
+
+  // App Theme: ScryPad itself in Dark or Light (the toolbar's Light/Dark only previews your page)
+  const applyAppTheme = (theme: 'dark' | 'light') => {
+    if (theme === 'light') document.documentElement.setAttribute('data-app-theme', 'light');
+    else document.documentElement.removeAttribute('data-app-theme');
+    const label = document.getElementById('label-app-theme');
+    if (label) label.textContent = theme === 'light' ? 'Light' : 'Dark';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f1f9' : '#0f0b16');
+    try { localStorage.setItem('scrypad_app_theme', theme); } catch { /* ignore */ }
+  };
+  applyAppTheme(document.documentElement.getAttribute('data-app-theme') === 'light' ? 'light' : 'dark');
+  document.getElementById('menu-view-app-theme')?.addEventListener('click', () => {
+    closeAllMenus();
+    applyAppTheme(document.documentElement.getAttribute('data-app-theme') === 'light' ? 'dark' : 'light');
+  });
+
+  // --- Help menu ---
+  document.getElementById('menu-help-tour')?.addEventListener('click', () => { closeAllMenus(); showTour(); });
+  document.getElementById('menu-help-keys')?.addEventListener('click', () => {
+    const nk = isDesktopApp ? 'Ctrl+N' : 'Ctrl+Alt+N';
+    const rows: [string, string][] = [
+      ['New Page', nk], ['Open File', 'Ctrl+O'], ['Save', 'Ctrl+S'], ['Save As', 'Ctrl+Shift+S'],
+      ['Undo', 'Ctrl+Z'], ['Redo', 'Ctrl+Y'], ['Find', 'Ctrl+F'], ['Find &amp; Replace', 'Ctrl+H'],
+      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'],
+      ['Indent', 'Tab'], ['Close a window or menu', 'Esc'],
+    ];
+    showDialog({
+      title: 'Keyboard Shortcuts',
+      bodyHtml: '<table><thead><tr><th>Action</th><th>Keys</th></tr></thead><tbody>' + rows.map(([a, k]) => `<tr><td>${a}</td><td><kbd>${k}</kbd></td></tr>`).join('') + '</tbody></table>' + (isDesktopApp ? '' : '<p style="margin-top:10px">In a browser, Ctrl+N opens a new window, so New Page uses Ctrl+Alt+N.</p>'),
     });
-    btnCloseTemplates?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
-    btnTemplatesDone?.addEventListener('click', () => modalTemplates.classList.add('hidden'));
-    modalTemplates.addEventListener('click', (e) => {
-      if (e.target === modalTemplates) modalTemplates.classList.add('hidden');
+  });
+  document.getElementById('menu-help-read')?.addEventListener('click', () => {
+    showDialog({
+      title: 'What ScryPad Can Read',
+      wide: true,
+      bodyHtml: '<p>ScryPad is made for web pages. Open a whole .html file with its styles, or use Open Folder so its images and stylesheets load too.</p>'
+        + '<table><thead><tr><th>File</th><th>Colored Code</th><th>Live Preview</th><th>Click to Edit</th></tr></thead><tbody>'
+        + '<tr><td>HTML (.html)</td><td>Yes</td><td>The page itself</td><td>Text and color</td></tr>'
+        + '<tr><td>CSS, JavaScript</td><td>Inside your page</td><td>Through the page that uses them</td><td>No</td></tr>'
+        + '<tr><td>Images in a folder</td><td>No</td><td>Shown in your page</td><td>No</td></tr>'
+        + '</tbody></table>'
+        + '<p style="margin-top:10px">Markdown (.md), diagrams (.mmd) and SVG with their own previews are on the way.</p>',
     });
-  }
+  });
+  document.getElementById('menu-help-about')?.addEventListener('click', () => {
+    showDialog({
+      title: 'About ScryPad',
+      wide: true,
+      bodyHtml: '<img src="/icon.svg" alt="" class="sp-wisp">'
+        + '<p><b>A straightforward live viewer of your code, for building and learning.</b> Notepad for HTML, with the page right next to it.</p>'
+        + '<p>When I started learning, I\'d edit the code, hope it was right, upload it by FTP, refresh, see it was wrong, and repeat. ScryPad turns that loop into "type and see it".</p>'
+        + '<p><b>Scry Your Own Code.</b> Use ScryPad on your own pages and pages you have the rights to, and respect other people\'s work.</p>'
+        + '<p>Made by Graves Ghostly at <a href="https://lab.interstatus.app" target="_blank" rel="noopener" style="color:var(--forge-hi)">Interstatus Lab</a>. Open source under the MIT License.</p>',
+    });
+  });
 
   // Run initial integrity check
-  checkDocumentIntegrity(STARTER_HTML);
+  checkDocumentIntegrity('');
+
+  // First visit: show the tour (not when ScryPad opened a file or has a draft to restore)
+  let hasDraft = false;
+  try { hasDraft = !!localStorage.getItem('scrypad_draft'); } catch { /* ignore */ }
+  if (!hasSeenTour() && !hasDraft) {
+    setTimeout(() => { if (!isDialogOpen() && !codePane.getValue().trim()) showTour(); }, 600);
+  }
 });

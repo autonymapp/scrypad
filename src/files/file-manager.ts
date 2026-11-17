@@ -1,4 +1,5 @@
 import { ProjectFolder } from './project-folder.ts';
+import { isDesktop, desktopOpen, desktopWrite, desktopSaveAs, DesktopFile } from './desktop.ts';
 
 export interface FileState {
   handle: FileSystemFileHandle | null;
@@ -6,6 +7,8 @@ export interface FileState {
   isDirty: boolean;
   projectPath: string | null;
   projectName: string | null;
+  /** Full path on disk (desktop app only). */
+  diskPath?: string | null;
 }
 
 export class FileManager {
@@ -246,6 +249,16 @@ export class FileManager {
    * Open single file using File System Access API or fallback
    */
   public async openFile(): Promise<string | null> {
+    if (isDesktop()) {
+      try {
+        const f = await desktopOpen();
+        if (!f) return null;
+        return this.adoptDesktopFile(f);
+      } catch (err) {
+        console.error('Desktop open failed:', err);
+        return null;
+      }
+    }
     if ('showOpenFilePicker' in window) {
       try {
         const [handle] = await (window as any).showOpenFilePicker({
@@ -304,6 +317,20 @@ export class FileManager {
   /**
    * Save file using project handle, existing handle or prompt Save As
    */
+  /** Use a file the desktop app read from disk (Open dialog or double-click). */
+  public adoptDesktopFile(f: DesktopFile): string {
+    this.state = {
+      handle: null,
+      name: f.name,
+      isDirty: false,
+      projectPath: null,
+      projectName: this.currentProject ? this.currentProject.name : null,
+      diskPath: f.path
+    };
+    this.notify();
+    return f.content;
+  }
+
   public async saveFile(content: string, forceSaveAs: boolean = false): Promise<boolean> {
     // Keep in-memory buffer up to date
     if (this.state.projectPath) {
@@ -319,6 +346,24 @@ export class FileManager {
       if (ok) {
         this.markDirty(false);
         return true;
+      }
+    }
+
+    if (isDesktop()) {
+      try {
+        if (this.state.diskPath && !forceSaveAs) {
+          await desktopWrite(this.state.diskPath, content);
+          this.markDirty(false);
+          return true;
+        }
+        const saved = await desktopSaveAs(this.state.name || 'index.html', content);
+        if (!saved) return false;
+        this.state = { ...this.state, handle: null, name: saved.name, isDirty: false, diskPath: saved.path };
+        this.notify();
+        return true;
+      } catch (err) {
+        console.error('Desktop save failed:', err);
+        return false;
       }
     }
 
