@@ -52,19 +52,19 @@ const STARTER_HTML = `<!DOCTYPE html>
   <title>ScryPad ✦ Live HTML Editor</title>
   <style>
     :root {
-      --void: #070a10;
-      --panel: #0c1320;
-      --line: #203453;
-      --ink: #e8eef8;
-      --dim: #8d9bb6;
-      --bio-green: #5cff9d;
-      --hud-teal: #48e0d2;
+      --void: #0f0b16;
+      --panel: #18121f;
+      --line: #36294a;
+      --ink: #efe8fb;
+      --dim: #a597c2;
+      --forge-hi: #d896ff;
+      --forge: #c56bff;
     }
     body {
       margin: 0;
       padding: 44px 20px;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at 50% 20%, #122036 0%, #070a10 70%);
+      background: radial-gradient(circle at 50% 20%, #211a2c 0%, #0f0b16 70%);
       color: var(--ink);
       min-height: 100vh;
       display: flex;
@@ -75,11 +75,11 @@ const STARTER_HTML = `<!DOCTYPE html>
     .hud-card {
       max-width: 540px;
       width: 100%;
-      background: linear-gradient(180deg, rgba(18, 32, 54, 0.85) 0%, rgba(12, 19, 32, 0.95) 100%);
+      background: linear-gradient(180deg, rgba(33, 26, 44, 0.85) 0%, rgba(24, 18, 31, 0.95) 100%);
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 34px 30px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 20px rgba(72, 224, 210, 0.1);
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 20px rgba(197, 107, 255, 0.1);
       text-align: center;
       position: relative;
     }
@@ -91,9 +91,9 @@ const STARTER_HTML = `<!DOCTYPE html>
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      background: rgba(92, 255, 157, 0.12);
-      color: var(--bio-green);
-      border: 1px solid rgba(92, 255, 157, 0.35);
+      background: rgba(216, 150, 255, 0.12);
+      color: var(--forge-hi);
+      border: 1px solid rgba(216, 150, 255, 0.35);
       padding: 4px 12px;
       border-radius: 20px;
       margin-bottom: 18px;
@@ -112,7 +112,7 @@ const STARTER_HTML = `<!DOCTYPE html>
     }
     .features-list {
       text-align: left;
-      background: rgba(7, 10, 16, 0.6);
+      background: rgba(15, 11, 22, 0.6);
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 16px 20px;
@@ -128,23 +128,23 @@ const STARTER_HTML = `<!DOCTYPE html>
       margin-bottom: 0;
     }
     .features-list strong {
-      color: var(--hud-teal);
+      color: var(--forge);
     }
     .cta-btn {
       display: inline-block;
-      background: linear-gradient(135deg, var(--bio-green), var(--hud-teal));
-      color: #070a10;
+      background: linear-gradient(135deg, var(--forge-hi), var(--forge));
+      color: #0f0b16;
       font-weight: 700;
       font-size: 0.95rem;
       padding: 12px 30px;
       border-radius: 6px;
       text-decoration: none;
       transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 0 16px rgba(92, 255, 157, 0.3);
+      box-shadow: 0 0 16px rgba(216, 150, 255, 0.3);
     }
     .cta-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 24px rgba(92, 255, 157, 0.5);
+      box-shadow: 0 0 24px rgba(216, 150, 255, 0.5);
     }
   </style>
 </head>
@@ -269,6 +269,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let coordinator: SyncCoordinator;
 
+  // Blank Page screen (Dusk Wisp): shown over the preview while the page is empty
+  const blankPage = document.getElementById('blank-page');
+  function updateBlankPage(code: string) {
+    if (!blankPage) return;
+    blankPage.classList.toggle('hidden', code.trim().length > 0);
+  }
+
+  // Phones get Code / Preview tabs instead of a side-by-side split
+  const phoneQuery = window.matchMedia('(max-width: 767px)');
+
   // Initialize Code Editor
   const codePane = new CodePane({
     container: codeMount,
@@ -276,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onDocChange: (code) => {
       if (coordinator) coordinator.handleCodeChange(code);
       checkDocumentIntegrity(code);
+      updateBlankPage(code);
     }
   });
 
@@ -341,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cssMatch) {
       const href = cssMatch[1];
       if (!fileManager.hasCss(href)) {
-        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
+        smartHelperMsg.innerHTML = `Unlinked stylesheet: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${href}</code>. In a web sandbox, relative files cannot load unless embedded.`;
         btnHelperActionCss.classList.remove('hidden');
         btnHelperActionCss.style.display = 'inline-flex';
         smartHelperBanner.classList.remove('hidden');
@@ -354,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const unembeddedImages: UnembeddedImage[] = findUnembeddedImages(code);
     if (unembeddedImages.length > 0) {
       currentPendingTargetImgSrc = unembeddedImages[0].src;
-      smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#070a10] px-1.5 py-0.5 rounded border border-[#203453]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
+      smartHelperMsg.innerHTML = `Local image detected: <code class="text-white bg-[#0f0b16] px-1.5 py-0.5 rounded border border-[#36294a]">${currentPendingTargetImgSrc}</code>. Convert it to a Base64 data URI to display it anywhere!`;
       btnHelperActionImg.classList.remove('hidden');
       btnHelperActionImg.style.display = 'inline-flex';
       smartHelperBanner.classList.remove('hidden');
@@ -591,12 +602,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const TYPE_GROUPS = [
-    { id: 'html', label: 'HTML Documents', color: '#48e0d2', badge: 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30', icon: `<svg class="w-3.5 h-3.5 text-[#48e0d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
-    { id: 'css', label: 'Stylesheets', color: '#ffbf4d', badge: 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ffbf4d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
-    { id: 'js', label: 'Scripts', color: '#5cff9d', badge: 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30', icon: `<svg class="w-3.5 h-3.5 text-[#5cff9d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
-    { id: 'image', label: 'Images & Media', color: '#a98bff', badge: 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#a98bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
+    { id: 'html', label: 'HTML Documents', color: '#c56bff', badge: 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>` },
+    { id: 'css', label: 'Stylesheets', color: '#f2d27a', badge: 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30', icon: `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>` },
+    { id: 'js', label: 'Scripts', color: '#d896ff', badge: 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>` },
+    { id: 'image', label: 'Images & Media', color: '#8fb6ff', badge: 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30', icon: `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>` },
     { id: 'font', label: 'Web Fonts', color: '#ff7be5', badge: 'text-[#ff7be5] bg-[#ff7be5]/10 border-[#ff7be5]/30', icon: `<svg class="w-3.5 h-3.5 text-[#ff7be5] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>` },
-    { id: 'other', label: 'Other Assets', color: '#8d9bb6', badge: 'text-[#8d9bb6] bg-[#8d9bb6]/10 border-[#8d9bb6]/30', icon: `<svg class="w-3.5 h-3.5 text-[#8d9bb6] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
+    { id: 'other', label: 'Other Assets', color: '#a597c2', badge: 'text-[#a597c2] bg-[#a597c2]/10 border-[#a597c2]/30', icon: `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>` }
   ];
 
   function renderTreeHtml(nodes: TreeNode[], depth: number, activePath: string | null): string {
@@ -607,21 +618,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(node.path);
         const count = countFilesInTree(node);
         const caretSvg = isCollapsed
-          ? `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-          : `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+          ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+          : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
         const folderSvg = isCollapsed
-          ? `<svg class="w-3.5 h-3.5 text-[#ffbf4d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#ffbf4d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[#f2d27a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><circle cx="12" cy="13" r="2"/></svg>`;
 
         out += `
           <div class="tree-folder-group">
-            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition text-[#8d9bb6] hover:text-[#e8eef8]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
+            <button class="tree-folder-toggle w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-folder-path="${node.path}" style="padding-left: ${indent + 4}px">
               <span class="flex items-center gap-1.5 truncate">
                 <span class="shrink-0">${caretSvg}</span>
                 <span class="shrink-0">${folderSvg}</span>
-                <span class="font-bold text-xs truncate text-[#cbd5e1]">${node.name}</span>
+                <span class="font-bold text-xs truncate text-[#d9e2f2]">${node.name}</span>
               </span>
-              <span class="text-[9px] text-[#556987] bg-[#0c1320] px-1 rounded ml-1 border border-[#203453] shrink-0">${count}</span>
+              <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${count}</span>
             </button>
             <div class="tree-folder-children ${isCollapsed ? 'hidden' : ''}">
               ${renderTreeHtml(node.children, depth + 1, activePath)}
@@ -631,23 +642,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const f = node.fileEntry;
         const isAct = (activePath && (activePath === f.path || activePath === f.name));
-        const badgeColor = f.kind === 'html' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
-          : f.kind === 'css' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
-          : f.kind === 'js' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
-          : 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30';
+        const badgeColor = f.kind === 'html' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
+          : f.kind === 'css' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
+          : f.kind === 'js' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
+          : 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30';
 
         const fileIcon = f.kind === 'html'
-          ? `<svg class="w-3.5 h-3.5 text-[#48e0d2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[#c56bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`
           : f.kind === 'css'
-          ? `<svg class="w-3.5 h-3.5 text-[#ffbf4d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[#f2d27a] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`
           : f.kind === 'js'
-          ? `<svg class="w-3.5 h-3.5 text-[#5cff9d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-[#d896ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10 13-2 2 2 2"/><path d="m14 17 2-2-2-2"/><path d="M14 3v4a2 2 0 0 0 2 2h4"/><path d="M4 17V4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/></svg>`
           : f.kind === 'image'
-          ? `<svg class="w-3.5 h-3.5 text-[#a98bff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
-          : `<svg class="w-3.5 h-3.5 text-[#8d9bb6] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
+          ? `<svg class="w-3.5 h-3.5 text-[#8fb6ff] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`
+          : `<svg class="w-3.5 h-3.5 text-[#a597c2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 2 2h4"/></svg>`;
 
         out += `
-          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isAct ? 'bg-[#122036] border border-[#48e0d2]/60 text-white font-bold' : 'text-[#8d9bb6]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
+          <button class="project-file-item w-full px-1.5 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" style="padding-left: ${indent + 18}px" title="${f.path}">
             <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
               ${fileIcon}
               <span class="truncate text-xs">${node.name}</span>
@@ -674,28 +685,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const groupKey = `group_${group.id}`;
       const isCollapsed = projectSearchQuery ? false : collapsedFolders.has(groupKey);
       const caretSvg = isCollapsed
-        ? `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
-        : `<svg class="w-3 h-3 text-[#556987]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
+        ? `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`
+        : `<svg class="w-3 h-3 text-[#675c7d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
 
       out += `
         <div class="type-folder-group">
-          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#122036] transition text-[#8d9bb6] hover:text-[#e8eef8]" data-group-key="${groupKey}">
+          <button class="type-group-toggle w-full px-2 py-1.5 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition text-[#a597c2] hover:text-[#efe8fb]" data-group-key="${groupKey}">
             <span class="flex items-center gap-1.5 truncate">
               <span class="shrink-0">${caretSvg}</span>
               <span class="shrink-0">${group.icon}</span>
-              <span class="font-bold text-xs truncate text-[#cbd5e1]">${group.label}</span>
+              <span class="font-bold text-xs truncate text-[#d9e2f2]">${group.label}</span>
             </span>
-            <span class="text-[9px] text-[#556987] bg-[#0c1320] px-1 rounded ml-1 border border-[#203453] shrink-0">${groupFiles.length}</span>
+            <span class="text-[9px] text-[#675c7d] bg-[#18121f] px-1 rounded ml-1 border border-[#36294a] shrink-0">${groupFiles.length}</span>
           </button>
           <div class="type-group-children ${isCollapsed ? 'hidden' : ''} space-y-0.5">
             ${groupFiles.map((f: any) => {
               const isAct = (activePath && (activePath === f.path || activePath === f.name));
               const dirPart = f.path.includes('/') ? f.path.substring(0, f.path.lastIndexOf('/')) : '';
               return `
-                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[#122036] transition ${isAct ? 'bg-[#122036] border border-[#48e0d2]/60 text-white font-bold' : 'text-[#8d9bb6]'}" data-path="${f.path}" title="${f.path}">
+                <button class="project-file-item w-full pl-6 pr-2 py-1 rounded flex items-center justify-between text-left hover:bg-[#211a2c] transition ${isAct ? 'bg-[#211a2c] border border-[#c56bff]/60 text-white font-bold' : 'text-[#a597c2]'}" data-path="${f.path}" title="${f.path}">
                   <span class="flex items-center gap-1.5 truncate flex-1 min-w-0">
                     <span class="truncate text-xs">${f.name}</span>
-                    ${dirPart ? `<span class="text-[10px] text-[#556987] truncate">(${dirPart})</span>` : ''}
+                    ${dirPart ? `<span class="text-[10px] text-[#675c7d] truncate">(${dirPart})</span>` : ''}
                   </span>
                   <span class="text-[9px] uppercase px-1 py-0.2 border rounded ml-1 shrink-0 ${group.badge}">${f.kind}</span>
                 </button>
@@ -712,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!project) return;
     const allFiles = project.getFilesList();
     if (allFiles.length === 0) {
-      projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No supported files found.</div>`;
+      projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No supported files found.</div>`;
       if (projectFileCount) projectFileCount.textContent = '0 files';
       return;
     }
@@ -732,14 +743,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (projectTreeMode === 'tree') {
       const filteredTree = filterTree(tree, projectSearchQuery);
       if (filteredTree.length === 0) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = renderTreeHtml(filteredTree, 0, activePath);
       }
     } else {
       const groupedHtml = renderGroupedHtml(allFiles, activePath);
       if (!groupedHtml) {
-        projectFileList.innerHTML = `<div class="p-3 text-center text-[#8d9bb6] text-xs">No files matching "${projectSearchQuery}".</div>`;
+        projectFileList.innerHTML = `<div class="p-3 text-center text-[#a597c2] text-xs">No files matching "${projectSearchQuery}".</div>`;
       } else {
         projectFileList.innerHTML = groupedHtml;
       }
@@ -816,18 +827,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnViewTree?.addEventListener('click', () => {
     projectTreeMode = 'tree';
-    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[#162742] text-[#48e0d2]';
-    btnViewType?.classList.remove('bg-[#162742]', 'text-[#48e0d2]', 'font-bold');
-    btnViewType?.classList.add('text-[#8d9bb6]');
+    btnViewTree.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
+    btnViewType?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
+    btnViewType?.classList.add('text-[#a597c2]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
 
   btnViewType?.addEventListener('click', () => {
     projectTreeMode = 'type';
-    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[#162742] text-[#48e0d2]';
-    btnViewTree?.classList.remove('bg-[#162742]', 'text-[#48e0d2]', 'font-bold');
-    btnViewTree?.classList.add('text-[#8d9bb6]');
+    btnViewType.className = 'px-2 py-0.5 rounded font-bold transition bg-[#261d33] text-[#c56bff]';
+    btnViewTree?.classList.remove('bg-[#261d33]', 'text-[#c56bff]', 'font-bold');
+    btnViewTree?.classList.add('text-[#a597c2]');
     const curProj = fileManager.getProject();
     if (curProj) renderProjectFiles(curProj);
   });
@@ -895,8 +906,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Open File Button
-  document.getElementById('btn-open')?.addEventListener('click', async () => {
+  // Open File (File menu, Ctrl+O and the Blank Page screen all use this)
+  const openFileAction = async () => {
     const content = await fileManager.openFile();
     if (content !== null) {
       codePane.setValue(content);
@@ -906,20 +917,42 @@ document.addEventListener('DOMContentLoaded', () => {
       checkDocumentIntegrity(content);
       showToast('✦ File loaded into ScryPad');
     }
-  });
+  };
+  document.getElementById('btn-open')?.addEventListener('click', openFileAction);
 
-  // New File Button
-  document.getElementById('btn-new')?.addEventListener('click', () => {
+  // New File: a truly blank page. The Blank Page screen (with Wisp) shows while it's empty
+  const newFileAction = () => {
     if (fileManager.isDirty()) {
-      if (!confirm('You have unsaved changes. Create a new document?')) {
+      if (!confirm('You have unsaved changes. Start a new page anyway?')) {
         return;
       }
     }
     fileManager.setUntitled();
+    codePane.setValue('');
+    previewPane.render('');
+    coordinator.updateStats();
+    checkDocumentIntegrity('');
+    updateBlankPage('');
+  };
+  document.getElementById('btn-new')?.addEventListener('click', newFileAction);
+
+  // Blank Page screen buttons
+  document.getElementById('blank-open')?.addEventListener('click', () => { openFileAction(); });
+  document.getElementById('blank-start')?.addEventListener('click', () => {
+    const starter = '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Untitled</title>\n</head>\n<body>\n  \n</body>\n</html>\n';
+    codePane.setValue(starter);
+    previewPane.render(starter);
+    coordinator.updateStats();
+    checkDocumentIntegrity(starter);
+    updateBlankPage(starter);
+    if (phoneQuery.matches) setViewMode('code');
+  });
+  document.getElementById('blank-tour')?.addEventListener('click', () => {
     codePane.setValue(STARTER_HTML);
     previewPane.render(STARTER_HTML);
     coordinator.updateStats();
     checkDocumentIntegrity(STARTER_HTML);
+    updateBlankPage(STARTER_HTML);
   });
 
   // Keyboard shortcut Ctrl+S / Cmd+S
@@ -935,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const active = toggleVisualEdit.checked;
     previewPane.setVisualEditMode(active);
     previewModeTag.textContent = active ? 'Direct Tweak Active' : 'Read-only Preview';
-    previewModeTag.className = active ? 'text-[#48e0d2]' : 'text-[#8d9bb6]';
+    previewModeTag.className = active ? 'text-[#c56bff]' : 'text-[#a597c2]';
   });
 
   // Quick Format Bar
@@ -1250,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (el.style.color) snippet += `color: ${el.style.color};\n`;
       if (el.style.padding) snippet += `padding: ${el.style.padding};\n`;
     } else {
-      snippet += `padding: 10px 22px;\nbackground: #48e0d2;\ncolor: #070a10;\nfont-weight: 700;\ncursor: pointer;\n`;
+      snippet += `padding: 10px 22px;\nbackground: #c56bff;\ncolor: #0f0b16;\nfont-weight: 700;\ncursor: pointer;\n`;
     }
     try {
       await navigator.clipboard.writeText(snippet);
@@ -1281,16 +1314,16 @@ document.addEventListener('DOMContentLoaded', () => {
     paletteSummaryCount.textContent = `${swatches.length} unique colors detected`;
 
     if (swatches.length === 0) {
-      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#8d9bb6]">No colors detected in document styles.</div>`;
+      paletteSwatches.innerHTML = `<div class="col-span-full py-6 text-center text-xs text-[#a597c2]">No colors detected in document styles.</div>`;
       return;
     }
 
     paletteSwatches.innerHTML = swatches.map((s) => `
-      <button class="swatch-card p-2 bg-[#122036] hover:bg-[#1b2f4f] border ${activeTargetColor === s.color ? 'border-[#5cff9d]' : 'border-[#203453]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
+      <button class="swatch-card p-2 bg-[#211a2c] hover:bg-[#2c2140] border ${activeTargetColor === s.color ? 'border-[#d896ff]' : 'border-[#36294a]'} rounded flex items-center gap-2.5 transition text-left" data-color="${s.color}">
         <span class="w-6 h-6 rounded shadow border border-white/20 shrink-0" style="background-color: ${s.color};"></span>
         <div class="flex-1 min-w-0">
-          <div class="text-[11px] font-['IBM_Plex_Mono'] text-white font-bold truncate">${s.color}</div>
-          <div class="text-[10px] text-[#8d9bb6]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
+          <div class="text-[11px] font-['Fira_Code'] text-white font-bold truncate">${s.color}</div>
+          <div class="text-[10px] text-[#a597c2]">${s.count} ${s.count === 1 ? 'match' : 'matches'}</div>
         </div>
       </button>
     `).join('');
@@ -1377,9 +1410,9 @@ document.addEventListener('DOMContentLoaded', () => {
   viewportBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       viewportBtns.forEach((b) => {
-        b.className = 'viewport-btn px-2 py-0.5 rounded text-[#8d9bb6] hover:bg-[#122036] hover:text-[#e8eef8]';
+        b.className = 'viewport-btn px-2 py-0.5 rounded text-[#a597c2] hover:bg-[#211a2c] hover:text-[#efe8fb]';
       });
-      btn.className = 'viewport-btn px-2 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]';
+      btn.className = 'viewport-btn px-2 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]';
       const width = btn.getAttribute('data-width') || '100%';
       previewPane.setViewportWidth(width);
     });
@@ -1437,12 +1470,26 @@ document.addEventListener('DOMContentLoaded', () => {
     preview: document.getElementById('mode-preview')!
   };
 
+  let currentViewMode: 'split' | 'code' | 'preview' = 'split';
+  const phoneTabs = {
+    code: document.getElementById('phone-tab-code'),
+    preview: document.getElementById('phone-tab-preview')
+  };
+
   function setViewMode(mode: 'split' | 'code' | 'preview') {
+    // No room for a split on a phone: show the page itself
+    if (mode === 'split' && phoneQuery.matches) mode = 'preview';
+    currentViewMode = mode;
+    Object.entries(phoneTabs).forEach(([m, tab]) => {
+      if (!tab) return;
+      tab.classList.toggle('is-active', m === mode);
+      tab.setAttribute('aria-selected', String(m === mode));
+    });
     Object.entries(modeButtons).forEach(([m, btn]) => {
       if (m === mode) {
-        btn.className = "px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]";
+        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
       } else {
-        btn.className = "px-2.5 py-1 text-xs font-['Rajdhani'] font-bold uppercase tracking-wider rounded text-[#8d9bb6] hover:text-[#e8eef8]";
+        btn.className = "px-2.5 py-1 text-xs font-['Chakra_Petch'] font-bold uppercase tracking-wider rounded text-[#a597c2] hover:text-[#efe8fb]";
       }
     });
 
@@ -1468,6 +1515,14 @@ document.addEventListener('DOMContentLoaded', () => {
   modeButtons.split.addEventListener('click', () => setViewMode('split'));
   modeButtons.code.addEventListener('click', () => setViewMode('code'));
   modeButtons.preview.addEventListener('click', () => setViewMode('preview'));
+  phoneTabs.code?.addEventListener('click', () => setViewMode('code'));
+  phoneTabs.preview?.addEventListener('click', () => setViewMode('preview'));
+  const syncPhoneLayout = () => {
+    if (phoneQuery.matches && currentViewMode === 'split') setViewMode('preview');
+    else if (!phoneQuery.matches && currentViewMode !== 'split') setViewMode('split');
+  };
+  phoneQuery.addEventListener('change', syncPhoneLayout);
+  syncPhoneLayout();
 
   // CDN Library Injector Modal
   const modalLibrary = document.getElementById('modal-library')!;
@@ -1478,13 +1533,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render library list
   libraryList.innerHTML = CDN_LIBRARIES.map((lib) => `
-    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[#48e0d2] transition">
+    <div class="hud-frame p-3 rounded flex items-center justify-between gap-3 hover:border-[#c56bff] transition">
       <div class="flex-1">
         <div class="flex items-center gap-2">
-          <span class="font-['Rajdhani'] font-bold text-white text-sm tracking-wide">${lib.name}</span>
-          <span class="text-[10px] font-['IBM_Plex_Mono'] uppercase px-1.5 py-0.2 bg-[#122036] text-[#48e0d2] border border-[#203453] rounded">${lib.badge}</span>
+          <span class="font-['Chakra_Petch'] font-bold text-white text-sm tracking-wide">${lib.name}</span>
+          <span class="text-[10px] font-['Fira_Code'] uppercase px-1.5 py-0.2 bg-[#211a2c] text-[#c56bff] border border-[#36294a] rounded">${lib.badge}</span>
         </div>
-        <p class="text-xs text-[#8d9bb6] mt-0.5">${lib.description}</p>
+        <p class="text-xs text-[#a597c2] mt-0.5">${lib.description}</p>
       </div>
       <button class="btn-hud btn-hud-ghost btn-inject text-xs whitespace-nowrap" data-lib-id="${lib.id}">
         <span>+ Inject</span>
@@ -1572,11 +1627,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // File Menu
   document.getElementById('menu-file-new')?.addEventListener('click', () => {
     closeAllMenus();
-    document.getElementById('btn-new')?.click();
+    newFileAction();
   });
   document.getElementById('menu-file-open')?.addEventListener('click', () => {
     closeAllMenus();
-    document.getElementById('btn-open')?.click();
+    openFileAction();
   });
   document.getElementById('menu-file-folder')?.addEventListener('click', () => {
     closeAllMenus();
@@ -1610,19 +1665,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Insert Menu
   document.getElementById('menu-insert-btn-slant')?.addEventListener('click', () => {
     closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); background: #48e0d2; color: #070a10; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Cyber Button</button>`;
+    const snippet = `<button style="clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); background: #c56bff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Cyber Button</button>`;
     codePane.insertSnippet(snippet);
     showToast('✦ Inserted Slanted Cyber Button snippet');
   });
   document.getElementById('menu-insert-btn-notch')?.addEventListener('click', () => {
     closeAllMenus();
-    const snippet = `<button style="clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); background: #5cff9d; color: #070a10; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Notched Button</button>`;
+    const snippet = `<button style="clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); background: #d896ff; color: #0f0b16; font-weight: 700; padding: 10px 22px; border: none; cursor: pointer; font-family: inherit;">Notched Button</button>`;
     codePane.insertSnippet(snippet);
     showToast('✦ Inserted Notched Button snippet');
   });
   document.getElementById('menu-insert-btn-pill')?.addEventListener('click', () => {
     closeAllMenus();
-    const snippet = `<button style="border-radius: 9999px; background: #ffbf4d; color: #070a10; font-weight: 700; padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;">Pill Button</button>`;
+    const snippet = `<button style="border-radius: 9999px; background: #f2d27a; color: #0f0b16; font-weight: 700; padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;">Pill Button</button>`;
     codePane.insertSnippet(snippet);
     showToast('✦ Inserted Pill Button snippet');
   });
@@ -1722,13 +1777,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const { total, current } = codePane.setSearch(query, replaceStr, isCaseSensitive);
     if (!query) {
       findCount.textContent = '0/0';
-      findCount.className = 'text-[11px] text-[#8d9bb6] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[#a597c2] px-1 shrink-0 min-w-[36px] text-right';
     } else if (total === 0) {
       findCount.textContent = '0';
-      findCount.className = 'text-[11px] text-[#ffbf4d] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[#f2d27a] px-1 shrink-0 min-w-[36px] text-right';
     } else {
       findCount.textContent = `${current > 0 ? current : 1}/${total}`;
-      findCount.className = 'text-[11px] text-[#5cff9d] px-1 shrink-0 min-w-[36px] text-right';
+      findCount.className = 'text-[11px] text-[#d896ff] px-1 shrink-0 min-w-[36px] text-right';
     }
   }
 
@@ -1784,8 +1839,8 @@ document.addEventListener('DOMContentLoaded', () => {
   btnFindCase.addEventListener('click', () => {
     isCaseSensitive = !isCaseSensitive;
     btnFindCase.className = isCaseSensitive 
-      ? "px-2 py-1 bg-[#122036] border border-[#48e0d2] text-[#48e0d2] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(72,224,210,0.3)] transition"
-      : "px-2 py-1 bg-[#122036] border border-[#203453] rounded text-[11px] font-bold text-[#8d9bb6] hover:text-[#e8eef8] transition";
+      ? "px-2 py-1 bg-[#211a2c] border border-[#c56bff] text-[#c56bff] rounded text-[11px] font-bold shadow-[0_0_8px_rgba(197,107,255,0.3)] transition"
+      : "px-2 py-1 bg-[#211a2c] border border-[#36294a] rounded text-[11px] font-bold text-[#a597c2] hover:text-[#efe8fb] transition";
     updateSearchMatches();
   });
 
@@ -1845,9 +1900,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnShapeOpts.forEach((btn) => {
       const s = btn.getAttribute('data-shape');
       if (s === shape) {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]";
+        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
       } else {
-        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded text-[#8d9bb6] hover:text-white";
+        btn.className = "btn-shape-opt px-1.5 py-0.5 rounded text-[#a597c2] hover:text-white";
       }
     });
   }
@@ -1874,10 +1929,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateGuidesState() {
     if (guidesEnabled) {
       labelGuides.textContent = 'Guides: ON';
-      btnToggleGuides.className = "px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#5cff9d]/50 text-[#5cff9d] rounded text-xs flex items-center gap-1.5 transition";
+      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#d896ff]/50 text-[#d896ff] rounded text-xs flex items-center gap-1.5 transition";
     } else {
       labelGuides.textContent = 'Guides: OFF';
-      btnToggleGuides.className = "px-2 py-1 bg-[#122036] hover:bg-[#1b2f4f] border border-[#203453] text-[#8d9bb6] rounded text-xs flex items-center gap-1.5 transition";
+      btnToggleGuides.className = "px-2 py-1 bg-[#211a2c] hover:bg-[#2c2140] border border-[#36294a] text-[#a597c2] rounded text-xs flex items-center gap-1.5 transition";
       inspectorTagHint.classList.add('hidden');
       inspectorTagHint.style.display = 'none';
     }
@@ -1938,29 +1993,29 @@ document.addEventListener('DOMContentLoaded', () => {
     tagGuideCount.textContent = `Showing ${filtered.length} of ${HTML_TAG_DICTIONARY.length} tags`;
 
     if (filtered.length === 0) {
-      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#8d9bb6]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
+      tagCardsContainer.innerHTML = `<div class="p-6 text-center text-[#a597c2]">No tags matching "${filterText}". Try searching for button, input, select, form, or table.</div>`;
       return;
     }
 
     tagCardsContainer.innerHTML = filtered.map((t: TagInfo) => `
-      <div class="hud-frame p-3.5 rounded-md border border-[#203453] bg-[#0c1320] hover:border-[#48e0d2] transition flex flex-col gap-2">
+      <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex flex-col gap-2">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <code class="text-sm font-bold text-[#48e0d2] bg-[#122036] px-2 py-0.5 rounded border border-[#203453]">&lt;${t.tag}&gt;</code>
+            <code class="text-sm font-bold text-[#c56bff] bg-[#211a2c] px-2 py-0.5 rounded border border-[#36294a]">&lt;${t.tag}&gt;</code>
             <span class="text-xs font-semibold text-white">${t.name}</span>
-            <span class="text-[10px] text-[#5cff9d] bg-[#5cff9d]/10 border border-[#5cff9d]/30 px-1.5 py-0.2 rounded">${t.purpose}</span>
+            <span class="text-[10px] text-[#d896ff] bg-[#d896ff]/10 border border-[#d896ff]/30 px-1.5 py-0.2 rounded">${t.purpose}</span>
           </div>
           <button class="btn-hud btn-hud-primary btn-insert-tag text-xs py-0.5 px-2.5" data-tag="${t.tag}">
             <span>+ Insert</span>
           </button>
         </div>
-        <p class="text-xs text-[#8d9bb6] leading-relaxed">${t.description}</p>
-        <div class="flex items-center justify-between pt-1 border-t border-[#203453]/60 text-[11px]">
-          <div class="flex items-center gap-1.5 text-[#8d9bb6] truncate">
-            <span class="text-[10px] uppercase text-[#8d9bb6]/70">Attributes:</span>
-            ${t.commonAttributes.map(a => `<code class="text-[#a98bff] bg-[#070a10] px-1 py-0.2 rounded border border-[#203453]">${a}</code>`).join(' ')}
+        <p class="text-xs text-[#a597c2] leading-relaxed">${t.description}</p>
+        <div class="flex items-center justify-between pt-1 border-t border-[#36294a]/60 text-[11px]">
+          <div class="flex items-center gap-1.5 text-[#a597c2] truncate">
+            <span class="text-[10px] uppercase text-[#a597c2]/70">Attributes:</span>
+            ${t.commonAttributes.map(a => `<code class="text-[#8fb6ff] bg-[#0f0b16] px-1 py-0.2 rounded border border-[#36294a]">${a}</code>`).join(' ')}
           </div>
-          <span class="text-[10px] text-[#48e0d2]/70 uppercase tracking-wider shrink-0">${t.category}</span>
+          <span class="text-[10px] text-[#c56bff]/70 uppercase tracking-wider shrink-0">${t.category}</span>
         </div>
       </div>
     `).join('');
@@ -2009,9 +2064,9 @@ document.addEventListener('DOMContentLoaded', () => {
   tagCategoryPills.forEach(pill => {
     pill.addEventListener('click', () => {
       tagCategoryPills.forEach(p => {
-        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[#8d9bb6] hover:bg-[#122036]";
+        p.className = "tag-cat-pill px-2.5 py-1 rounded text-[#a597c2] hover:bg-[#211a2c]";
       });
-      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[#122036] text-[#48e0d2] border border-[#2e4d75]";
+      pill.className = "tag-cat-pill px-2.5 py-1 rounded bg-[#211a2c] text-[#c56bff] border border-[#4f3a6e]";
       currentTagCategory = pill.getAttribute('data-category') || 'All';
       renderTagGuideCards(tagGuideSearch.value);
     });
@@ -2047,21 +2102,21 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTemplatesList() {
     if (!templatesList) return;
     templatesList.innerHTML = WEB_TEMPLATES.map((tpl: WebTemplate) => {
-      const badgeColor = tpl.category === 'Components' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
-        : tpl.category === 'Cards' ? 'text-[#5cff9d] bg-[#5cff9d]/10 border-[#5cff9d]/30'
-        : tpl.category === 'Layouts' ? 'text-[#ffbf4d] bg-[#ffbf4d]/10 border-[#ffbf4d]/30'
-        : tpl.category === 'Dashboards' ? 'text-[#48e0d2] bg-[#48e0d2]/10 border-[#48e0d2]/30'
-        : tpl.category === 'Forms' ? 'text-[#a98bff] bg-[#a98bff]/10 border-[#a98bff]/30'
-        : 'text-[#e8eef8] bg-[#122036] border-[#203453]';
+      const badgeColor = tpl.category === 'Components' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
+        : tpl.category === 'Cards' ? 'text-[#d896ff] bg-[#d896ff]/10 border-[#d896ff]/30'
+        : tpl.category === 'Layouts' ? 'text-[#f2d27a] bg-[#f2d27a]/10 border-[#f2d27a]/30'
+        : tpl.category === 'Dashboards' ? 'text-[#c56bff] bg-[#c56bff]/10 border-[#c56bff]/30'
+        : tpl.category === 'Forms' ? 'text-[#8fb6ff] bg-[#8fb6ff]/10 border-[#8fb6ff]/30'
+        : 'text-[#efe8fb] bg-[#211a2c] border-[#36294a]';
 
       return `
-        <div class="hud-frame p-3.5 rounded-md border border-[#203453] bg-[#0c1320] hover:border-[#48e0d2] transition flex items-center justify-between gap-3">
+        <div class="hud-frame p-3.5 rounded-md border border-[#36294a] bg-[#18121f] hover:border-[#c56bff] transition flex items-center justify-between gap-3">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
               <span class="font-bold text-white text-sm">${tpl.name}</span>
               <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${badgeColor}">${tpl.badge}</span>
             </div>
-            <p class="text-xs text-[#8d9bb6] m-0 leading-relaxed">${tpl.description}</p>
+            <p class="text-xs text-[#a597c2] m-0 leading-relaxed">${tpl.description}</p>
           </div>
           <button class="btn-hud btn-hud-primary btn-load-template text-xs py-1 px-3 whitespace-nowrap" data-tpl-id="${tpl.id}">
             <span>Load Preset</span>

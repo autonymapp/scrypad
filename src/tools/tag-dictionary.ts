@@ -239,7 +239,7 @@ export const HTML_TAG_DICTIONARY: TagInfo[] = [
     category: 'Text',
     purpose: 'Inline container for styling specific words or text',
     description: 'A generic inline wrapper with no default appearance. Used to color, highlight, or font-style specific words within a paragraph.',
-    snippet: '<span style="color: #48e0d2; font-weight: bold;">Highlighted Text</span>',
+    snippet: '<span style="color: #c56bff; font-weight: bold;">Highlighted Text</span>',
     commonAttributes: ['class', 'id', 'style']
   },
   {
