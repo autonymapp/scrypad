@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "preview",
+  "description": "The Pop Out Preview window: it only listens for the page from the main window",
+  "windows": [
+    "preview"
+  ],
+  "permissions": [
+    "core:event:default"
+  ]
+}

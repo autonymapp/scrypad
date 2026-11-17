@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
+use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 
 /// A file ScryPad read from disk.
@@ -117,12 +118,38 @@ fn launch_file() -> Option<DiskFile> {
         .and_then(|p| read_disk_file(p).ok())
 }
 
+/// View > Pop Out Preview: opens (or brings back) a second window that shows the page.
+#[tauri::command]
+async fn open_preview_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("preview") {
+        let _ = w.unminimize();
+        return w.set_focus().map_err(|e| e.to_string());
+    }
+    tauri::WebviewWindowBuilder::new(&app, "preview", tauri::WebviewUrl::App("popout.html".into()))
+        .title("ScryPad Preview")
+        .inner_size(960.0, 720.0)
+        .min_inner_size(320.0, 240.0)
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file, read_path, save_bytes_as])
+        .invoke_handler(tauri::generate_handler![open_file, write_file, save_file_as, launch_file, read_path, save_bytes_as, open_preview_window])
+        .on_window_event(|window, event| {
+            // Closing ScryPad closes its Pop Out Preview too
+            if let tauri::WindowEvent::Destroyed = event {
+                if window.label() == "main" {
+                    if let Some(p) = window.app_handle().get_webview_window("preview") {
+                        let _ = p.destroy();
+                    }
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running ScryPad application");
 }

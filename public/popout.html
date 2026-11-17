@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ScryPad Preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; }
+  iframe { display: block; border: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<!-- Windows app only: the Pop Out Preview window. The main window sends the page here as you type. -->
+<iframe id="page" title="ScryPad Preview"></iframe>
+<script>
+  const frame = document.getElementById('page');
+  const empty = '<!DOCTYPE html><body style="font-family:sans-serif;color:#888;display:grid;place-items:center;height:90vh;margin:0">Your page will show up here.</body>';
+
+  function show(html) {
+    const win = frame.contentWindow;
+    const x = win.scrollX, y = win.scrollY;
+    const d = frame.contentDocument;
+    d.open();
+    d.write(html && html.trim() ? html : empty);
+    d.close();
+    document.title = d.title ? d.title + ' · ScryPad Preview' : 'ScryPad Preview';
+    win.scrollTo(x, y);
+  }
+
+  const events = window.__TAURI__ && window.__TAURI__.event;
+  if (events) {
+    events.listen('scrypad-preview', (e) => show(e.payload));
+    events.emit('scrypad-preview-ready');
+  } else {
+    show('');
+  }
+</script>
+</body>
+</html>
