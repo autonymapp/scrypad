@@ -61,6 +61,7 @@ import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionar
 import { htmlToGodotBBCode } from './tools/godot-exporter.ts';
 import { WEB_TEMPLATES, WebTemplate } from './templates/web-templates.ts';
 import { showDialog, confirmDialog, copyOrShow, isDialogOpen } from './ui/dialog.ts';
+import { desktopLaunchFile } from './files/desktop.ts';
 
 // Initial Starter HTML (ScryPad's Own Interactive Explainer)
 const STARTER_HTML = `<!DOCTYPE html>
@@ -2236,13 +2237,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Unsaved work: leave-page warning + a draft kept in this browser ---
-  window.addEventListener('beforeunload', (e) => {
-    if (fileManager.isDirty()) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
+  // --- Desktop app: open the .html file ScryPad was launched with ---
+  desktopLaunchFile().then(async (f) => {
+    if (!f) return;
+    const content = fileManager.adoptDesktopFile(f);
+    codePane.setValue(content);
+    const resolved = await fileManager.resolvePreview(content);
+    previewPane.render(resolved);
+    coordinator.updateStats();
+    checkDocumentIntegrity(content);
+    updateBlankPage(content);
+    showToast(`✦ Opened ${f.name}`);
   });
+
+  // --- Unsaved work: leave-page warning + a draft kept in this browser ---
+  const tauriWindow = (window as any).__TAURI__?.window?.getCurrentWindow?.();
+  if (tauriWindow) {
+    // Desktop app: ask before closing with unsaved changes
+    tauriWindow.onCloseRequested(async (event: { preventDefault: () => void }) => {
+      if (!fileManager.isDirty()) return;
+      event.preventDefault();
+      const choice = await showDialog({
+        title: 'Save Before You Go?',
+        bodyHtml: '<p>Your changes to <b>' + escapeHtml(fileManager.getFilename()) + '</b> aren\'t saved yet.</p>',
+        actions: [
+          { label: 'Cancel', value: 'cancel' },
+          { label: 'Don\'t Save', value: 'discard' },
+          { label: 'Save', value: 'save', primary: true },
+        ],
+      });
+      if (choice === 'cancel') return;
+      if (choice === 'save') {
+        const ok = await fileManager.saveFile(codePane.getValue());
+        if (!ok) return;
+      }
+      clearDraft();
+      await tauriWindow.destroy();
+    });
+  } else {
+    window.addEventListener('beforeunload', (e) => {
+      if (fileManager.isDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  }
 
   const DRAFT_KEY = 'scrypad_draft';
   let draftTimer: ReturnType<typeof setTimeout> | null = null;

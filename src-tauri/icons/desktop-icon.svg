@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- ScryPad desktop icon: the studio's desktop tile (cut corners top-right and bottom-left, like Wisp) with ScryPad's code eye. -->
+  <defs>
+    <!-- Background Tile Gradient -->
+    <linearGradient id="tileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#211a2c"/>
+      <stop offset="50%" stop-color="#18121f"/>
+      <stop offset="100%" stop-color="#0f0b16"/>
+    </linearGradient>
+
+    <!-- Lab Glow Gradients -->
+    <linearGradient id="scryEyeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c56bff"/>
+      <stop offset="50%" stop-color="#d896ff"/>
+      <stop offset="100%" stop-color="#c56bff"/>
+    </linearGradient>
+
+    <radialGradient id="pupilAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d896ff" stop-opacity="0.8"/>
+      <stop offset="40%" stop-color="#c56bff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#18121f" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Sci-Fantasy HUD Glow Filters -->
+    <filter id="hudGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <filter id="intenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="blur1"/>
+      <feGaussianBlur stdDeviation="5" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <path d="M 40 40 L 392 40 L 472 120 L 472 472 L 120 472 L 40 392 Z" fill="url(#tileGrad)" stroke="#c56bff" stroke-width="14" stroke-linejoin="round"/>
+  <g transform="translate(256 256) scale(0.86) translate(-256 -256)">
+  <!-- Left Code Bracket "<" (clean breathing space) -->
+  <path d="M 124 180 L 64 256 L 124 332" 
+        stroke="url(#scryEyeGrad)" 
+        stroke-width="18" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none" 
+        filter="url(#hudGlow)"/>
+
+  <!-- Right Code Bracket ">" (clean breathing space) -->
+  <path d="M 388 180 L 448 256 L 388 332" 
+        stroke="url(#scryEyeGrad)" 
+        stroke-width="18" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none" 
+        filter="url(#hudGlow)"/>
+
+  <!-- Centered Eye Contour (Upper & Lower Eyelid Arches) -->
+  <path d="M 164 256 C 188 152, 324 152, 348 256" 
+        stroke="#c56bff" 
+        stroke-width="12" 
+        stroke-linecap="round" 
+        fill="none" 
+        filter="url(#hudGlow)"/>
+
+  <path d="M 164 256 C 188 360, 324 360, 348 256" 
+        stroke="#c56bff" 
+        stroke-width="12" 
+        stroke-linecap="round" 
+        fill="none" 
+        filter="url(#hudGlow)"/>
+
+  <!-- Soft Iris Inner Glow -->
+  <circle cx="256" cy="256" r="64" fill="url(#pupilAura)"/>
+
+  <!-- The Clean, Iconic All-Seeing Star Pupil ✦ (Uncomplicated & Radiant) -->
+  <path d="M 256 194 C 256 236, 276 256, 318 256 C 276 256, 256 276, 256 318 C 256 276, 236 256, 194 256 C 236 256, 256 236, 256 194 Z" 
+        fill="url(#scryEyeGrad)" 
+        filter="url(#intenseGlow)"/>
+
+  <!-- Specular Light Sparkles -->
+  <circle cx="236" cy="236" r="5" fill="#ffffff" filter="url(#hudGlow)"/>
+  <circle cx="274" cy="274" r="3" fill="#d896ff"/>
+
+  </g>
+</svg>
