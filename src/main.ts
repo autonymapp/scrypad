@@ -44,7 +44,9 @@ import {
   Image as ImageIcon,
   ExternalLink,
   FolderArchive,
-  Globe
+  Globe,
+  Minus,
+  RemoveFormatting
 } from 'lucide';
 import { CodePane } from './editor/code-pane.ts';
 import { PreviewPane, ActiveElementInfo } from './preview/preview-pane.ts';
@@ -52,7 +54,7 @@ import { FileManager, FileState } from './files/file-manager.ts';
 import { SyncCoordinator } from './sync/sync-coordinator.ts';
 import { CDN_LIBRARIES, injectSnippetIntoHtml } from './libraries/cdn-catalog.ts';
 import { extractPalette, replaceColor, ColorSwatch } from './tools/palette-scanner.ts';
-import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont } from './tools/font-detector.ts';
+import { detectUnlinkedFonts, injectGoogleFont, UnlinkedFont, POPULAR_GOOGLE_FONTS } from './tools/font-detector.ts';
 import { findUnembeddedImages, inlineImageInHtml, fileToDataUrl, UnembeddedImage } from './tools/image-inliner.ts';
 import { extractCleanBody } from './tools/body-exporter.ts';
 import { HTML_TAG_DICTIONARY, findTagInfo, TagInfo } from './tools/tag-dictionary.ts';
@@ -75,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ExternalLink,
       FolderArchive,
       Globe,
+      Minus,
+      RemoveFormatting,
       FilePlus,
       FolderOpen,
       Save,
@@ -1039,10 +1043,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (k === 'o' && !e.shiftKey) { e.preventDefault(); openFileAction(); }
     else if (k === 'n' && (e.altKey || isDesktopApp)) { e.preventDefault(); newFileAction(); }
     else if (k === 'f' && e.shiftKey) { e.preventDefault(); e.stopPropagation(); tidyCode(); }
-    else if ((k === 'b' || k === 'i') && !inCode && !e.shiftKey && !e.altKey) {
+    else if ((k === 'b' || k === 'i' || k === 'u') && !inCode && !e.shiftKey && !e.altKey) {
       e.preventDefault();
-      document.getElementById(k === 'b' ? 'btn-bold' : 'btn-italic')?.click();
+      document.getElementById(k === 'b' ? 'btn-bold' : k === 'i' ? 'btn-italic' : 'btn-underline')?.click();
     }
+    else if (k === 'k' && !inCode && !e.shiftKey && !e.altKey) { e.preventDefault(); document.getElementById('btn-insert-link')?.click(); }
   }, true);
 
   // Visual Edit Toggle
@@ -1061,6 +1066,99 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-italic')?.addEventListener('click', () => {
     previewPane.applyStyleCommand('italic');
   });
+  document.getElementById('btn-underline')?.addEventListener('click', () => {
+    previewPane.applyStyleCommand('underline');
+  });
+  // Text Type: paragraph, headings, quote, lists
+  const selectBlock = document.getElementById('select-block') as HTMLSelectElement | null;
+  selectBlock?.addEventListener('change', () => {
+    const v = selectBlock.value;
+    if (v === 'ul') previewPane.applyStyleCommand('insertUnorderedList');
+    else if (v === 'ol') previewPane.applyStyleCommand('insertOrderedList');
+    else if (v) previewPane.applyStyleCommand('formatBlock', `<${v}>`);
+    selectBlock.value = '';
+  });
+  // Link the selected text, or edit the link you're in
+  document.getElementById('btn-insert-link')?.addEventListener('click', async () => {
+    const doc = previewPane.getDocument();
+    const sel = doc?.getSelection();
+    const anchorEl = sel?.anchorNode ? (sel.anchorNode.nodeType === Node.TEXT_NODE ? sel.anchorNode.parentElement : sel.anchorNode as HTMLElement) : null;
+    if (anchorEl?.closest('a')) { btnEditLink?.click(); return; }
+    if (!sel || sel.isCollapsed || !sel.rangeCount) {
+      showToast('✦ Select some text in the preview first, then press Link');
+      return;
+    }
+    const range = sel.getRangeAt(0).cloneRange();
+    const href = { label: 'Goes To', value: 'https://', hint: 'A web address, a file like about.html, or #section-id' };
+    const newTab = { label: 'Open in a New Tab', check: true, value: 'no' };
+    const choice = await showDialog({ title: 'Add a Link', fields: [href, newTab], actions: [{ label: 'Cancel', value: 'cancel' }, { label: 'Add Link', value: 'ok', primary: true }] });
+    if (choice !== 'ok' || !href.value.trim() || href.value.trim() === 'https://') return;
+    previewPane.applyStyleCommand('createLink', href.value.trim(), range);
+    if (newTab.value === 'yes') {
+      const a = (doc!.getSelection()?.anchorNode as Node | null);
+      const link = (a && (a.nodeType === Node.TEXT_NODE ? a.parentElement : a as HTMLElement))?.closest('a');
+      if (link) previewPane.editElement(() => { link.setAttribute('target', '_blank'); link.setAttribute('rel', 'noopener'); });
+    }
+    showToast('✦ Link added');
+  });
+  // Edit menu: picture, divider, clear formatting (they go where the cursor is in the preview)
+  document.getElementById('menu-edit-divider')?.addEventListener('click', () => {
+    closeAllMenus();
+    // Goes after the block you're in, so it never splits a paragraph or box in two
+    const doc = previewPane.getDocument();
+    if (!doc) return;
+    const sel = doc.getSelection();
+    const node = sel?.anchorNode ?? null;
+    const el = node ? (node.nodeType === Node.TEXT_NODE ? node.parentElement : node as HTMLElement) : null;
+    const block = el?.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, div, section, article, header, footer, figure, img, table, ul, ol');
+    previewPane.editElement(() => {
+      const hr = doc.createElement('hr');
+      if (block && block !== doc.body && doc.body.contains(block)) block.after(hr);
+      else doc.body.appendChild(hr);
+    });
+    showToast('✦ Divider line added');
+  });
+  document.getElementById('menu-edit-clear-format')?.addEventListener('click', () => {
+    closeAllMenus();
+    previewPane.applyStyleCommand('removeFormat');
+  });
+  document.getElementById('menu-edit-picture')?.addEventListener('click', async () => {
+    closeAllMenus();
+    const doc = previewPane.getDocument();
+    const sel = doc?.getSelection();
+    const range = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+    const src = {
+      label: 'Picture', value: '', placeholder: 'images/cat.png or https://...',
+      hint: 'A file path, a web address, or choose one from your computer to embed it',
+      browse: {
+        label: 'Choose…',
+        pick: () => new Promise<{ value: string; display: string } | null>((resolve) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.addEventListener('change', async () => {
+            const f = input.files?.[0];
+            if (!f) { resolve(null); return; }
+            try { resolve({ value: await fileToDataUrl(f), display: `Embedded: ${f.name}` }); } catch { resolve(null); }
+          });
+          input.click();
+        }),
+      },
+    };
+    const alt = { label: 'Description (Alt Text)', value: '', placeholder: 'A sleepy cat on a keyboard', hint: 'Read aloud by screen readers, and shown if the picture can\'t load' };
+    const choice = await showDialog({ title: 'Add a Picture', fields: [src, alt], actions: [{ label: 'Cancel', value: 'cancel' }, { label: 'Add Picture', value: 'ok', primary: true }] });
+    if (choice !== 'ok' || !src.value.trim() || !doc) return;
+    previewPane.editElement(() => {
+      const img = doc.createElement('img');
+      img.setAttribute('src', src.value.trim());
+      img.setAttribute('alt', alt.value);
+      img.style.maxWidth = '100%';
+      if (range && doc.body.contains(range.startContainer)) { range.collapse(false); range.insertNode(img); }
+      else doc.body.appendChild(img);
+    });
+    showToast('✦ Picture added');
+  });
+
   quickColor.addEventListener('input', (e) => {
     const val = (e.target as HTMLInputElement).value;
     previewPane.applyStyleCommand('foreColor', val);
@@ -1182,12 +1280,103 @@ document.addEventListener('DOMContentLoaded', () => {
     return `#${r}${g}${b}`;
   }
 
+  // --- Styles drawer: Font, Weight, Line Height, Align, Width, Border, Shadow ---
+  const selectFont = document.getElementById('select-font') as HTMLSelectElement;
+  const selectWeight = document.getElementById('select-weight') as HTMLSelectElement;
+  const selectAlign = document.getElementById('select-align') as HTMLSelectElement;
+  const sliderLineHeight = document.getElementById('slider-line-height') as HTMLInputElement;
+  const valLineHeight = document.getElementById('val-line-height')!;
+  const sliderWidth = document.getElementById('slider-width') as HTMLInputElement;
+  const valWidth = document.getElementById('val-width')!;
+  const sliderBorder = document.getElementById('slider-border') as HTMLInputElement;
+  const valBorder = document.getElementById('val-border')!;
+  const selectBorderStyle = document.getElementById('select-border-style') as HTMLSelectElement;
+  const pickerBorderColor = document.getElementById('picker-border-color') as HTMLInputElement;
+  const valBorderColor = document.getElementById('val-border-color')!;
+  const selectShadow = document.getElementById('select-shadow') as HTMLSelectElement;
+
+  const GOOGLE_FONT_QUERY: Record<string, string> = {
+    'VT323': 'VT323', 'Pixelify Sans': 'Pixelify+Sans:wght@400;700', 'Caveat': 'Caveat:wght@400;700', 'Comfortaa': 'Comfortaa:wght@400;700',
+  };
+  const fontQuery = (name: string) => POPULAR_GOOGLE_FONTS[name] || GOOGLE_FONT_QUERY[name] || name.replace(/ /g, '+');
+
+  function populateExtraStyles(info: ActiveElementInfo) {
+    const st = info.styles;
+    const fam = (st.fontFamily || '').split(',')[0].trim().replace(/^["']|["']$/g, '');
+    const opt = Array.from(selectFont.options).find((o) => o.value && (o.value === `gf:${fam}` || o.value.split(',')[0].trim() === fam));
+    selectFont.value = opt ? opt.value : (fam ? '__own' : '');
+    const w = parseInt(st.fontWeight) || 400;
+    selectWeight.value = ['300', '400', '500', '600', '700', '800'].includes(String(w)) ? String(w) : '';
+    const fs = parsePxValue(st.fontSize, 16);
+    const lh = st.lineHeight === 'normal' || !st.lineHeight ? 1.2 : parsePxValue(st.lineHeight, fs * 1.2) / fs;
+    sliderLineHeight.value = String(Math.round(Math.min(3, Math.max(0.8, lh)) * 10));
+    valLineHeight.textContent = (Number(sliderLineHeight.value) / 10).toFixed(1);
+    selectAlign.value = st.textAlign || '';
+    const wPct = /%$/.test(st.width) ? Math.round(parseFloat(st.width)) : 0;
+    sliderWidth.value = String(wPct);
+    valWidth.textContent = wPct ? `${wPct}%` : (st.width || 'Auto');
+    const bw = st.borderStyle === 'none' ? 0 : Math.round(parsePxValue(st.borderWidth, 0));
+    sliderBorder.value = String(Math.min(12, bw));
+    valBorder.textContent = `${sliderBorder.value}px`;
+    if (['solid', 'dashed', 'dotted', 'double'].includes(st.borderStyle)) selectBorderStyle.value = st.borderStyle;
+    if (st.borderColor && bw > 0) {
+      const hex = st.borderColor.startsWith('#') ? st.borderColor : rgbToHex(st.borderColor);
+      pickerBorderColor.value = hex;
+      valBorderColor.textContent = hex;
+    }
+    selectShadow.value = Array.from(selectShadow.options).some((o) => o.value === st.boxShadow) ? st.boxShadow : '';
+  }
+
+  selectFont.addEventListener('change', () => {
+    const v = selectFont.value;
+    if (v === '__own') return;
+    if (v.startsWith('gf:')) {
+      const name = v.slice(3);
+      const doc = previewPane.getDocument();
+      if (doc) {
+        previewPane.editElement(() => {
+          const already = Array.from(doc.querySelectorAll('link[href*="fonts.googleapis.com"]')).some((l) => (l.getAttribute('href') || '').includes(`family=${name.replace(/ /g, '+')}`));
+          if (!already) {
+            const link = doc.createElement('link');
+            link.setAttribute('rel', 'stylesheet');
+            link.setAttribute('href', `https://fonts.googleapis.com/css2?family=${fontQuery(name)}&display=swap`);
+            doc.head.appendChild(link);
+          }
+        });
+      }
+      previewPane.updateActiveElementStyle('fontFamily', `'${name}', ${/Mono|Code|VT323/.test(name) ? 'monospace' : /Lora|Playfair|Merriweather|Cinzel/.test(name) ? 'serif' : /Caveat/.test(name) ? 'cursive' : 'sans-serif'}`);
+    } else {
+      previewPane.updateActiveElementStyle('fontFamily', v);
+    }
+  });
+  selectWeight.addEventListener('change', () => previewPane.updateActiveElementStyle('fontWeight', selectWeight.value));
+  selectAlign.addEventListener('change', () => previewPane.updateActiveElementStyle('textAlign', selectAlign.value));
+  sliderLineHeight.addEventListener('input', () => {
+    const v = (Number(sliderLineHeight.value) / 10).toFixed(1);
+    valLineHeight.textContent = v;
+    previewPane.updateActiveElementStyle('lineHeight', v);
+  });
+  sliderWidth.addEventListener('input', () => {
+    const v = Number(sliderWidth.value);
+    valWidth.textContent = v ? `${v}%` : 'Auto';
+    previewPane.updateActiveElementStyle('width', v ? `${v}%` : '');
+  });
+  const applyBorder = () => {
+    const w = Number(sliderBorder.value);
+    valBorder.textContent = `${w}px`;
+    previewPane.updateActiveElementStyle('border', w ? `${w}px ${selectBorderStyle.value} ${pickerBorderColor.value}` : '');
+  };
+  sliderBorder.addEventListener('input', applyBorder);
+  selectBorderStyle.addEventListener('change', () => { if (Number(sliderBorder.value) === 0) sliderBorder.value = '2'; applyBorder(); });
+  pickerBorderColor.addEventListener('input', () => { valBorderColor.textContent = pickerBorderColor.value; if (Number(sliderBorder.value) === 0) sliderBorder.value = '2'; applyBorder(); });
+  selectShadow.addEventListener('change', () => previewPane.updateActiveElementStyle('boxShadow', selectShadow.value));
+
   function populateStyleDrawer(info: ActiveElementInfo) {
     drawerElementTag.textContent = `<${info.tagName}${info.id ? '#' + info.id : ''}${info.className ? '.' + info.className.trim().split(/\s+/)[0] : ''}>`;
 
     // Font size
     const fontSizeNum = Math.round(parsePxValue(info.styles.fontSize, 16));
-    sliderFontSize.value = String(Math.min(64, Math.max(10, fontSizeNum)));
+    sliderFontSize.value = String(Math.min(96, Math.max(10, fontSizeNum)));
     valFontSize.textContent = `${sliderFontSize.value}px`;
 
     // Padding
@@ -1226,6 +1415,8 @@ document.addEventListener('DOMContentLoaded', () => {
       pickerBgColor.value = hex;
       valBgColor.textContent = hex;
     }
+
+    populateExtraStyles(info);
 
     // Element Shape Detection
     const valShapeName = document.getElementById('val-shape-name');
@@ -2337,7 +2528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows: [string, string][] = [
       ['New Page', nk], ['Open File', 'Ctrl+O'], ['Save', 'Ctrl+S'], ['Save As', 'Ctrl+Shift+S'],
       ['Undo', 'Ctrl+Z'], ['Redo', 'Ctrl+Y'], ['Find', 'Ctrl+F'], ['Find &amp; Replace', 'Ctrl+H'],
-      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'],
+      ['Tidy Code', 'Ctrl+Shift+F'], ['Bold (in the preview)', 'Ctrl+B'], ['Italic (in the preview)', 'Ctrl+I'], ['Underline (in the preview)', 'Ctrl+U'], ['Link (in the preview)', 'Ctrl+K'],
       ['Indent', 'Tab'], ['Close a window or menu', 'Esc'],
     ];
     showDialog({

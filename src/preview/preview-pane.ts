@@ -10,6 +10,16 @@ export interface ActiveElementStyles {
   backgroundColor: string;
   opacity: string;
   clipPath?: string;
+  fontFamily: string;
+  fontWeight: string;
+  lineHeight: string;
+  textAlign: string;
+  /** Only the element's own width setting (style=""), not the measured width */
+  width: string;
+  borderWidth: string;
+  borderStyle: string;
+  borderColor: string;
+  boxShadow: string;
 }
 
 export interface ActiveElementInfo {
@@ -128,9 +138,16 @@ export class PreviewPane {
     this.isWritingToIframe = false;
   }
 
-  public applyStyleCommand(command: string, value: string | null = null) {
+  public applyStyleCommand(command: string, value: string | null = null, range?: Range) {
     const win = this.iframe.contentWindow;
     if (win) {
+      win.focus();
+      if (range) {
+        // Put back a selection that a dialog took away
+        const sel = win.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
       win.document.execCommand(command, false, value as any);
       this.notifyDocChange();
     }
@@ -138,6 +155,11 @@ export class PreviewPane {
 
   public getActiveElement(): HTMLElement | null {
     return this.activeElement;
+  }
+
+  /** The page's document, for small edits like adding a font link */
+  public getDocument(): Document | null {
+    return this.getDoc();
   }
 
   /** Make a change to the page (like a new link address), then sync it to the code. */
@@ -284,7 +306,16 @@ export class PreviewPane {
             color: computed?.color || el.style.color || '',
             backgroundColor: computed?.backgroundColor || el.style.backgroundColor || '',
             opacity: computed?.opacity || el.style.opacity || '1',
-            clipPath: el.style.clipPath || computed?.clipPath || ''
+            clipPath: el.style.clipPath || computed?.clipPath || '',
+            fontFamily: el.style.fontFamily || '',
+            fontWeight: computed?.fontWeight || '',
+            lineHeight: computed?.lineHeight || '',
+            textAlign: el.style.textAlign || '',
+            width: el.style.width || '',
+            borderWidth: computed?.borderTopWidth || '',
+            borderStyle: computed?.borderTopStyle || '',
+            borderColor: computed?.borderTopColor || '',
+            boxShadow: el.style.boxShadow || ''
           }
         });
       }

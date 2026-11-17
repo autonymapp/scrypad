@@ -60,6 +60,10 @@
             <button id="btn-find-toggle" class="menu-item" role="menuitem"><span><i data-lucide="search"></i>Find &amp; Replace</span><kbd>Ctrl+F</kbd></button>
             <button id="btn-palette-toggle" class="menu-item" role="menuitem"><span><i data-lucide="palette"></i>Replace a Color</span></button>
             <div class="menu-sep"></div>
+            <button id="menu-edit-picture" class="menu-item" role="menuitem"><span><i data-lucide="image"></i>Add a Picture</span></button>
+            <button id="menu-edit-divider" class="menu-item" role="menuitem"><span><i data-lucide="minus"></i>Add a Divider Line</span></button>
+            <button id="menu-edit-clear-format" class="menu-item" role="menuitem"><span><i data-lucide="remove-formatting"></i>Clear Formatting</span></button>
+            <div class="menu-sep"></div>
             <button id="menu-edit-clean" class="menu-item" role="menuitem"><span><i data-lucide="sparkles"></i>Tidy Code</span><kbd>Ctrl+Shift+F</kbd></button>
             <button id="menu-tools-libraries" class="menu-item" role="menuitem"><span><i data-lucide="book-copy"></i>Add a Library</span></button>
           </div>
@@ -135,12 +139,24 @@
         <i data-lucide="mouse-pointer-click"></i><span>Click to Edit</span>
       </label>
       <div class="tb-tools">
+        <select id="select-block" class="tb-select" title="Turn the selected line into a heading, quote or list" aria-label="Text type">
+          <option value="" hidden>Text Type</option>
+          <option value="p">Paragraph</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="blockquote">Quote</option>
+          <option value="ul">Bullet List</option>
+          <option value="ol">Numbered List</option>
+        </select>
         <button id="btn-bold" class="tb-btn tb-icon font-bold" title="Bold (Ctrl+B)" aria-label="Bold">B</button>
         <button id="btn-italic" class="tb-btn tb-icon italic font-serif" title="Italic (Ctrl+I)" aria-label="Italic">I</button>
-        <label class="tb-btn" title="Text color">
+        <button id="btn-underline" class="tb-btn tb-icon underline" title="Underline (Ctrl+U)" aria-label="Underline">U</button>
+        <label class="tb-btn" title="Text color for the selected text">
           <i data-lucide="palette"></i><span>Color</span>
           <input type="color" id="quick-color" value="#c56bff" class="tb-color" aria-label="Text color">
         </label>
+        <button id="btn-insert-link" class="tb-btn tb-icon" title="Link the selected text (Ctrl+K)" aria-label="Add a link"><i data-lucide="link"></i></button>
         <button id="btn-toggle-styles" class="tb-btn" title="Size, spacing and color sliders for the selected element"><i data-lucide="sliders-horizontal"></i><span>Styles</span></button>
       </div>
     </div>
@@ -333,57 +349,25 @@
           <button id="btn-close-style-drawer" class="text-[var(--dim)] hover:text-[var(--ink)] p-0.5" title="Close Drawer">✕</button>
         </div>
         
-        <div class="p-3.5 space-y-3.5 overflow-y-auto flex-1 text-xs font-['Fira_Code']">
-          <!-- Font Size -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Font Size</span>
-              <span id="val-font-size" class="text-[var(--forge)]">16px</span>
+        <div class="p-3 space-y-2 overflow-y-auto flex-1 text-xs font-['Fira_Code']">
+          <details class="sd-sec" open>
+            <summary>Text</summary>
+            <div class="sd-body">
+            <label class="sd-row"><span>Font</span><select id="select-font" class="sd-select"><option value="">Page Default</option><option value="system-ui, sans-serif">System Sans</option><option value="Georgia, serif">Serif</option><option value="ui-monospace, Consolas, monospace">Monospace</option><option value="Comic Sans MS, cursive">Comic Sans</option><optgroup label="Google Fonts"><option value="gf:Inter">Inter</option><option value="gf:Poppins">Poppins</option><option value="gf:Lora">Lora</option><option value="gf:Playfair Display">Playfair Display</option><option value="gf:Space Grotesk">Space Grotesk</option><option value="gf:Merriweather">Merriweather</option><option value="gf:Oswald">Oswald</option><option value="gf:Press Start 2P">Press Start 2P</option><option value="gf:VT323">VT323</option><option value="gf:Pixelify Sans">Pixelify Sans</option><option value="gf:Caveat">Caveat</option><option value="gf:Comfortaa">Comfortaa</option><option value="gf:Cinzel">Cinzel</option><option value="gf:Fira Code">Fira Code</option></optgroup><option value="__own" hidden>The Page's Own</option></select></label>
+            <label class="sd-row"><span>Weight</span><select id="select-weight" class="sd-select"><option value="">Default</option><option value="300">Light</option><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semi Bold</option><option value="700">Bold</option><option value="800">Extra Bold</option></select></label>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Font Size</span><span id="val-font-size" class="text-[var(--forge)]">16px</span></div>
+              <input type="range" id="slider-font-size" min="10" max="96" value="16" class="w-full accent-[var(--forge)] cursor-pointer">
             </div>
-            <input type="range" id="slider-font-size" min="10" max="64" value="16" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Padding -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Padding</span>
-              <span id="val-padding" class="text-[var(--forge)]">16px</span>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Line Height</span><span id="val-line-height" class="text-[var(--forge)]">1.5</span></div>
+              <input type="range" id="slider-line-height" min="8" max="30" value="15" class="w-full accent-[var(--forge)] cursor-pointer">
             </div>
-            <input type="range" id="slider-padding" min="0" max="64" value="16" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Margin -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Margin</span>
-              <span id="val-margin" class="text-[var(--forge)]">0px</span>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Letter Spacing</span><span id="val-spacing" class="text-[var(--forge)]">0px</span></div>
+              <input type="range" id="slider-spacing" min="-2" max="10" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
             </div>
-            <input type="range" id="slider-margin" min="0" max="64" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Border Radius -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Border Radius</span>
-              <span id="val-radius" class="text-[var(--forge)]">8px</span>
-            </div>
-            <input type="range" id="slider-radius" min="0" max="48" value="8" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Letter Spacing -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Letter Spacing</span>
-              <span id="val-spacing" class="text-[var(--forge)]">0px</span>
-            </div>
-            <input type="range" id="slider-spacing" min="-2" max="10" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Opacity -->
-          <div>
-            <div class="flex justify-between text-[var(--dim)] mb-1">
-              <span>Opacity</span>
-              <span id="val-opacity" class="text-[var(--forge)]">100%</span>
-            </div>
-            <input type="range" id="slider-opacity" min="10" max="100" value="100" class="w-full accent-[var(--forge)] cursor-pointer">
-          </div>
-          <!-- Color Pickers -->
-          <div class="pt-2 border-t border-[var(--line)] space-y-2.5">
+            <label class="sd-row"><span>Align</span><select id="select-align" class="sd-select"><option value="">Default</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="justify">Justify</option></select></label>
             <div class="flex items-center justify-between">
               <span class="text-[var(--dim)]">Text Color</span>
               <div class="flex items-center gap-1.5">
@@ -391,6 +375,28 @@
                 <span id="val-text-color" class="text-[10px] text-[var(--dim)]">#efe8fb</span>
               </div>
             </div>
+            </div>
+          </details>
+          <details class="sd-sec" open>
+            <summary>Spacing &amp; Size</summary>
+            <div class="sd-body">
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Padding</span><span id="val-padding" class="text-[var(--forge)]">16px</span></div>
+              <input type="range" id="slider-padding" min="0" max="64" value="16" class="w-full accent-[var(--forge)] cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Margin</span><span id="val-margin" class="text-[var(--forge)]">0px</span></div>
+              <input type="range" id="slider-margin" min="0" max="64" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Width</span><span id="val-width" class="text-[var(--forge)]">Auto</span></div>
+              <input type="range" id="slider-width" min="0" max="100" value="0" class="w-full accent-[var(--forge)] cursor-pointer" title="0 = automatic width">
+            </div>
+            </div>
+          </details>
+          <details class="sd-sec">
+            <summary>Look</summary>
+            <div class="sd-body">
             <div class="flex items-center justify-between">
               <span class="text-[var(--dim)]">Background</span>
               <div class="flex items-center gap-1.5">
@@ -398,43 +404,49 @@
                 <span id="val-bg-color" class="text-[10px] text-[var(--dim)]">#18121f</span>
               </div>
             </div>
-          </div>
-
-          <!-- Element Shape (Cyber Cuts & Corners for Buttons / Cards) -->
-          <div class="pt-2 border-t border-[var(--line)] space-y-2.5">
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Border</span><span id="val-border" class="text-[var(--forge)]">0px</span></div>
+              <input type="range" id="slider-border" min="0" max="12" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
+            </div>
+            <label class="sd-row"><span>Border Style</span><select id="select-border-style" class="sd-select"><option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option><option value="double">Double</option></select></label>
+            <div class="flex items-center justify-between">
+              <span class="text-[var(--dim)]">Border Color</span>
+              <div class="flex items-center gap-1.5">
+                <input type="color" id="picker-border-color" value="#c56bff" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0">
+                <span id="val-border-color" class="text-[10px] text-[var(--dim)]">#c56bff</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Corner Rounding</span><span id="val-radius" class="text-[var(--forge)]">0px</span></div>
+              <input type="range" id="slider-radius" min="0" max="48" value="0" class="w-full accent-[var(--forge)] cursor-pointer">
+            </div>
+            <label class="sd-row"><span>Shadow</span><select id="select-shadow" class="sd-select"><option value="">None</option><option value="0 2px 6px rgba(0,0,0,.25)">Soft</option><option value="0 10px 30px rgba(0,0,0,.35)">Lifted</option><option value="0 0 18px currentColor">Glow</option></select></label>
+            <div>
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Opacity</span><span id="val-opacity" class="text-[var(--forge)]">100%</span></div>
+              <input type="range" id="slider-opacity" min="10" max="100" value="100" class="w-full accent-[var(--forge)] cursor-pointer">
+            </div>
+            </div>
+          </details>
+          <details class="sd-sec">
+            <summary>Shape (Cuts &amp; Corners)</summary>
+            <div class="sd-body space-y-2.5">
             <div class="flex items-center justify-between text-[var(--dim)]">
-              <span>Shape (Cuts &amp; Corners)</span>
+              <span>Shape</span>
               <span id="val-shape-name" class="text-[10px] text-[var(--forge)]">Default</span>
             </div>
             <div class="grid grid-cols-4 gap-1 text-[10px]">
               <button id="btn-shape-el-default" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--ink)]">Round</button>
-              <button id="btn-shape-el-slant" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--forge)]" title="Slanted angular polygon cut">Slanted</button>
-              <button id="btn-shape-el-notch" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--forge-hi)]" title="Notched chamfered corners">Notched</button>
+              <button id="btn-shape-el-slant" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--forge)]" title="Slanted angular cut">Slanted</button>
+              <button id="btn-shape-el-notch" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--forge-hi)]" title="Notched corners">Notched</button>
               <button id="btn-shape-el-sharp" class="px-1.5 py-1 rounded bg-[var(--panel-hi)] hover:bg-[var(--panel-hover)] border border-[var(--line)] text-[var(--gold)]" title="Sharp rectangle">Sharp</button>
             </div>
-
-            <!-- Clip-Path Cut Depth Slider -->
             <div id="cut-depth-container">
-              <div class="flex justify-between text-[var(--dim)] mb-1">
-                <span>Cut Depth (Clip-Path)</span>
-                <span id="val-cut-depth" class="text-[var(--forge)]">8px</span>
-              </div>
-              <input type="range" id="slider-cut-depth" min="0" max="32" value="8" class="w-full accent-[var(--forge)] cursor-pointer" title="Adjust angle/chamfer cut size">
+              <div class="flex justify-between text-[var(--dim)] mb-1"><span>Cut Depth</span><span id="val-cut-depth" class="text-[var(--forge)]">8px</span></div>
+              <input type="range" id="slider-cut-depth" min="0" max="32" value="8" class="w-full accent-[var(--forge)] cursor-pointer" title="How deep the corner cuts go">
             </div>
-
-            <!-- Border Radius Slider -->
-            <div>
-              <div class="flex justify-between text-[var(--dim)] mb-1">
-                <span>Corner Rounding</span>
-                <span id="val-shape-radius" class="text-[var(--forge)]">8px</span>
-              </div>
-              <input type="range" id="slider-shape-radius" min="0" max="48" value="8" class="w-full accent-[var(--forge)] cursor-pointer" title="Adjust border radius">
+            <button id="btn-copy-shape-css" class="w-full py-1.5 bg-[var(--void)] hover:bg-[var(--panel-hi)] border border-[var(--line)] rounded text-[10px] text-[var(--forge)] text-center transition font-bold">Copy Shape CSS</button>
             </div>
-
-            <button id="btn-copy-shape-css" class="w-full py-1.5 bg-[var(--void)] hover:bg-[var(--panel-hi)] border border-[var(--line)] rounded text-[10px] text-[var(--forge)] text-center transition font-bold">
-              📋 Copy Shape CSS (Clip-Path &amp; Radius)
-            </button>
-          </div>
+          </details>
         </div>
       </aside>
 
