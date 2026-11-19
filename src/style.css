@@ -571,8 +571,12 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, label:focu
   width: min(460px, 100%);
   max-height: calc(100vh - 32px);
   overflow: auto;
-  background: var(--panel);
+  background:
+    linear-gradient(to bottom left, transparent 50%, var(--line) 50%, var(--line) calc(50% + 1.2px), transparent calc(50% + 1.2px)) top right / 14px 14px no-repeat border-box,
+    linear-gradient(to top right, transparent 50%, var(--line) 50%, var(--line) calc(50% + 1.2px), transparent calc(50% + 1.2px)) bottom left / 14px 14px no-repeat border-box,
+    var(--panel);
   border: 1px solid var(--line);
+  /* cut corners keep their outline: the diagonals above redraw the border the clip removes */
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   padding: 20px 22px 18px;
   box-shadow: 0 30px 60px var(--shadow);
