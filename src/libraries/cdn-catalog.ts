@@ -21,7 +21,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Pico CSS',
     category: 'CSS Framework',
     badge: 'Classless',
-    description: 'Minimal, semantic, beautiful CSS without classes',
+    description: 'Styles plain HTML tags, no classes needed',
     snippet: '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">'
   },
   {
@@ -29,7 +29,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Lucide Icons',
     category: 'Icons',
     badge: 'SVG Icons',
-    description: 'Clean & consistent icon pack with instant DOM replacement',
+    description: 'Icon pack: write the icon name and it swaps in the picture',
     snippet: '<script src="https://unpkg.com/lucide@latest"></script>\n<script>window.addEventListener("DOMContentLoaded", () => { if (window.lucide) window.lucide.createIcons(); });</script>'
   },
   {
@@ -37,7 +37,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Canvas Confetti',
     category: 'Animation',
     badge: 'FX',
-    description: 'Delightful confetti bursts for buttons and celebrations',
+    description: 'Confetti bursts for buttons and celebrations',
     snippet: '<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>'
   },
   {
@@ -45,7 +45,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Google Fonts: Inter',
     category: 'Typography',
     badge: 'Font',
-    description: 'Modern, highly-legible UI sans-serif font',
+    description: 'Easy-to-read sans-serif for menus and body text',
     snippet: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">\n<style>body { font-family: "Inter", sans-serif; }</style>'
   },
   {
@@ -53,7 +53,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Google Fonts: JetBrains Mono',
     category: 'Typography',
     badge: 'Monospace',
-    description: 'Clean code & tech monospace font',
+    description: 'Monospace font made for code',
     snippet: '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">\n<style>code, pre, .mono { font-family: "JetBrains Mono", monospace; }</style>'
   },
   {
@@ -61,7 +61,7 @@ export const CDN_LIBRARIES: CdnLibrary[] = [
     name: 'Alpine.js',
     category: 'Micro-Framework',
     badge: 'Reactivity',
-    description: 'Lightweight reactive DOM state in simple attributes',
+    description: 'Small script that adds interactivity right in your HTML attributes',
     snippet: '<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>'
   }
 ];
