@@ -16,12 +16,12 @@ const STEPS: TourStep[] = [
   {
     wisp: true,
     title: 'Welcome to ScryPad',
-    body: '<p>Write HTML on one side and watch your page come to life on the other.</p><p>This quick tour takes about a minute.</p>',
+    body: '<p>Write HTML on one side and watch your page update on the other.</p><p>This quick tour takes about a minute.</p>',
   },
   {
     icon: Columns2,
     title: 'Code Meets Preview',
-    body: '<p>Every change shows up in the preview as you type. No uploading, no refreshing, no guessing!</p><p>Pick <b>Split</b>, <b>Code</b> or <b>Preview</b> in the toolbar. On a phone, the tabs at the bottom switch between them.</p>',
+    body: '<p>Every change shows up in the preview as you type, so there's nothing to upload or refresh.</p><p>Pick <b>Split</b>, <b>Code</b> or <b>Preview</b> in the toolbar. On a phone, the tabs at the bottom switch between them.</p>',
   },
   {
     icon: MousePointerClick,
