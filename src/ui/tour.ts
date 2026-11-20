@@ -21,7 +21,7 @@ const STEPS: TourStep[] = [
   {
     icon: Columns2,
     title: 'Code Meets Preview',
-    body: '<p>Every change shows up in the preview as you type, so there's nothing to upload or refresh.</p><p>Pick <b>Split</b>, <b>Code</b> or <b>Preview</b> in the toolbar. On a phone, the tabs at the bottom switch between them.</p>',
+    body: '<p>Every change shows up in the preview as you type, so there\'s nothing to upload or refresh.</p><p>Pick <b>Split</b>, <b>Code</b> or <b>Preview</b> in the toolbar. On a phone, the tabs at the bottom switch between them.</p>',
   },
   {
     icon: MousePointerClick,
